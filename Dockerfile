@@ -6,7 +6,7 @@ ADD . .
 
 RUN go build -o ./bin/algorun *.go
 
-FROM algorand/algod:3.25.0-stable
+FROM algorand/algod:latest
 
 ENV TOKEN: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ENV ADMIN_TOKEN: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
