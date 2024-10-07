@@ -8,7 +8,8 @@ import (
 
 // StatusModel represents a status response from algod.Status
 type StatusModel struct {
-	LastRound int // Last recorded round
+	HeartBeat chan uint64 // Subscription Channel
+	LastRound uint64      // Last recorded round
 }
 
 // String prints the last round value
@@ -22,6 +23,19 @@ func (m *StatusModel) Fetch(algodClient *algod.Client) error {
 	if err != nil {
 		return err
 	}
-	m.LastRound = int(s.LastRound)
+	m.LastRound = s.LastRound
 	return nil
+}
+
+// Watch uses algod.StatusAfterBlock to wait for changes and emits to the HeartBeat channel
+func (m *StatusModel) Watch(ctx context.Context, algodClient *algod.Client) error {
+	lastRound := uint64(0)
+	for {
+		status, err := algodClient.StatusAfterBlock(lastRound).Do(ctx)
+		if err != nil {
+			return err
+		}
+		m.HeartBeat <- status.LastRound
+		lastRound++
+	}
 }
