@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorandfoundation/hack-tui/ui"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
 	"os"
 	"strings"
 )
@@ -30,16 +33,24 @@ var (
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
-		//Run: func(cmd *cobra.Command, args []string) {
-		//	fmt.Println(ui.Purple("Arguments: " + strings.Join(args, " ") + viper.GetString("server")))
-		//},
+		// TODO: Add default application
+		RunE: func(cmd *cobra.Command, args []string) error {
+			log.SetOutput(cmd.OutOrStdout())
+
+			if viper.GetString("server") == "" {
+				return errors.New(ui.Magenta("server is required"))
+			}
+
+			log.Info(ui.Purple("Arguments: " + strings.Join(args, " ") + "Server: " + viper.GetString("server")))
+			return nil
+		},
 	}
 )
 
 // Handle global flags and set usage templates
 func init() {
+	log.SetReportTimestamp(false)
 	initConfig()
-
 	// Configure Version
 	if Version == "" {
 		Version = "unknown (built from source)"
@@ -47,15 +58,20 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVar(&server, "server", "http://localhost:4001", ui.LightBlue("server address"))
-	rootCmd.PersistentFlags().StringVar(&token, "token", strings.Repeat("a", 64), ui.LightBlue("server token"))
+	rootCmd.PersistentFlags().StringVar(&server, "server", "", ui.LightBlue("server address"))
+	rootCmd.PersistentFlags().StringVar(&token, "token", "", ui.LightBlue("server token"))
 	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 
 	// Update Long Text
-	rootCmd.Long = rootCmd.Long +
-		ui.LightBlue("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-		ui.LightBlue("Server: ") + viper.GetString("server")
+	rootCmd.Long +=
+		ui.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
+			ui.LightBlue("Server: ") + viper.GetString("server")
+
+	if viper.GetString("data") != "" {
+		rootCmd.Long +=
+			ui.Magenta("\nAlgorand Data: ") + viper.GetString("data")
+	}
 
 	// Add Commands
 	rootCmd.AddCommand(statusCmd)
@@ -64,6 +80,10 @@ func init() {
 // Execute executes the root command.
 func Execute() error {
 	return rootCmd.Execute()
+}
+
+type AlgodConfig struct {
+	EndpointAddress string `json:"EndpointAddress"`
 }
 
 func initConfig() {
@@ -83,7 +103,62 @@ func initConfig() {
 
 	// Load Configurations
 	viper.AutomaticEnv()
-	cobra.CheckErr(viper.ReadInConfig())
+	err = viper.ReadInConfig()
+	// Load ALGORAND_DATA/config.json
+	algorandData, exists := os.LookupEnv("ALGORAND_DATA")
+
+	// Load the Algorand Data Configuration
+	if exists && algorandData != "" {
+		// Placeholder for Struct
+		var algodConfig AlgodConfig
+
+		dataConfigPath := algorandData + "/config.json"
+
+		// Open the config.json File
+		configFile, err := os.Open(dataConfigPath)
+		if err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+
+		// Read the bytes of the File
+		byteValue, _ := io.ReadAll(configFile)
+		err = json.Unmarshal(byteValue, &algodConfig)
+		if err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+
+		// Close the open handle
+		err = configFile.Close()
+		if err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+
+		// Replace catchall address with localhost
+		if strings.Contains(algodConfig.EndpointAddress, "0.0.0.0") {
+			algodConfig.EndpointAddress = strings.Replace(algodConfig.EndpointAddress, "0.0.0.0", "127.0.0.1", 1)
+		}
+
+		// Handle Token Path
+		tokenPath := algorandData + "/algod.admin.token"
+
+		tokenFile, err := os.Open(tokenPath)
+
+		if err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+
+		byteValue, _ = io.ReadAll(tokenFile)
+
+		// Set the server configuration
+		viper.Set("server", "http://"+algodConfig.EndpointAddress)
+		viper.Set("token", string(byteValue))
+		viper.Set("data", dataConfigPath)
+	}
+
 }
 
 // getAlgodClient creates the interface based on the current configuration
