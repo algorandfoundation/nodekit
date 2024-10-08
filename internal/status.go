@@ -29,7 +29,7 @@ func (m *StatusModel) Fetch(algodClient *algod.Client) error {
 
 // Watch uses algod.StatusAfterBlock to wait for changes and emits to the HeartBeat channel
 func (m *StatusModel) Watch(ctx context.Context, algodClient *algod.Client) error {
-	lastRound := uint64(0)
+	lastRound := m.LastRound
 	for {
 		status, err := algodClient.StatusAfterBlock(lastRound).Do(ctx)
 		if err != nil {
