@@ -21,10 +21,11 @@ var statusCmd = &cobra.Command{
 		}
 
 		// Get Algod from configuration
-		algodClient := getAlgodClient()
+		client, err := getClient()
+		cobra.CheckErr(err)
 
 		// Create the TUI
-		view, err := ui.MakeStatusViewModel(algodClient)
+		view, err := ui.MakeStatusViewModel(client)
 		cobra.CheckErr(err)
 		p := tea.NewProgram(view)
 

@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorandfoundation/hack-tui/api"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
 	"strings"
@@ -11,28 +11,25 @@ import (
 )
 
 func Test_ExecuteInvalidStatusCommand(t *testing.T) {
-	algodClient, err := algod.MakeClient(
-		"http://0.0.0.0:4001",
-		"",
-	)
+	client, err := api.NewClientWithResponses("http://255.255.255.255:4001")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Test Invalid Node
-	_, err = MakeStatusViewModel(algodClient)
-	if !strings.Contains(err.Error(), "dial tcp 0.0.0.0:4001") {
+	_, err = MakeStatusViewModel(client)
+	if !strings.Contains(err.Error(), "dial tcp 255.255.255.255:4001") {
 		t.Fatal(err)
 	}
 }
 func Test_ExecuteStatusCommand(t *testing.T) {
-	algodClient, err := algod.MakeClient(
-		"https://mainnet-api.4160.nodely.dev",
-		"",
-	)
+	client, err := api.NewClientWithResponses("https://mainnet-api.4160.nodely.dev")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	var m tea.Model
-	m, err = MakeStatusViewModel(algodClient)
+	m, err = MakeStatusViewModel(client)
 
 	if err != nil {
 		t.Fatal(err)

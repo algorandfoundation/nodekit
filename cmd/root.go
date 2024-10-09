@@ -3,9 +3,10 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui"
 	"github.com/charmbracelet/log"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io"
@@ -161,15 +162,10 @@ func initConfig() {
 
 }
 
-// getAlgodClient creates the interface based on the current configuration
-func getAlgodClient() *algod.Client {
-	algodClient, err := algod.MakeClient(
-		viper.GetString("server"),
-		viper.GetString("token"),
-	)
+func getClient() (*api.ClientWithResponses, error) {
+	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", viper.GetString("token"))
 	if err != nil {
-		log.Fatalf("Failed to create rpc client: %s", err)
+		return nil, err
 	}
-
-	return algodClient
+	return api.NewClientWithResponses(viper.GetString("server"), api.WithRequestEditorFn(apiToken.Intercept))
 }

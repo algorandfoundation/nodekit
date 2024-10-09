@@ -1,0 +1,11 @@
+package: api
+output: api/lf.go
+generate:
+  models: true
+  client: true
+  gorilla-server: false
+  embedded-spec: false
+output-options:
+  skip-prune: false
+  exclude-operation-ids:
+    - TealCompile

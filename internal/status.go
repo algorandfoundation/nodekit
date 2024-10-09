@@ -3,7 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 // StatusModel represents a status response from algod.Status
@@ -18,24 +18,24 @@ func (m *StatusModel) String() string {
 }
 
 // Fetch handles algod.Status
-func (m *StatusModel) Fetch(algodClient *algod.Client) error {
-	s, err := algodClient.Status().Do(context.Background())
+func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses) error {
+	s, err := client.GetStatusWithResponse(ctx)
 	if err != nil {
 		return err
 	}
-	m.LastRound = s.LastRound
+	m.LastRound = uint64(s.JSON200.LastRound)
 	return nil
 }
 
 // Watch uses algod.StatusAfterBlock to wait for changes and emits to the HeartBeat channel
-func (m *StatusModel) Watch(ctx context.Context, algodClient *algod.Client) error {
+func (m *StatusModel) Watch(ctx context.Context, client *api.ClientWithResponses) error {
 	lastRound := m.LastRound
 	for {
-		status, err := algodClient.StatusAfterBlock(lastRound).Do(ctx)
+		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
 		if err != nil {
 			return err
 		}
-		m.HeartBeat <- status.LastRound
+		m.HeartBeat <- uint64(status.JSON200.LastRound)
 		lastRound++
 	}
 }

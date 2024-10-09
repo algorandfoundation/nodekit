@@ -2,7 +2,7 @@ package ui
 
 import (
 	"context"
-	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"strconv"
@@ -12,8 +12,7 @@ import (
 // StatusViewModel is extended from the internal.StatusModel
 type StatusViewModel struct {
 	internal.StatusModel
-	IsVisible   bool
-	algodClient algod.Client
+	IsVisible bool
 }
 
 // Init has no I/O right now
@@ -69,19 +68,19 @@ func (m StatusViewModel) View() string {
 }
 
 // MakeStatusViewModel constructs the model to be used in a tea.Program
-func MakeStatusViewModel(algodClient *algod.Client) (tea.Model, error) {
+func MakeStatusViewModel(client *api.ClientWithResponses) (tea.Model, error) {
 	// Create the Model
 	m := StatusViewModel{}
 	m.HeartBeat = make(chan uint64)
-
-	err := m.Fetch(algodClient)
+	ctx := context.Background()
+	err := m.Fetch(ctx, client)
 	if err != nil {
 		return nil, err
 	}
 
 	// Watch for block changes
 	go func() {
-		err := m.Watch(context.Background(), algodClient)
+		err := m.Watch(ctx, client)
 		// TODO: Update render and better error handling
 		if err != nil {
 			panic(err)
