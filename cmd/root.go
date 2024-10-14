@@ -48,6 +48,13 @@ var (
 	}
 )
 
+func check(err interface{}) {
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+}
+
 // Handle global flags and set usage templates
 func init() {
 	log.SetReportTimestamp(false)
@@ -117,25 +124,16 @@ func initConfig() {
 
 		// Open the config.json File
 		configFile, err := os.Open(dataConfigPath)
-		if err != nil {
-			log.Fatal(err)
-			panic(err)
-		}
+		check(err)
 
 		// Read the bytes of the File
 		byteValue, _ := io.ReadAll(configFile)
 		err = json.Unmarshal(byteValue, &algodConfig)
-		if err != nil {
-			log.Fatal(err)
-			panic(err)
-		}
+		check(err)
 
 		// Close the open handle
 		err = configFile.Close()
-		if err != nil {
-			log.Fatal(err)
-			panic(err)
-		}
+		check(err)
 
 		// Replace catchall address with localhost
 		if strings.Contains(algodConfig.EndpointAddress, "0.0.0.0") {
@@ -146,13 +144,10 @@ func initConfig() {
 		tokenPath := algorandData + "/algod.admin.token"
 
 		tokenFile, err := os.Open(tokenPath)
+		check(err)
 
-		if err != nil {
-			log.Fatal(err)
-			panic(err)
-		}
-
-		byteValue, _ = io.ReadAll(tokenFile)
+		byteValue, err = io.ReadAll(tokenFile)
+		check(err)
 
 		// Set the server configuration
 		viper.Set("server", "http://"+algodConfig.EndpointAddress)
