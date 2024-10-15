@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
@@ -34,16 +35,20 @@ var (
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
-		// TODO: Add default application
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.SetOutput(cmd.OutOrStdout())
+			client, err := getClient()
+			cobra.CheckErr(err)
 
-			if viper.GetString("server") == "" {
-				return errors.New(ui.Magenta("server is required"))
-			}
+			m, err := ui.MakeViewportViewModel(context.Background(), client)
+			cobra.CheckErr(err)
 
-			log.Info(ui.Purple("Arguments: " + strings.Join(args, " ") + "Server: " + viper.GetString("server")))
-			return nil
+			p := tea.NewProgram(
+				m,
+				tea.WithAltScreen(),
+			)
+			_, err = p.Run()
+			return err
 		},
 	}
 )
