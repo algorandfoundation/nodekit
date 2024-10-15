@@ -1,0 +1,5 @@
+services:
+  algod:
+    build: .
+    volumes:
+      - .data:/algod/data

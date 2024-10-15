@@ -1,0 +1,12 @@
+package: api
+output: api/lf.go
+generate:
+  models: true
+  client: true
+  embedded-spec: false
+output-options:
+  client-type-name: Algod
+  include-operation-ids:
+    - Metrics
+    - GetStatus
+    - WaitForBlock
