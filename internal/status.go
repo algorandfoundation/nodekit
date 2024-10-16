@@ -9,6 +9,7 @@ import (
 // StatusModel represents a status response from algod.Status
 type StatusModel struct {
 	HeartBeat   chan uint64 // Subscription Channel
+	State       string
 	Version     string
 	Network     string
 	Voting      bool

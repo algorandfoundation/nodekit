@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/ui"
@@ -25,9 +26,10 @@ var statusCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		// Create the TUI
-		view, err := ui.MakeStatusViewModel(client)
+		view, err := ui.MakeStatusViewModel(context.Background(), client)
+
 		cobra.CheckErr(err)
-		p := tea.NewProgram(view)
+		p := tea.NewProgram(view, tea.WithAltScreen())
 
 		// Execute the Command
 		if _, err := p.Run(); err != nil {

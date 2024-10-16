@@ -4,57 +4,34 @@ import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strconv"
-	"strings"
 )
 
 const useHighPerformanceRenderer = false
 
-var (
-	rounderBorder = func() lipgloss.Style {
-		return lipgloss.NewStyle().
-			BorderStyle(lipgloss.RoundedBorder())
-	}()
-	topSections = func(width int) lipgloss.Style {
-		return rounderBorder.
-			Width(width - 2).
-			Padding(0).
-			Margin(0).
-			Height(5).
-			//BorderBackground(lipgloss.Color("4")).
-			BorderForeground(lipgloss.Color("5"))
-	}
-	infoStyle = func() lipgloss.Style {
-		b := lipgloss.RoundedBorder()
-		b.Left = "┤"
-		b.Right = "├"
-		return rounderBorder.BorderStyle(b)
-	}()
-	blue = func() lipgloss.Style {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
-	}()
-	cyan   = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	yellow = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
-	green  = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-)
-
 type ViewportViewModel struct {
-	ready       bool
-	HelpVisible bool
-	viewport    viewport.Model
-	table       table.Model
-	status      *internal.StatusModel
+	// Status Component
+	status StatusViewModel
+	// Protocol Component
+	protocol ProtocolViewModel
+	// Application Controls
+	controls ControlViewModel
+
+	ready    bool
+	viewport viewport.Model
+	// TODO: move to custom component
+	table table.Model
 }
 
+// Init is a no-op
 func (m ViewportViewModel) Init() tea.Cmd {
 	return nil
 }
 
+// Update Handle the viewport lifecycle
 func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -63,17 +40,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case uint64:
-		m.status.LastRound = msg
+		m.status.Status.LastRound = msg
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "h":
-			m.HelpVisible = !m.HelpVisible
-		case "esc":
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
@@ -87,7 +56,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
-		footerHeight := lipgloss.Height(m.footerView())
+		footerHeight := lipgloss.Height(m.controls.View())
 		verticalMarginHeight := headerHeight + footerHeight
 
 		// On first run, configure the models
@@ -159,148 +128,46 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.table, cmd = m.table.Update(msg)
 	cmds = append(cmds, cmd)
-
-	cmds = append(cmds, waitForUint64(m.status.HeartBeat))
+	m.controls, cmd = m.controls.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.protocol, cmd = m.protocol.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.status, cmd = m.status.HandleMessage(msg)
+	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
-// hidden returns 0 when the width is greater than the fill
-func hidden(width int, fillSize int) int {
-	if fillSize < width {
-		return 0
-	}
-	return width
-}
-
+// View renders the viewport.Model
 func (m ViewportViewModel) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
 	m.viewport.SetContent(m.table.View())
-	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
+	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.controls.View())
 }
 
-// TODO: Move to internal Metrics Model
-type MetricsModel struct {
-	LastRound int
-	RoundTime float64
-	TPS       int
-	State     string
-	RX        int
-	TX        int
-}
-
-func (m ViewportViewModel) metricsView(status MetricsModel) string {
-	if m.viewport.Width <= 0 {
-		return ""
-	}
-	beginning := blue.Render(" Latest Round: ") + strconv.Itoa(status.LastRound)
-	end := yellow.Render(strings.ToUpper(status.State)) + " "
-	middle := strings.Repeat(" ", max(0, m.viewport.Width/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
-
-	// Last Round
-	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
-
-	beginning = blue.Render(" Round time: ") + fmt.Sprintf("%.2fs", status.RoundTime)
-	end = fmt.Sprintf("%d KB/s ", status.TX/1024) + green.Render("TX ")
-	middle = strings.Repeat(" ", max(0, m.viewport.Width/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
-
-	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
-
-	beginning = blue.Render(" TPS:") + fmt.Sprintf("%d", status.TPS)
-	end = fmt.Sprintf("%d KB/s ", status.RX/1024) + green.Render("RX ")
-	middle = strings.Repeat(" ", max(0, m.viewport.Width/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
-
-	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
-	return lipgloss.JoinVertical(lipgloss.Left,
-		row1,
-		"",
-		cyan.Render(" -- 100 round average --"),
-		row2,
-		row3,
-	)
-}
-
-func (m ViewportViewModel) consensusView(status internal.StatusModel) string {
-	if m.viewport.Width <= 0 {
-		return ""
-	}
-	beginning := blue.Render(" Node: ") + status.Version
-	end := ""
-	if status.NeedsUpdate {
-		end = green.Render("[UPDATE AVAILABLE] ")
-	}
-
-	middle := strings.Repeat(" ", max(0, m.viewport.Width/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
-
-	// Last Round
-	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
-
-	row2 := blue.Render(" Network: ") + status.Network
-
-	row3 := blue.Render(" Protocol Voting: ") + strconv.FormatBool(status.Voting)
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		row1,
-		"",
-		row2,
-		"",
-		row3,
-	)
-}
+// headerView generates the top elements
 func (m ViewportViewModel) headerView() string {
-	if !m.HelpVisible {
-		return ""
-	}
-	metrics := MetricsModel{
-		LastRound: int(m.status.LastRound),
-		RoundTime: 2.87,
-		TPS:       55,
-		State:     "syncing",
-		RX:        82 * 1024,
-		TX:        205 * 1024,
-	}
-	left := topSections(max(0, m.viewport.Width/2)).Render(m.metricsView(metrics))
-
-	right := topSections(max(0, m.viewport.Width/2)).Render(m.consensusView(*m.status))
-
-	return lipgloss.JoinHorizontal(lipgloss.Center, left, right)
+	// TODO: Stack Vertically on small screens
+	render := lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
+	return render
 }
 
-func (m ViewportViewModel) footerView() string {
-	if !m.HelpVisible {
-		return ""
-	}
-	info := infoStyle.Render(" (q)uit | (d)elete | (g)enerate | (h)ide ")
-	difference := m.viewport.Width - lipgloss.Width(info)
-
-	line := strings.Repeat("─", max(0, difference/2))
-	return lipgloss.JoinHorizontal(lipgloss.Center, line, info, line)
-}
-
+// MakeViewportViewModel handles the construction of the TUI viewport
 func MakeViewportViewModel(ctx context.Context, client *api.ClientWithResponses) (*ViewportViewModel, error) {
+	controls := MakeControlViewModel()
 
-	status := internal.StatusModel{
-		HeartBeat:   make(chan uint64),
-		Voting:      false,
-		NeedsUpdate: true,
-	}
-	err := status.Fetch(ctx, client)
+	status, err := MakeStatusViewModel(ctx, client)
 	if err != nil {
 		return nil, err
 	}
+	protocol := MakeProtocolViewModel(status.Status)
+
 	m := ViewportViewModel{
-		HelpVisible: true,
-		status:      &status,
+		status:   status,
+		protocol: protocol,
+		controls: controls,
 	}
 
-	// Watch for block changes
-	go func() {
-		err := status.Watch(ctx, client)
-		// TODO: Update render and better error handling
-		if err != nil {
-			panic(err)
-		}
-	}()
 	return &m, nil
 }
