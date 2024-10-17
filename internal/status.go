@@ -30,7 +30,7 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 			return err
 		}
 		if v.StatusCode() != 200 {
-			return fmt.Errorf("Satus code %d: %s", v.StatusCode(), v.Status())
+			return fmt.Errorf("Status code %d: %s", v.StatusCode(), v.Status())
 		}
 		m.Network = v.JSON200.GenesisId
 		m.Version = fmt.Sprintf("v%d.%d.%d-%s", v.JSON200.Build.Major, v.JSON200.Build.Minor, v.JSON200.Build.BuildNumber, v.JSON200.Build.Channel)
@@ -43,7 +43,7 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 	}
 
 	if s.StatusCode() != 200 {
-		return fmt.Errorf("Satus code %d: %s", s.StatusCode(), s.Status())
+		return fmt.Errorf("Status code %d: %s", s.StatusCode(), s.Status())
 	}
 	m.LastRound = uint64(s.JSON200.LastRound)
 
