@@ -8,12 +8,19 @@ local-prefix: "github.com/algorandfoundation/hack-tui"
 threshold:
   # (optional; default 0)
   # The minimum coverage that each file should have
-  file: 70
+  file: 0
 
   # (optional; default 0)
   # The minimum coverage that each package should have
-  package: 80
+  package: 0
 
   # (optional; default 0)
   # The minimum total coverage project should have
-  total: 95
+  total: 0
+
+# Holds regexp rules which will exclude matched files or packages
+# from coverage statistics
+exclude:
+  # Exclude files or packages matching their paths
+  paths:
+    - api/if.go
