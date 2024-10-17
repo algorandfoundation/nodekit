@@ -45,7 +45,7 @@ jobs:
         run: go build .
 
       - name: Test with the Go CLI
-        run: go test -v -coverprofile=coverage.txt ./...
+        run: go test -cover -coverprofile=coverage.txt ./...
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
