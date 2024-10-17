@@ -8,7 +8,7 @@ import (
 
 // StatusModel represents a status response from algod.Status
 type StatusModel struct {
-	HeartBeat   chan uint64 // Subscription Channel
+	Metrics     MetricsModel
 	State       string
 	Version     string
 	Network     string
@@ -19,12 +19,12 @@ type StatusModel struct {
 
 // String prints the last round value
 func (m *StatusModel) String() string {
-	return fmt.Sprintf("Last round: %d", m.LastRound)
+	return fmt.Sprintf("\nLastRound: %d\nRoundTime: %f \nTPS: %f", m.LastRound, m.Metrics.RoundTime.Seconds(), m.Metrics.TPS)
 }
 
 // Fetch handles algod.Status
 func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses) error {
-	if m.Version == "" {
+	if m.Version == "" || m.Version == "NA" {
 		v, err := client.GetVersionWithResponse(ctx)
 		if err != nil {
 			return err
@@ -36,7 +36,7 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 		m.Version = fmt.Sprintf("v%d.%d.%d-%s", v.JSON200.Build.Major, v.JSON200.Build.Minor, v.JSON200.Build.BuildNumber, v.JSON200.Build.Channel)
 
 	}
-	m.HeartBeat = make(chan uint64)
+
 	s, err := client.GetStatusWithResponse(ctx)
 	if err != nil {
 		return err
@@ -51,17 +51,4 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 		m.Voting = *s.JSON200.UpgradeNodeVote
 	}
 	return nil
-}
-
-// Watch uses algod.StatusAfterBlock to wait for changes and emits to the HeartBeat channel
-func (m *StatusModel) Watch(ctx context.Context, client *api.ClientWithResponses) error {
-	lastRound := m.LastRound
-	for {
-		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
-		if err != nil {
-			return err
-		}
-		m.HeartBeat <- uint64(status.JSON200.LastRound)
-		lastRound++
-	}
 }

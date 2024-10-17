@@ -16,12 +16,7 @@ var (
 			//BorderBackground(lipgloss.Color("4")).
 			BorderForeground(lipgloss.Color("5"))
 	}
-	infoStyle = func() lipgloss.Style {
-		b := lipgloss.RoundedBorder()
-		b.Left = "┤"
-		b.Right = "├"
-		return rounderBorder.BorderStyle(b)
-	}()
+
 	blue = func() lipgloss.Style {
 		return lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
 	}()

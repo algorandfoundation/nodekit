@@ -1,9 +1,19 @@
 package ui
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 // waitForUint64 handles an uint64 subscription channel as a tea.Message
 func waitForUint64(sub chan uint64) tea.Cmd {
+	return func() tea.Msg {
+		return <-sub
+	}
+}
+
+// waitForTableRows handles an uint64 subscription channel as a tea.Message
+func waitForTableRows(sub chan []table.Row) tea.Cmd {
 	return func() tea.Msg {
 		return <-sub
 	}

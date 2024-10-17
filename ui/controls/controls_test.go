@@ -1,4 +1,4 @@
-package ui
+package controls
 
 import (
 	"bytes"
@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-func Test_ControlsViewRender(t *testing.T) {
+func Test_Controls(t *testing.T) {
 	expected := "(q)uit | (d)elete | (g)enerate | (t)xn | (h)ide"
 	// Create the Model
-	m := MakeControlViewModel()
+	m := New(expected)
 
 	tm := teatest.NewTestModel(
 		t, m,
@@ -28,11 +28,8 @@ func Test_ControlsViewRender(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-	// Send quit key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("q"),
-	})
+	// Send quit msg
+	tm.Send(tea.QuitMsg{})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

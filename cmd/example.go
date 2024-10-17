@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 )
 
-// statusCmd is the main entrypoint for the `status` cobra.Command with a tea.Program
-var statusCmd = &cobra.Command{
-	Use:   "status",
+// exampleCmd is the main entrypoint for the `status` cobra.Command with a tea.Program
+var exampleCmd = &cobra.Command{
+	Use:   "example",
 	Short: "Get the node status",
 	Long:  ui.Purple(BANNER) + "\n" + ui.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -25,28 +26,12 @@ var statusCmd = &cobra.Command{
 		// Get Algod from configuration
 		client, err := getClient()
 		cobra.CheckErr(err)
-		state := internal.StateModel{
-			Status: internal.StatusModel{
-				State:       "SYNCING",
-				Version:     "NA",
-				Network:     "NA",
-				Voting:      false,
-				NeedsUpdate: true,
-				LastRound:   0,
-			},
-			Metrics: internal.MetricsModel{
-				RoundTime: 0,
-				TPS:       0,
-				RX:        0,
-				TX:        0,
-			},
-			ParticipationKeys: nil,
-		}
-		err = state.Status.Fetch(context.Background(), client)
-		cobra.CheckErr(err)
-		// Create the TUI
-		view := ui.MakeStatusViewModel(&state)
 
+		partkeys, err := internal.GetPartKeys(context.Background(), client)
+		cobra.CheckErr(err)
+
+		// Create the TUI
+		view := keys.New((*partkeys)[0].Address, partkeys)
 		p := tea.NewProgram(view, tea.WithAltScreen())
 
 		// Execute the Command

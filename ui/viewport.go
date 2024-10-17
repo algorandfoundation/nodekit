@@ -4,26 +4,54 @@ import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
+	"github.com/algorandfoundation/hack-tui/ui/pages/generate"
+	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
+	"github.com/algorandfoundation/hack-tui/ui/pages/transaction"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-const useHighPerformanceRenderer = false
+type ViewportPage string
+
+const (
+	AccountsPage    ViewportPage = "accounts"
+	KeysPage        ViewportPage = "keys"
+	GeneratePage    ViewportPage = "generate"
+	TransactionPage ViewportPage = "transaction"
+)
 
 type ViewportViewModel struct {
-	// Status Component
-	status StatusViewModel
-	// Protocol Component
-	protocol ProtocolViewModel
-	// Application Controls
-	controls ControlViewModel
+	PageWidth, PageHeight         int
+	TerminalWidth, TerminalHeight int
 
-	ready    bool
-	viewport viewport.Model
-	// TODO: move to custom component
-	table table.Model
+	Data *internal.StateModel
+
+	// Header Components
+	status   StatusViewModel
+	protocol ProtocolViewModel
+
+	// Pages
+	accountsPage    accounts.ViewModel
+	keysPage        keys.ViewModel
+	generatePage    generate.ViewModel
+	transactionPage transaction.ViewModel
+
+	page   ViewportPage
+	client *api.ClientWithResponses
+}
+
+type DeleteFinished string
+
+func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
+	return func() tea.Msg {
+		err := internal.DeletePartKey(context.Background(), client, key.Id)
+		if err != nil {
+			return DeleteFinished(err.Error())
+		}
+		return DeleteFinished("Key deleted")
+	}
 }
 
 // Init is a no-op
@@ -37,136 +65,176 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
-
-	switch msg := msg.(type) {
-	case uint64:
-		m.status.Status.LastRound = msg
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c":
-			return m, tea.Quit
-		case "enter":
-			if m.table.SelectedRow() != nil {
-				return m, tea.Batch(
-					tea.Printf("Let's go to %s!", m.table.SelectedRow()[1]),
-				)
-			}
-
-		}
-
-	case tea.WindowSizeMsg:
-		headerHeight := lipgloss.Height(m.headerView())
-		footerHeight := lipgloss.Height(m.controls.View())
-		verticalMarginHeight := headerHeight + footerHeight
-
-		// On first run, configure the models
-		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
-			m.viewport.YPosition = headerHeight
-			m.viewport.HighPerformanceRendering = useHighPerformanceRenderer
-			m.viewport.SetContent(m.table.View())
-			m.ready = true
-
-			// TODO: Better reactivity and hidden attributes
-			fillSize := max(0, (msg.Width-49)/2)
-			columns := []table.Column{
-				{Title: "Account", Width: fillSize},
-				{Title: "Status", Width: hidden(20, fillSize)},
-				{Title: "Keys", Width: 4},
-				{Title: "Expires", Width: 15},
-				{Title: "Last Used", Width: 10},
-				{Title: "Balance", Width: fillSize},
-			}
-
-			rows := []table.Row{
-				{"QNZ7GONNHTNXFW56Y24CNJQEMYKZKKI566ASNSWPD24VSGKJWHGO6QOP7U", "Active", "4", "42 days", "NA", "42,000 ALGO"},
-				{"WZ7BQUYLGP5GCWVHH6PJJCGCIHRV4K7ZDFWHED74HGLUCB3GTDVPNFRVUM", "Cooldown (31 rounds)", "1", "169 days", "NA", "13,000 ALGO"},
-			}
-
-			m.table = table.New(
-				table.WithColumns(columns),
-				table.WithRows(rows),
-				table.WithFocused(true),
-				table.WithHeight(m.viewport.Height-verticalMarginHeight),
-			)
-
-			s := table.DefaultStyles()
-			s.Header = s.Header.
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("240")).
-				BorderBottom(true).
-				Bold(false)
-			s.Selected = s.Selected.
-				Foreground(lipgloss.Color("229")).
-				Background(lipgloss.Color("57")).
-				Bold(false)
-			m.table.SetStyles(s)
-			m.viewport.YPosition = headerHeight + 1
-		} else { // Run the update cycle
-			m.table.SetWidth(msg.Width)
-			m.table.SetHeight(msg.Height - verticalMarginHeight)
-
-			fillSize := (msg.Width - 62) / 2
-			columns := []table.Column{
-				{Title: "Account", Width: fillSize},
-				{Title: "Status", Width: hidden(20, fillSize)},
-				{Title: "Keys", Width: 4},
-				{Title: "Expires", Width: 15},
-				{Title: "Last Used", Width: 10},
-				{Title: "Balance", Width: fillSize},
-			}
-			m.table.SetColumns(columns)
-
-			m.viewport.Width = msg.Width
-			m.viewport.Height = msg.Height - verticalMarginHeight
-		}
-
-		if useHighPerformanceRenderer {
-			cmds = append(cmds, viewport.Sync(m.viewport))
-		}
-	}
-
-	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	m.controls, cmd = m.controls.HandleMessage(msg)
-	cmds = append(cmds, cmd)
+	// Handle Header Updates
 	m.protocol, cmd = m.protocol.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.status, cmd = m.status.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+
+	switch msg := msg.(type) {
+	// When the state updates
+	case internal.StateModel:
+		m.Data = &msg
+		// Navigate to the transaction page when a partkey is selected
+	case *api.ParticipationKey:
+		m.page = TransactionPage
+	// Navigate to the keys page when an account is selected
+	case internal.Account:
+		m.page = KeysPage
+	case keys.DeleteKey:
+		return m, DeleteKey(m.client, msg)
+	case DeleteFinished:
+	//	TODO
+	case tea.KeyMsg:
+		switch msg.String() {
+		// Tab Backwards
+		case "shift+tab":
+			if m.page == AccountsPage {
+				return m, nil
+			}
+			if m.page == TransactionPage {
+				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+			}
+			if m.page == KeysPage {
+				m.page = AccountsPage
+				return m, nil
+			}
+		// Tab Forwards
+		case "tab":
+			if m.page == AccountsPage {
+				m.page = KeysPage
+				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+			}
+			if m.page == KeysPage {
+				m.page = TransactionPage
+				return m, nil
+			}
+		case "g":
+			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
+			m.page = GeneratePage
+			return m, nil
+		case "a":
+			m.page = AccountsPage
+		case "k":
+			m.page = KeysPage
+			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+		case "t":
+			m.page = TransactionPage
+			// If there isn't a key already, select the first record
+			if m.keysPage.SelectedKey() == nil && m.Data != nil {
+				data := *m.Data.ParticipationKeys
+				return m, keys.EmitKeySelected(&data[0])
+			}
+			// Navigate to the transaction page
+			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
+		case "ctrl+c":
+			return m, tea.Quit
+		}
+
+	case tea.WindowSizeMsg:
+		m.TerminalWidth = msg.Width
+		m.TerminalHeight = msg.Height
+		m.PageWidth = msg.Width
+		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView())-1)
+
+		// Custom size message
+		pageMsg := tea.WindowSizeMsg{
+			Height: m.PageHeight,
+			Width:  m.PageWidth,
+		}
+
+		// Handle the page resize event
+		//switch m.page {
+		//case AccountsPage:
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(pageMsg)
+		cmds = append(cmds, cmd)
+		//case KeysPage:
+		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
+		cmds = append(cmds, cmd)
+		//case GeneratePage:
+		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
+		cmds = append(cmds, cmd)
+		//case TransactionPage:
+		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
+		cmds = append(cmds, cmd)
+		//}
+		cmds = append(cmds, cmd)
+		// Avoid triggering commands again
+		return m, tea.Batch(cmds...)
+
+	}
+	// Get Page Updates
+	switch m.page {
+	case AccountsPage:
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+	case KeysPage:
+		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+	case GeneratePage:
+		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
+	case TransactionPage:
+		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
 // View renders the viewport.Model
 func (m ViewportViewModel) View() string {
-	if !m.ready {
-		return "\n  Initializing..."
+	// Handle Page render
+	var page tea.Model
+	switch m.page {
+	case AccountsPage:
+		page = m.accountsPage
+	case GeneratePage:
+		page = m.generatePage
+	case KeysPage:
+		page = m.keysPage
+	case TransactionPage:
+		page = m.transactionPage
 	}
-	m.viewport.SetContent(m.table.View())
-	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.controls.View())
+
+	if page == nil {
+		return "Error loading page..."
+	}
+
+	return fmt.Sprintf("%s\n%s", m.headerView(), page.View())
 }
 
 // headerView generates the top elements
 func (m ViewportViewModel) headerView() string {
-	// TODO: Stack Vertically on small screens
-	render := lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
-	return render
+	if m.TerminalHeight < 15 {
+		return ""
+	}
+
+	if m.TerminalWidth < 90 {
+		if m.protocol.View() == "" {
+			return lipgloss.JoinVertical(lipgloss.Center, m.status.View())
+		}
+		return lipgloss.JoinVertical(lipgloss.Center, m.status.View(), m.protocol.View())
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
 }
 
 // MakeViewportViewModel handles the construction of the TUI viewport
-func MakeViewportViewModel(ctx context.Context, client *api.ClientWithResponses) (*ViewportViewModel, error) {
-	controls := MakeControlViewModel()
-
-	status, err := MakeStatusViewModel(ctx, client)
-	if err != nil {
-		return nil, err
-	}
-	protocol := MakeProtocolViewModel(status.Status)
-
+func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithResponses) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
-		status:   status,
-		protocol: protocol,
-		controls: controls,
+		Data: state,
+
+		// Header
+		status:   MakeStatusViewModel(state),
+		protocol: MakeProtocolViewModel(state),
+
+		// Pages
+		accountsPage:    accounts.New(state),
+		keysPage:        keys.New("", state.ParticipationKeys),
+		generatePage:    generate.New("", client),
+		transactionPage: transaction.New(),
+
+		// Current Page
+		page: AccountsPage,
+		// RPC client
+		client: client,
 	}
 
 	return &m, nil
