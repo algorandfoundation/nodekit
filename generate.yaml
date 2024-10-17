@@ -10,3 +10,4 @@ output-options:
     - Metrics
     - GetStatus
     - WaitForBlock
+    - GetVersion
