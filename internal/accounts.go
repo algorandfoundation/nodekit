@@ -25,7 +25,7 @@ type Account struct {
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
 func AccountsFromState(state *StateModel) map[string]Account {
 	values := make(map[string]Account)
-	if state == nil {
+	if state == nil || state.ParticipationKeys == nil {
 		return values
 	}
 	for _, key := range *state.ParticipationKeys {
