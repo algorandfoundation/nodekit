@@ -1,5 +1,12 @@
 services:
   algod:
     build: .
+    environment:
+      - ADMIN_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    ports:
+      - "8080:8080"
     volumes:
-      - .data:/algod/data
+      - algod:/algod/data
+volumes:
+  algod:
