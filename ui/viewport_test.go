@@ -2,8 +2,8 @@ package ui
 
 import (
 	"bytes"
-	"context"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
@@ -17,8 +17,21 @@ func Test_ViewportViewRender(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	state := internal.StateModel{
+		Status: internal.StatusModel{
+			LastRound:   1337,
+			NeedsUpdate: true,
+			State:       "SYNCING",
+		},
+		Metrics: internal.MetricsModel{
+			RoundTime: 0,
+			TX:        0,
+			RX:        0,
+			TPS:       0,
+		},
+	}
 	// Create the Model
-	m, err := MakeViewportViewModel(context.Background(), client)
+	m, err := MakeViewportViewModel(&state, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +54,7 @@ func Test_ViewportViewRender(t *testing.T) {
 	// Send quit key
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
-		Runes: []rune("q"),
+		Runes: []rune("ctrl+c"),
 	})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))

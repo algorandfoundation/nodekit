@@ -1,12 +1,13 @@
 package internal
 
 import (
+	"strings"
 	"testing"
 )
 
 func Test_StatusModel(t *testing.T) {
 	m := StatusModel{LastRound: 0}
-	if m.String() != "Last round: 0" {
-		t.Fatal("expected \"Last round: 0\", got ", m.String())
+	if !strings.Contains(m.String(), "LastRound: 0") {
+		t.Fatal("expected \"LastRound: 0\", got ", m.String())
 	}
 }

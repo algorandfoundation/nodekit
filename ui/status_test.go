@@ -2,46 +2,32 @@ package ui
 
 import (
 	"bytes"
-	"context"
-	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
-	"strings"
 	"testing"
 	"time"
 )
 
-func Test_InvalidStatusViewModel(t *testing.T) {
-	client, err := api.NewClientWithResponses("http://255.255.255.255:4001")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Test Invalid Node
-	_, err = MakeStatusViewModel(context.Background(), client)
-	if !strings.Contains(err.Error(), "dial tcp 255.255.255.255:4001") {
-		t.Fatal(err)
-	}
-}
 func Test_StatusViewRender(t *testing.T) {
-	status := internal.StatusModel{
-		HeartBeat:   make(chan uint64),
-		LastRound:   0,
-		NeedsUpdate: true,
-		State:       "SYNCING",
-	}
-	// Create the Model
-	m := StatusViewModel{
-		Status: &status,
-		Metrics: &internal.MetricsModel{
+	state := internal.StateModel{
+		Status: internal.StatusModel{
+			LastRound:   1337,
+			NeedsUpdate: true,
+			State:       "SYNCING",
+		},
+		Metrics: internal.MetricsModel{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,
 			TPS:       0,
 		},
-		ViewWidth: 80,
-		IsVisible: true,
+	}
+	// Create the Model
+	m := StatusViewModel{
+		Data:          &state,
+		TerminalWidth: 80,
+		IsVisible:     true,
 	}
 
 	tm := teatest.NewTestModel(
@@ -53,7 +39,7 @@ func Test_StatusViewRender(t *testing.T) {
 	teatest.WaitFor(
 		t, tm.Output(),
 		func(bts []byte) bool {
-			return bytes.Contains(bts, []byte("Latest Round: 0"))
+			return bytes.Contains(bts, []byte("Latest Round: 1337"))
 		},
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
@@ -68,7 +54,7 @@ func Test_StatusViewRender(t *testing.T) {
 	// Send quit key
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
-		Runes: []rune("q"),
+		Runes: []rune("ctrl+c"),
 	})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
