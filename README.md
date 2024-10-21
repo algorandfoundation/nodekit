@@ -1,7 +1,7 @@
 # ⌨️ Hack-TUI
 
 <div align="center">
-    <img alt="Terminal Render" src="https://raw.githubusercontent.com/algorandfoundation/hack-tui/refs/heads/main/assets/Banner.gif" width="65%">
+    <img alt="Terminal Render" src="/assets/Banner.gif" width="65%">
 </div>
 
 <div align="center">
@@ -10,14 +10,6 @@
     </a>
     <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
         <img alt="CD Badge" src="https://img.shields.io/badge/CD-TODO-red"/>
-    </a>
-    <a
-        target="_blank"
-        href="https://www.contributor-covenant.org/version/2/1/code_of_conduct/">
-            <img
-                alt="Code of Conduct Badge"
-                src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg"
-            />
     </a>
     <a target="_blank" href="https://github.com/algorandfoundation/hack-tui/stargazers">
         <img alt="Repository Stars Badge" src="https://img.shields.io/github/stars/algorandfoundation/hack-tui?color=7B1E7A&logo=star&style=flat" />
