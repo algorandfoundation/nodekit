@@ -123,7 +123,6 @@ func init() {
 
 	// Add Commands
 	rootCmd.AddCommand(statusCmd)
-	rootCmd.AddCommand(exampleCmd)
 }
 
 // Execute executes the root command.
