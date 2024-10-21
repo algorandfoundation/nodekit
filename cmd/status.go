@@ -48,7 +48,12 @@ var statusCmd = &cobra.Command{
 		view := ui.MakeStatusViewModel(&state)
 
 		p := tea.NewProgram(view, tea.WithAltScreen())
-
+		go func() {
+			state.Watch(func(status *internal.StateModel, err error) {
+				cobra.CheckErr(err)
+				p.Send(state)
+			}, context.Background(), client)
+		}()
 		// Execute the Command
 		if _, err := p.Run(); err != nil {
 			fmt.Printf("Alas, there's been an error: %v", err)
