@@ -1,27 +1,12 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-// EmitKeySelected waits for and retrieves a new set of table rows from a given channel.
-func EmitKeySelected(key *api.ParticipationKey) tea.Cmd {
-	return func() tea.Msg {
-		return key
-	}
-}
-
-type DeleteKey *api.ParticipationKey
-
-func EmitDeleteKey(key *api.ParticipationKey) tea.Cmd {
-	return func() tea.Msg {
-		return DeleteKey(key)
-	}
-}
 func (m ViewModel) Init() tea.Cmd {
 	return nil
 }

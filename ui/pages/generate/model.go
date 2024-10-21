@@ -4,7 +4,6 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 type ViewModel struct {
@@ -13,18 +12,6 @@ type ViewModel struct {
 	client     *api.ClientWithResponses
 	focusIndex int
 	cursorMode cursor.Mode
-}
-
-func (m *ViewModel) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.Inputs))
-
-	// Only text inputs with Focus() set will respond, so it's safe to simply
-	// update all of them here without any further logic.
-	for i := range m.Inputs {
-		m.Inputs[i], cmds[i] = m.Inputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
 }
 
 func New(address string, client *api.ClientWithResponses) ViewModel {

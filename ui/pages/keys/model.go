@@ -10,8 +10,6 @@ import (
 	"sort"
 )
 
-var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-
 type ViewModel struct {
 	Address string
 	Data    *[]api.ParticipationKey

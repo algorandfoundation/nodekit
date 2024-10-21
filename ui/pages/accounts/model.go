@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-
 type ViewModel struct {
 	Width  int
 	Height int

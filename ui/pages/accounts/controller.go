@@ -7,12 +7,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// EmitAccountSelected waits for and retrieves a new set of table rows from a given channel.
-func EmitAccountSelected(account internal.Account) tea.Cmd {
-	return func() tea.Msg {
-		return account
-	}
-}
 func (m ViewModel) Init() tea.Cmd {
 	return nil
 }
