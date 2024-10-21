@@ -53,7 +53,7 @@ func (m ViewModel) Init(){}
 func (m ViewModel) Update(){}
 ```
 
-#### ui/status/view/go
+#### ui/status/view.go
 
 ```go
 package status
@@ -61,4 +61,27 @@ package status
 func (m ViewModel) View() string {
 	return "Amazing View"
 }
+```
+
+#### ui/status/cmds.go
+
+```go
+package status
+
+func EmitSomething(thing internal.Something) tea.Cmd {
+	return func() tea.Msg {
+		return thing
+	}
+}
+
+```
+
+#### ui/status/style.go
+
+```go
+package status
+
+import "github.com/charmbracelet/lipgloss"
+
+var someStyle = lipgloss.NewStyle()
 ```
