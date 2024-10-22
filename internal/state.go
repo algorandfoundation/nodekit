@@ -12,6 +12,9 @@ type StateModel struct {
 	Metrics           MetricsModel
 	Accounts          map[string]Account
 	ParticipationKeys *[]api.ParticipationKey
+	// TODO: handle contexts instead of adding it to state
+	Admin    bool
+	Watching bool
 }
 
 func getAverage(data []float64) float64 {
@@ -30,7 +33,10 @@ func getAverageDuration(timings []time.Duration) time.Duration {
 	return time.Duration(avg * float64(time.Second))
 }
 
+// TODO: allow context to handle loop
 func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client *api.ClientWithResponses) {
+	s.Watching = true
+
 	err := s.Status.Fetch(ctx, client)
 	if err != nil {
 		cb(nil, err)
@@ -44,6 +50,9 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 	txns := make([]float64, 0)
 
 	for {
+		if !s.Watching {
+			break
+		}
 		// Collect Time of Round
 		startTime := time.Now()
 		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
@@ -62,13 +71,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Status.LastRound = uint64(status.JSON200.LastRound)
 
 		// Fetch Keys
-		s.ParticipationKeys, err = GetPartKeys(ctx, client)
-		if err != nil {
-			cb(nil, err)
-		}
-
-		// Get Accounts
-		s.Accounts = AccountsFromState(s)
+		s.UpdateKeys(ctx, client)
 
 		// Fetch Block
 		var format api.GetBlockParamsFormat = "json"
@@ -88,11 +91,10 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			txns = append(txns, 0)
 		}
 
-		// Set Metrics
-		s.Metrics.RoundTime = getAverageDuration(timings)
-		s.Metrics.Window = len(timings)
-		s.Metrics.TPS = getAverage(txns)
-
+		// Fetch RX/TX every 5th round
+		if s.Status.LastRound%5 == 0 {
+			s.UpdateMetrics(ctx, client, timings, txns)
+		}
 		// Trim data
 		if len(timings) >= 100 {
 			timings = timings[1:]
@@ -101,5 +103,51 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 
 		lastRound = s.Status.LastRound
 		cb(s, nil)
+	}
+}
+
+func (s *StateModel) Stop() {
+	s.Watching = false
+}
+
+func (s *StateModel) UpdateMetrics(
+	ctx context.Context,
+	client *api.ClientWithResponses,
+	timings []time.Duration,
+	txns []float64,
+) {
+	if s == nil {
+		panic("StateModel is nil while UpdateMetrics is called")
+	}
+	// Set Metrics
+	s.Metrics.RoundTime = getAverageDuration(timings)
+	s.Metrics.Window = len(timings)
+	s.Metrics.TPS = getAverage(txns)
+
+	// Fetch RX/TX
+	res, err := GetMetrics(ctx, client)
+	if err != nil {
+		s.Metrics.Enabled = false
+	}
+	if err == nil {
+		s.Metrics.Enabled = true
+		s.Metrics.TX = res["algod_network_sent_bytes_total"]
+		s.Metrics.RX = res["algod_network_received_bytes_total"]
+	}
+}
+
+func (s *StateModel) UpdateAccounts() {
+	s.Accounts = AccountsFromState(s)
+}
+
+func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithResponses) {
+	var err error
+	s.ParticipationKeys, err = GetPartKeys(ctx, client)
+	if err != nil {
+		s.Admin = false
+	}
+	if err == nil {
+		s.Admin = true
+		s.UpdateAccounts()
 	}
 }

@@ -22,8 +22,10 @@ type Account struct {
 	LastModified int
 }
 
-// AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel) map[string]Account {
+type Accounts map[string]Account
+
+// AccountsFromState maps the StateModel to a keyed map of Account
+func AccountsFromState(state *StateModel) Accounts {
 	values := make(map[string]Account)
 	if state == nil || state.ParticipationKeys == nil {
 		return values
@@ -31,7 +33,7 @@ func AccountsFromState(state *StateModel) map[string]Account {
 	for _, key := range *state.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
-
+			// TODO: update from State
 			values[key.Address] = Account{
 				Address: key.Address,
 				Status:  "NA",
@@ -41,7 +43,6 @@ func AccountsFromState(state *StateModel) map[string]Account {
 			}
 		} else {
 			val.Keys++
-			//val.
 			values[key.Address] = val
 		}
 	}
