@@ -45,7 +45,7 @@ var (
 
 			state := internal.StateModel{
 				Status: internal.StatusModel{
-					State:       "SYNCING",
+					State:       "INITIALIZING",
 					Version:     "NA",
 					Network:     "NA",
 					Voting:      false,
