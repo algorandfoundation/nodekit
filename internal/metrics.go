@@ -1,9 +1,11 @@
 package internal
 
+import "time"
+
 type MetricsModel struct {
-	// TODO: Channel emissions
-	RoundTime float64
-	TPS       int
+	Window    int
+	RoundTime time.Duration
+	TPS       float64
 	RX        int
 	TX        int
 }

@@ -10,11 +10,10 @@ import (
 
 // ProtocolViewModel includes the internal.StatusModel and internal.MetricsModel
 type ProtocolViewModel struct {
-	tea.Model
-	Status    *internal.StatusModel
-	Metrics   *internal.MetricsModel
-	ViewWidth int
-	IsVisible bool
+	Data           internal.StatusModel
+	TerminalWidth  int
+	TerminalHeight int
+	IsVisible      bool
 }
 
 // Init has no I/O right now
@@ -31,15 +30,21 @@ func (m ProtocolViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // It handles tea.WindowSizeMsg to update ViewWidth and tea.KeyMsg for key events like 'h' to toggle visibility and 'q' or 'ctrl+c' to quit.
 func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	// Handle a Status Update
+	case internal.StatusModel:
+		m.Data = msg
+		return m, nil
 	// Update Viewport Size
 	case tea.WindowSizeMsg:
-		m.ViewWidth = msg.Width
+		m.TerminalWidth = msg.Width
+		m.TerminalHeight = msg.Height
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		// The H key should hide the render
 		case "h":
 			m.IsVisible = !m.IsVisible
-		case "q", "ctrl+c":
+		case "ctrl+c":
 			return m, tea.Quit
 		}
 	}
@@ -52,46 +57,57 @@ func (m ProtocolViewModel) View() string {
 	if !m.IsVisible {
 		return ""
 	}
-	if m.ViewWidth <= 0 {
+	if m.TerminalWidth <= 0 {
 		return "Loading...\n\n\n\n\n\n"
 	}
-	beginning := blue.Render(" Node: ") + m.Status.Version
-	end := ""
-	if m.Status.NeedsUpdate {
-		end = green.Render("[UPDATE AVAILABLE] ")
+	beginning := blue.Render(" Node: ") + m.Data.Version
+
+	isCompact := m.TerminalWidth < 90
+
+	if isCompact && m.TerminalHeight < 26 {
+		return ""
 	}
 
-	middle := strings.Repeat(" ", max(0, m.ViewWidth/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+	end := ""
+	if m.Data.NeedsUpdate && !isCompact {
+		end += green.Render("[UPDATE AVAILABLE] ")
+	}
 
+	var size int
+	if isCompact {
+		size = m.TerminalWidth
+	} else {
+		size = m.TerminalWidth / 2
+	}
+
+	middle := strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+
+	var rows []string
 	// Last Round
-	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
+	rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end))
+	if !isCompact {
+		rows = append(rows, "")
+	}
+	rows = append(rows, blue.Render(" Network: ")+m.Data.Network)
+	if !isCompact {
+		rows = append(rows, "")
+	}
+	rows = append(rows, blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
 
-	row2 := blue.Render(" Network: ") + m.Status.Network
-
-	row3 := blue.Render(" Protocol Voting: ") + strconv.FormatBool(m.Status.Voting)
-
-	return topSections(max(0, m.ViewWidth/2)).Render(lipgloss.JoinVertical(lipgloss.Left,
-		row1,
-		"",
-		row2,
-		"",
-		row3,
+	if isCompact && m.Data.NeedsUpdate {
+		rows = append(rows, blue.Render(" Upgrade Available: ")+green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
+	}
+	return topSections(max(0, size)).Render(lipgloss.JoinVertical(lipgloss.Left,
+		rows...,
 	))
 }
 
 // MakeProtocolViewModel constructs a ProtocolViewModel using a given StatusModel and predefined metrics.
-func MakeProtocolViewModel(status *internal.StatusModel) ProtocolViewModel {
-	metrics := internal.MetricsModel{
-		RoundTime: 2.87,
-		TPS:       55,
-		RX:        82 * 1024,
-		TX:        205 * 1024,
-	}
-
+func MakeProtocolViewModel(state *internal.StateModel) ProtocolViewModel {
 	return ProtocolViewModel{
-		Status:    status,
-		Metrics:   &metrics,
-		ViewWidth: 0,
-		IsVisible: true,
+		Data:           state.Status,
+		TerminalWidth:  0,
+		TerminalHeight: 0,
+		IsVisible:      true,
 	}
 }

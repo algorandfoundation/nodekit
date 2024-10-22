@@ -11,3 +11,10 @@ output-options:
     - GetStatus
     - WaitForBlock
     - GetVersion
+    - GetParticipationKeys
+    - AddParticipationKey
+    - GenerateParticipationKeys
+    - DeleteParticipationKeyByID
+    - GetParticipationKeyByID
+    - AppendKeys
+    - GetBlock
