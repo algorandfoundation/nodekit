@@ -3,9 +3,8 @@ package transaction
 import (
 	"context"
 
-	encoder "github.com/algonode/algourl/encoder"
-	msgpack "github.com/algorand/go-algorand-sdk/encoding/msgpack"
-	types "github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/hack-tui/api"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -19,8 +18,9 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 
-func (m ViewModel) UpdateTxnURLAndQRCode() error {
+func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 
+	// Get Online Status of Account
 	var format api.AccountInformationParamsFormat = "json"
 	r, err := m.Client.AccountInformationWithResponse(
 		context.Background(),
@@ -33,11 +33,12 @@ func (m ViewModel) UpdateTxnURLAndQRCode() error {
 		return err
 	}
 
-	goOnline := false
+	isOnline := false
 	if r.JSON200.Status == "Online" {
-		goOnline = true
+		isOnline = true
 	}
 
+	// Construct Transaction
 	tx := types.Transaction{}
 
 	senderAddress, err := types.DecodeAddress(m.Data.Address)
@@ -45,17 +46,17 @@ func (m ViewModel) UpdateTxnURLAndQRCode() error {
 		return err
 	}
 
-	if goOnline {
+	if isOnline { // TX take account online
 		var stateProofPk types.MerkleVerifier
 		copy(stateProofPk[:], (*m.Data.Key.StateProofKey)[:])
 
 		tx = types.Transaction{
 			Type: types.KeyRegistrationTx,
 			Header: types.Header{
-				Sender:      senderAddress,
-				Fee:         0,
-				FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
-				LastValid:   types.Round(*m.Data.EffectiveLastValid),
+				Sender: senderAddress,
+				Fee:    0, //TODO: get proper fee
+				//FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
+				//LastValid:   types.Round(*m.Data.EffectiveLastValid),
 				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
 				GenesisID:   m.NetworkParams.Network,
 			},
@@ -69,22 +70,26 @@ func (m ViewModel) UpdateTxnURLAndQRCode() error {
 			},
 		}
 
-	} else {
+	} else { // TX to take account offline
 		tx = types.Transaction{
 			Type: types.KeyRegistrationTx,
 			Header: types.Header{
-				Sender:      senderAddress,
-				Fee:         0,
-				FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
-				LastValid:   types.Round(*m.Data.EffectiveLastValid),
+				Sender: senderAddress,
+				Fee:    0, //TODO: get proper fee
+				//FirstValid: types.Round(*m.Data.EffectiveFirstValid), //TODO: Determine if this is needed
+				//LastValid:   types.Round(*m.Data.EffectiveLastValid),
 				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
 				GenesisID:   m.NetworkParams.Network,
 			},
 		}
 	}
 
-	encodedTxn := msgpack.Encode(tx)
-	kr, err := encoder.MakeQRKeyRegRequest(encodedTxn)
+	// Construct QR Code
+
+	kr, err := encoder.MakeQRKeyRegRequest(
+		encoder.RawTxn{
+			Txn: tx,
+		})
 
 	if err != nil {
 		return err
@@ -106,8 +111,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	// When the participation key updates, set the models data
-	case api.ParticipationKey:
-		m.Data = msg
+
+	case *api.ParticipationKey:
+		m.Data = *msg
 
 		err := m.UpdateTxnURLAndQRCode()
 		if err != nil {

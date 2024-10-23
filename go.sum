@@ -1,12 +1,10 @@
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
-github.com/algonode/algourl v0.0.0-20241019213625-74154582e3d5 h1:OXuvUO08ZCvwLsUdiGgs/fBn51Hynoe+zsERunzCP6k=
-github.com/algonode/algourl v0.0.0-20241019213625-74154582e3d5/go.mod h1:ge/QtZi9BNjnp/WFOsiyX3OeJgHzxMNr1PIz+If2aAM=
-github.com/algorand/go-algorand-sdk v1.24.0 h1:mi8vqjXMC5nU87snq4vxHi+NgPR0thtZHRLA16FKZMM=
-github.com/algorand/go-algorand-sdk v1.24.0/go.mod h1:WEeJcctOHMzDFTgVJ6GT8BLUo9DbFTT47S+Kzx7ffXQ=
 github.com/algorand/go-algorand-sdk/v2 v2.6.0 h1:pfL8lloEi26l6PwAFicmPUguWgKpy1eZZTMlQcci5h0=
 github.com/algorand/go-algorand-sdk/v2 v2.6.0/go.mod h1:4ayerzjoWChm3kuVhbgFgURTbaYTtlj0c41eP3av5lw=
 github.com/algorand/go-codec/codec v1.1.10 h1:zmWYU1cp64jQVTOG8Tw8wa+k0VfwgXIPbnDfiVa+5QA=
 github.com/algorand/go-codec/codec v1.1.10/go.mod h1:YkEx5nmr/zuCeaDYOIhlDg92Lxju8tj2d2NrYqP7g7k=
+github.com/algorandfoundation/algourl v0.0.0-20241023193235-8bbf72ad0b37 h1:zt00SDlTcFiYPvq+Wo/ZDmRwM2gBRW/VhOQ/zaplBAk=
+github.com/algorandfoundation/algourl v0.0.0-20241023193235-8bbf72ad0b37/go.mod h1:o91gtX3JDwJpS10P5cm6dwUsArtNtX+3kDshhelHTJ8=
 github.com/algorandfoundation/go-tinyqr v0.0.0-20241018103413-2082a3d637eb h1:NFKjd5BKatUpYUXiofxvWd0VqVoinsVzugtQw/W+vKs=
 github.com/algorandfoundation/go-tinyqr v0.0.0-20241018103413-2082a3d637eb/go.mod h1:j4+scGl0Oz2rw+bnoPxfmvregASzMapI5ydPrGzTDBU=
 github.com/apapsch/go-jsonmerge/v2 v2.0.0 h1:axGnT1gRIfimI7gJifB699GoE/oq+F2MU7Dml6nw9rQ=

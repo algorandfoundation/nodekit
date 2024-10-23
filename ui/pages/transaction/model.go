@@ -26,7 +26,7 @@ type ViewModel struct {
 	// Participation Key
 	Data api.ParticipationKey
 
-	// Network/Genesis id and Genesis Hash
+	// Genesis ID and Genesis Hash
 	NetworkParams NetworkParameters
 
 	// client is the API client
@@ -42,12 +42,27 @@ type ViewModel struct {
 
 // New creates and instance of the ViewModel with a default controls.Model
 func New(state *internal.StateModel, client *api.ClientWithResponses) ViewModel {
+
+	// // Open the file
+	// file, err := os.Open("utx.bytes")
+	// if err != nil {
+	// 	fmt.Printf("Error opening file: %v\n", err)
+	// 	panic(err)
+	// }
+	// defer file.Close()
+
+	// encodedTxn, err := io.ReadAll(file)
+	// kr, err := encoder.MakeQRKeyRegRequest(encodedTxn)
+	// qrCode, err := kr.ProduceQRCode()
+
 	return ViewModel{
 		Client: client,
 		NetworkParams: NetworkParameters{
 			Network:     state.Status.Network,
 			GenesisHash: state.Status.GenesisHash,
 		},
+		// urlTxn:   kr.String(),
+		// asciiQR:  qrCode,
 		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn ")),
 	}
 }

@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.23.1
 
 require (
-	github.com/algonode/algourl v0.0.0-20241019213625-74154582e3d5
+	github.com/algorandfoundation/algourl v0.0.0-20241023193235-8bbf72ad0b37
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.1
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -20,7 +20,6 @@ require (
 require gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 
 require (
-	github.com/algorand/go-algorand-sdk v1.24.0
 	github.com/algorand/go-algorand-sdk/v2 v2.6.0
 	github.com/algorand/go-codec/codec v1.1.10 // indirect
 	github.com/algorandfoundation/go-tinyqr v0.0.0-20241018103413-2082a3d637eb // indirect
