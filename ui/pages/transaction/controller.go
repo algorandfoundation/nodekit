@@ -46,7 +46,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 		return err
 	}
 
-	if isOnline { // TX take account online
+	if !isOnline { // TX take account online
 		var stateProofPk types.MerkleVerifier
 		copy(stateProofPk[:], (*m.Data.Key.StateProofKey)[:])
 
