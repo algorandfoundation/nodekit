@@ -1,8 +1,7 @@
 package transaction
 
 import (
-	"encoding/base64"
-	"fmt"
+	"context"
 
 	encoder "github.com/algonode/algourl/encoder"
 	msgpack "github.com/algorand/go-algorand-sdk/encoding/msgpack"
@@ -20,29 +19,24 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 
-type NetworkParameters struct {
-	Network     string
-	GenesisHash []byte
-}
-
 func (m ViewModel) UpdateTxnURLAndQRCode() error {
 
-	// TODO: Replace with a check for online status
-	goOnline := true
-	///////////////////////////////////////////////
+	var format api.AccountInformationParamsFormat = "json"
+	r, err := m.Client.AccountInformationWithResponse(
+		context.Background(),
+		m.Data.Address,
+		&api.AccountInformationParams{
+			Format: &format,
+		})
 
-	// TODO: Replace with a fetch of the actual genesis id and hash
-	genesisHash, err := base64.StdEncoding.DecodeString("wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=")
 	if err != nil {
-		fmt.Printf("Failed to decode genesis hash: %v\n", err)
 		return err
 	}
 
-	extStatus := NetworkParameters{
-		Network:     "mainnet-v1.0",
-		GenesisHash: genesisHash,
+	goOnline := false
+	if r.JSON200.Status == "Online" {
+		goOnline = true
 	}
-	///////////////////////////////////////////////
 
 	tx := types.Transaction{}
 
@@ -62,8 +56,8 @@ func (m ViewModel) UpdateTxnURLAndQRCode() error {
 				Fee:         0,
 				FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
 				LastValid:   types.Round(*m.Data.EffectiveLastValid),
-				GenesisHash: types.Digest(extStatus.GenesisHash),
-				GenesisID:   extStatus.Network,
+				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
+				GenesisID:   m.NetworkParams.Network,
 			},
 			KeyregTxnFields: types.KeyregTxnFields{
 				VotePK:          types.VotePK(m.Data.Key.VoteParticipationKey),
@@ -83,8 +77,8 @@ func (m ViewModel) UpdateTxnURLAndQRCode() error {
 				Fee:         0,
 				FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
 				LastValid:   types.Round(*m.Data.EffectiveLastValid),
-				GenesisHash: types.Digest(extStatus.GenesisHash),
-				GenesisID:   extStatus.Network,
+				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
+				GenesisID:   m.NetworkParams.Network,
 			},
 		}
 	}

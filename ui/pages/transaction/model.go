@@ -2,11 +2,17 @@ package transaction
 
 import (
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+
+type NetworkParameters struct {
+	Network     string
+	GenesisHash []byte
+}
 
 type ViewModel struct {
 	// Width is the last known horizontal lines
@@ -20,6 +26,12 @@ type ViewModel struct {
 	// Participation Key
 	Data api.ParticipationKey
 
+	// Network/Genesis id and Genesis Hash
+	NetworkParams NetworkParameters
+
+	// client is the API client
+	Client *api.ClientWithResponses
+
 	// Components
 	controls controls.Model
 
@@ -29,8 +41,13 @@ type ViewModel struct {
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
-func New() ViewModel {
+func New(state *internal.StateModel, client *api.ClientWithResponses) ViewModel {
 	return ViewModel{
+		Client: client,
+		NetworkParams: NetworkParameters{
+			Network:     state.Status.Network,
+			GenesisHash: state.Status.GenesisHash,
+		},
 		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn ")),
 	}
 }
