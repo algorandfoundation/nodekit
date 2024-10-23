@@ -14,19 +14,23 @@ type ViewModel struct {
 	// Height is the last known vertical lines
 	Height int
 
+	// QRWontFit is a flag to indicate the QR code is too large to display
+	QRWontFit bool
+
 	// Participation Key
 	Data api.ParticipationKey
 
 	// Components
 	controls controls.Model
 
-	// TODO: add URL
-	// urlTxn   string
+	// QR Code and URL
+	asciiQR string
+	urlTxn  string
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
 func New() ViewModel {
 	return ViewModel{
-		controls: controls.New(" (a)ccunts | (k)eys | " + green.Render("(t)xn ")),
+		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn ")),
 	}
 }

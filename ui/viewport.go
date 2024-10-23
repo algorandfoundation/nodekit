@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
