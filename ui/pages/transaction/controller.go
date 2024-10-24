@@ -18,9 +18,19 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 
-	isOnline := false
-	if m.State.Accounts[m.Data.Address].Status == "Online" {
+	accountStatus := m.State.Accounts[m.Data.Address].Status
+
+	var isOnline bool
+
+	switch accountStatus {
+	case "Offline":
+		isOnline = false
+	case "Online":
 		isOnline = true
+	case "NotParticipating": // This status means the account can never participate in consensus
+		m.urlTxn = ""
+		m.asciiQR = ""
+		return nil
 	}
 
 	// Construct Transaction
