@@ -20,6 +20,7 @@ const (
 	KeysPage        ViewportPage = "keys"
 	GeneratePage    ViewportPage = "generate"
 	TransactionPage ViewportPage = "transaction"
+	ErrorPage       ViewportPage = "error"
 )
 
 type ViewportViewModel struct {
@@ -40,6 +41,10 @@ type ViewportViewModel struct {
 
 	page   ViewportPage
 	client *api.ClientWithResponses
+
+	// Error Handler
+	errorMsg  *string
+	errorPage ErrorViewModel
 }
 
 type DeleteFinished string
@@ -72,6 +77,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case error:
+		strMsg := msg.Error()
+		m.errorMsg = &strMsg
 	// When the state updates
 	case internal.StateModel:
 		m.Data = &msg
@@ -158,6 +166,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		//}
+		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
 		return m, tea.Batch(cmds...)
@@ -180,6 +189,13 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the viewport.Model
 func (m ViewportViewModel) View() string {
+	errMsg := m.errorMsg
+
+	if errMsg != nil {
+		m.errorPage.Message = *errMsg
+		m.page = ErrorPage
+	}
+
 	// Handle Page render
 	var page tea.Model
 	switch m.page {
@@ -191,6 +207,8 @@ func (m ViewportViewModel) View() string {
 		page = m.keysPage
 	case TransactionPage:
 		page = m.transactionPage
+	case ErrorPage:
+		page = m.errorPage
 	}
 
 	if page == nil {
@@ -235,6 +253,8 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		page: AccountsPage,
 		// RPC client
 		client: client,
+
+		errorPage: NewErrorViewModel(""),
 	}
 
 	return &m, nil

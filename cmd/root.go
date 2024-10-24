@@ -75,8 +75,12 @@ var (
 			)
 			go func() {
 				state.Watch(func(status *internal.StateModel, err error) {
-					cobra.CheckErr(err)
-					p.Send(state)
+					if err == nil {
+						p.Send(state)
+					}
+					if err != nil {
+						p.Send(err)
+					}
 				}, context.Background(), client)
 			}()
 			_, err = p.Run()
