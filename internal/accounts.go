@@ -1,14 +1,17 @@
 package internal
 
 import (
+	"context"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 // Account represents a user's account, including address, status, balance, and number of keys.
 type Account struct {
 	// Account Address is the algorand encoded address
 	Address string
-	// Status is general information about the account
+	// Status is the Online/Offline/"NotParticipating" status of the account
 	Status string
 	// Balance is the current holdings in ALGO for the address.
 	// the balance should be tracked infrequently and use an appropriate distance from the
@@ -22,8 +25,25 @@ type Account struct {
 	LastModified int
 }
 
+// Get Online Status of Account
+func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (string, error) {
+	var format api.AccountInformationParamsFormat = "json"
+	r, err := client.AccountInformationWithResponse(
+		context.Background(),
+		address,
+		&api.AccountInformationParams{
+			Format: &format,
+		})
+
+	if err != nil {
+		return "N/A", err
+	}
+
+	return r.JSON200.Status, nil
+}
+
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel) map[string]Account {
+func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[string]Account {
 	values := make(map[string]Account)
 	if state == nil || state.ParticipationKeys == nil {
 		return values
@@ -32,9 +52,16 @@ func AccountsFromState(state *StateModel) map[string]Account {
 		val, ok := values[key.Address]
 		if !ok {
 
+			statusOnline, err := getAccountOnlineStatus(client, key.Address)
+
+			if err != nil {
+				// TODO: Logging
+				panic(err)
+			}
+
 			values[key.Address] = Account{
 				Address: key.Address,
-				Status:  "NA",
+				Status:  statusOnline,
 				Balance: 0,
 				Expires: time.Unix(0, 0),
 				Keys:    1,

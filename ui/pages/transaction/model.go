@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,8 +21,8 @@ type ViewModel struct {
 	// Participation Key
 	Data api.ParticipationKey
 
-	// client is the API client
-	Client *api.ClientWithResponses
+	// Pointer to the State
+	State *internal.StateModel
 
 	// Components
 	controls controls.Model
@@ -32,9 +33,9 @@ type ViewModel struct {
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
-func New(client *api.ClientWithResponses) ViewModel {
+func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
-		Client:   client,
+		State:    state,
 		controls: controls.New(" (a)ccounts | (k)eys | (t)xn "),
 	}
 }

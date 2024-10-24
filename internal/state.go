@@ -3,8 +3,9 @@ package internal
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/api"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 type StateModel struct {
@@ -68,7 +69,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		}
 
 		// Get Accounts
-		s.Accounts = AccountsFromState(s)
+		s.Accounts = AccountsFromState(s, client)
 
 		// Fetch Block
 		var format api.GetBlockParamsFormat = "json"

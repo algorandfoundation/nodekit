@@ -1,8 +1,6 @@
 package transaction
 
 import (
-	"context"
-
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/hack-tui/api"
@@ -20,21 +18,8 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 
-	// Get Online Status of Account
-	var format api.AccountInformationParamsFormat = "json"
-	r, err := m.Client.AccountInformationWithResponse(
-		context.Background(),
-		m.Data.Address,
-		&api.AccountInformationParams{
-			Format: &format,
-		})
-
-	if err != nil {
-		return err
-	}
-
 	isOnline := false
-	if r.JSON200.Status == "Online" {
+	if m.State.Accounts[m.Data.Address].Status == "Online" {
 		isOnline = true
 	}
 
@@ -77,7 +62,6 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 	}
 
 	// Construct QR Code
-
 	kr, err := encoder.MakeQRKeyRegRequest(
 		encoder.RawTxn{
 			Txn: tx,
@@ -88,6 +72,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 	}
 
 	qrCode, err := kr.ProduceQRCode()
+
 	if err != nil {
 		return err
 	}
