@@ -2,6 +2,8 @@ package internal
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
@@ -37,6 +39,10 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 
 	if err != nil {
 		return "N/A", err
+	}
+
+	if r.StatusCode() != 200 {
+		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
 	}
 
 	return r.JSON200.Status, nil
