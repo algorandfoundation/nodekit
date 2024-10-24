@@ -19,8 +19,8 @@
 
 ---
 
-Terminal UI for managing Algorand nodes. 
-Built with [bubbles](https://github.com/charmbracelet/bubbles)/[bubbletea](https://github.com/charmbracelet/bubbletea) 
+Terminal UI for managing Algorand nodes.
+Built with [bubbles](https://github.com/charmbracelet/bubbles)/[bubbletea](https://github.com/charmbracelet/bubbletea)
 
 # 🚀 Get Started
 
@@ -52,7 +52,7 @@ Start a participation node
 docker compose up
 ```
 
-Connect to the node 
+Connect to the node
 
 ```bash
 ./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -69,7 +69,7 @@ Configuration is loaded in the following order:
    2. Home Directory
    3. /etc/algorun/
 2. ENV Configuration
-   - ALGORUN_*
+   - ALGORUN\_\*
 3. CLI Flag Arguments
 4. ALGORAND_DATA parsing
 
@@ -80,24 +80,23 @@ This results in `ALGORAND_DATA` taking precedence in the loading order.
 Example configuration file:
 
 ```yaml
-server: "http://localhost:4001"
+server: "http://localhost:8080"
 token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 ```
 
 ### Environment Variables
 
 | Name           | Example                                                                          |
-|----------------|----------------------------------------------------------------------------------|
-| ALGORUN_SERVER | ALGORUN_SERVER="http://localhost:4001"                                           |
+| -------------- | -------------------------------------------------------------------------------- |
+| ALGORUN_SERVER | ALGORUN_SERVER="http://localhost:8080"                                           |
 | ALGORUN_TOKEN  | ALGORUN_TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
-
 
 ### Flags
 
 The application supports the `server` and `token` flags for configuration.
 
 ```bash
-algorun --server http://localhost:4001 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
 ## 🧑‍💻 Commands
