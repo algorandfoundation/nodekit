@@ -41,6 +41,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		}
 		if status.StatusCode() != 200 {
 			cb(nil, errors.New(status.Status()))
+			return
 		}
 
 		// Update Status
