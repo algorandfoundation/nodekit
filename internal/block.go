@@ -30,10 +30,11 @@ type BlockMetrics struct {
 }
 
 func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round uint64, window int) (*BlockMetrics, error) {
-	var avgs BlockMetrics
+	var avgs = BlockMetrics{
+		AvgTime: 0,
+		TPS:     0,
+	}
 	if round < uint64(window) {
-		avgs.AvgTime = 0
-		avgs.TPS = 0
 		return &avgs, nil
 	}
 	var format api.GetBlockParamsFormat = "json"
@@ -52,12 +53,14 @@ func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round
 	// Push to the transactions count list
 	aTimestamp := time.Duration(a.JSON200.Block["ts"].(float64)) * time.Second
 	bTimestamp := time.Duration(b.JSON200.Block["ts"].(float64)) * time.Second
-	//
-	aTransactions := a.JSON200.Block["tc"].(float64)
-	bTransactions := b.JSON200.Block["tc"].(float64)
+	// Transaction Counter
+	aTransactions := a.JSON200.Block["tc"]
+	bTransactions := b.JSON200.Block["tc"]
 
 	avgs.AvgTime = time.Duration((int(aTimestamp - bTimestamp)) / window)
-	avgs.TPS = (aTransactions - bTransactions) / (float64(window) * avgs.AvgTime.Seconds())
+	if aTransactions != nil && bTransactions != nil {
+		avgs.TPS = (aTransactions.(float64) - bTransactions.(float64)) / (float64(window) * avgs.AvgTime.Seconds())
+	}
 
 	return &avgs, nil
 }
