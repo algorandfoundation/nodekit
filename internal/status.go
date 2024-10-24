@@ -21,6 +21,17 @@ type StatusModel struct {
 func (m *StatusModel) String() string {
 	return fmt.Sprintf("\nLastRound: %d\n", m.LastRound)
 }
+func (m *StatusModel) Update(lastRound int, catchupTime int, upgradeNodeVote *bool) {
+	m.LastRound = uint64(lastRound)
+	if catchupTime > 0 {
+		m.State = "SYNCING"
+	} else {
+		m.State = "WATCHING"
+	}
+	if upgradeNodeVote != nil {
+		m.Voting = *upgradeNodeVote
+	}
+}
 
 // Fetch handles algod.Status
 func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses) error {
@@ -44,10 +55,7 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 	if s.StatusCode() != 200 {
 		return fmt.Errorf("Status code %d: %s", s.StatusCode(), s.Status())
 	}
-	m.LastRound = uint64(s.JSON200.LastRound)
 
-	if s.JSON200.UpgradeNodeVote != nil {
-		m.Voting = *s.JSON200.UpgradeNodeVote
-	}
+	m.Update(s.JSON200.LastRound, s.JSON200.CatchupTime, s.JSON200.UpgradeNodeVote)
 	return nil
 }

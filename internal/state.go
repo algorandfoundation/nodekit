@@ -44,7 +44,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		}
 
 		// Update Status
-		s.Status.LastRound = uint64(status.JSON200.LastRound)
+		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.UpgradeNodeVote)
 
 		// Fetch Keys
 		s.UpdateKeys(ctx, client)
