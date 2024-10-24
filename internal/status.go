@@ -13,7 +13,6 @@ type StatusModel struct {
 	State       string
 	Version     string
 	Network     string
-	GenesisHash []byte
 	Voting      bool
 	NeedsUpdate bool
 	LastRound   uint64 // Last recorded round
@@ -36,7 +35,6 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 		}
 		m.Network = v.JSON200.GenesisId
 		m.Version = fmt.Sprintf("v%d.%d.%d-%s", v.JSON200.Build.Major, v.JSON200.Build.Minor, v.JSON200.Build.BuildNumber, v.JSON200.Build.Channel)
-		m.GenesisHash = v.JSON200.GenesisHashB64
 	}
 
 	s, err := client.GetStatusWithResponse(ctx)
