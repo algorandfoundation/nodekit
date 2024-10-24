@@ -3,6 +3,10 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
@@ -11,9 +15,6 @@ import (
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io"
-	"os"
-	"strings"
 )
 
 const BANNER = `
@@ -60,7 +61,7 @@ var (
 				},
 				ParticipationKeys: partkeys,
 			}
-			state.Accounts = internal.AccountsFromState(&state)
+			state.Accounts = internal.AccountsFromState(&state, client)
 
 			// Fetch current state
 			err = state.Status.Fetch(context.Background(), client)

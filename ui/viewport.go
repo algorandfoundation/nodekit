@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
@@ -107,7 +108,13 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == KeysPage {
 				m.page = TransactionPage
-				return m, nil
+				// If there isn't a key already, select the first record
+				if m.keysPage.SelectedKey() == nil && m.Data != nil {
+					data := *m.Data.ParticipationKeys
+					return m, keys.EmitKeySelected(&data[0])
+				}
+				// Navigate to the transaction page
+				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
 		case "g":
 			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
@@ -120,10 +127,15 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 		case "t":
 			m.page = TransactionPage
-			// If there isn't a key already, select the first record
+			// If there isn't a key already, select the first record for that account
 			if m.keysPage.SelectedKey() == nil && m.Data != nil {
 				data := *m.Data.ParticipationKeys
-				return m, keys.EmitKeySelected(&data[0])
+				acct := m.accountsPage.SelectedAccount()
+				for i, key := range data {
+					if key.Address == acct.Address {
+						return m, keys.EmitKeySelected(&data[i])
+					}
+				}
 			}
 			// Navigate to the transaction page
 			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
@@ -229,7 +241,7 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		accountsPage:    accounts.New(state),
 		keysPage:        keys.New("", state.ParticipationKeys),
 		generatePage:    generate.New("", client),
-		transactionPage: transaction.New(),
+		transactionPage: transaction.New(state),
 
 		// Current Page
 		page: AccountsPage,

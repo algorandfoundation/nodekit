@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+
 	"github.com/algorandfoundation/hack-tui/api"
 )
 
@@ -80,8 +81,8 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.Clien
 		s.Metrics.RX = res["algod_network_received_bytes_total"]
 	}
 }
-func (s *StateModel) UpdateAccounts() {
-	s.Accounts = AccountsFromState(s)
+func (s *StateModel) UpdateAccounts(client *api.ClientWithResponses) {
+	s.Accounts = AccountsFromState(s, client)
 }
 
 func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithResponses) {
@@ -92,6 +93,6 @@ func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithRespo
 	}
 	if err == nil {
 		s.Admin = true
-		s.UpdateAccounts()
+		s.UpdateAccounts(client)
 	}
 }

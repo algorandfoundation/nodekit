@@ -19,11 +19,139 @@ const (
 	Api_keyScopes = "api_key.Scopes"
 )
 
+// Defines values for AccountSigType.
+const (
+	Lsig AccountSigType = "lsig"
+	Msig AccountSigType = "msig"
+	Sig  AccountSigType = "sig"
+)
+
+// Defines values for AccountInformationParamsFormat.
+const (
+	AccountInformationParamsFormatJson    AccountInformationParamsFormat = "json"
+	AccountInformationParamsFormatMsgpack AccountInformationParamsFormat = "msgpack"
+)
+
+// Defines values for AccountInformationParamsExclude.
+const (
+	All  AccountInformationParamsExclude = "all"
+	None AccountInformationParamsExclude = "none"
+)
+
 // Defines values for GetBlockParamsFormat.
 const (
-	Json    GetBlockParamsFormat = "json"
-	Msgpack GetBlockParamsFormat = "msgpack"
+	GetBlockParamsFormatJson    GetBlockParamsFormat = "json"
+	GetBlockParamsFormatMsgpack GetBlockParamsFormat = "msgpack"
 )
+
+// Account Account information at a given round.
+//
+// Definition:
+// data/basics/userBalance.go : AccountData
+type Account struct {
+	// Address the account public key
+	Address string `json:"address"`
+
+	// Amount \[algo\] total number of MicroAlgos in the account
+	Amount int `json:"amount"`
+
+	// AmountWithoutPendingRewards specifies the amount of MicroAlgos in the account, without the pending rewards.
+	AmountWithoutPendingRewards int `json:"amount-without-pending-rewards"`
+
+	// AppsLocalState \[appl\] applications local data stored in this account.
+	//
+	// Note the raw object uses `map[int] -> AppLocalState` for this type.
+	AppsLocalState *[]ApplicationLocalState `json:"apps-local-state,omitempty"`
+
+	// AppsTotalExtraPages \[teap\] the sum of all extra application program pages for this account.
+	AppsTotalExtraPages *int `json:"apps-total-extra-pages,omitempty"`
+
+	// AppsTotalSchema Specifies maximums on the number of each type that may be stored.
+	AppsTotalSchema *ApplicationStateSchema `json:"apps-total-schema,omitempty"`
+
+	// Assets \[asset\] assets held by this account.
+	//
+	// Note the raw object uses `map[int] -> AssetHolding` for this type.
+	Assets *[]AssetHolding `json:"assets,omitempty"`
+
+	// AuthAddr \[spend\] the address against which signing should be checked. If empty, the address of the current account is used. This field can be updated in any transaction by setting the RekeyTo field.
+	AuthAddr *string `json:"auth-addr,omitempty"`
+
+	// CreatedApps \[appp\] parameters of applications created by this account including app global data.
+	//
+	// Note: the raw account uses `map[int] -> AppParams` for this type.
+	CreatedApps *[]Application `json:"created-apps,omitempty"`
+
+	// CreatedAssets \[apar\] parameters of assets created by this account.
+	//
+	// Note: the raw account uses `map[int] -> Asset` for this type.
+	CreatedAssets *[]Asset `json:"created-assets,omitempty"`
+
+	// IncentiveEligible Whether or not the account can receive block incentives if its balance is in range at proposal time.
+	IncentiveEligible *bool `json:"incentive-eligible,omitempty"`
+
+	// LastHeartbeat The round in which this account last went online, or explicitly renewed their online status.
+	LastHeartbeat *int `json:"last-heartbeat,omitempty"`
+
+	// LastProposed The round in which this account last proposed the block.
+	LastProposed *int `json:"last-proposed,omitempty"`
+
+	// MinBalance MicroAlgo balance required by the account.
+	//
+	// The requirement grows based on asset and application usage.
+	MinBalance int `json:"min-balance"`
+
+	// Participation AccountParticipation describes the parameters used by this account in consensus protocol.
+	Participation *AccountParticipation `json:"participation,omitempty"`
+
+	// PendingRewards amount of MicroAlgos of pending rewards in this account.
+	PendingRewards int `json:"pending-rewards"`
+
+	// RewardBase \[ebase\] used as part of the rewards computation. Only applicable to accounts which are participating.
+	RewardBase *int `json:"reward-base,omitempty"`
+
+	// Rewards \[ern\] total rewards of MicroAlgos the account has received, including pending rewards.
+	Rewards int `json:"rewards"`
+
+	// Round The round for which this information is relevant.
+	Round int `json:"round"`
+
+	// SigType Indicates what type of signature is used by this account, must be one of:
+	// * sig
+	// * msig
+	// * lsig
+	SigType *AccountSigType `json:"sig-type,omitempty"`
+
+	// Status \[onl\] delegation status of the account's MicroAlgos
+	// * Offline - indicates that the associated account is delegated.
+	// *  Online  - indicates that the associated account used as part of the delegation pool.
+	// *   NotParticipating - indicates that the associated account is neither a delegator nor a delegate.
+	Status string `json:"status"`
+
+	// TotalAppsOptedIn The count of all applications that have been opted in, equivalent to the count of application local data (AppLocalState objects) stored in this account.
+	TotalAppsOptedIn int `json:"total-apps-opted-in"`
+
+	// TotalAssetsOptedIn The count of all assets that have been opted in, equivalent to the count of AssetHolding objects held by this account.
+	TotalAssetsOptedIn int `json:"total-assets-opted-in"`
+
+	// TotalBoxBytes \[tbxb\] The total number of bytes used by this account's app's box keys and values.
+	TotalBoxBytes *int `json:"total-box-bytes,omitempty"`
+
+	// TotalBoxes \[tbx\] The number of existing boxes created by this account's app.
+	TotalBoxes *int `json:"total-boxes,omitempty"`
+
+	// TotalCreatedApps The count of all apps (AppParams objects) created by this account.
+	TotalCreatedApps int `json:"total-created-apps"`
+
+	// TotalCreatedAssets The count of all assets (AssetParams objects) created by this account.
+	TotalCreatedAssets int `json:"total-created-assets"`
+}
+
+// AccountSigType Indicates what type of signature is used by this account, must be one of:
+// * sig
+// * msig
+// * lsig
+type AccountSigType string
 
 // AccountParticipation AccountParticipation describes the parameters used by this account in consensus protocol.
 type AccountParticipation struct {
@@ -54,6 +182,51 @@ type AccountStateDelta struct {
 	Delta StateDelta `json:"delta"`
 }
 
+// Application Application index and its parameters
+type Application struct {
+	// Id \[appidx\] application index.
+	Id int `json:"id"`
+
+	// Params Stores the global information associated with an application.
+	Params ApplicationParams `json:"params"`
+}
+
+// ApplicationLocalState Stores local state associated with an application.
+type ApplicationLocalState struct {
+	// Id The application which this local state is for.
+	Id int `json:"id"`
+
+	// KeyValue Represents a key-value store for use in an application.
+	KeyValue *TealKeyValueStore `json:"key-value,omitempty"`
+
+	// Schema Specifies maximums on the number of each type that may be stored.
+	Schema ApplicationStateSchema `json:"schema"`
+}
+
+// ApplicationParams Stores the global information associated with an application.
+type ApplicationParams struct {
+	// ApprovalProgram \[approv\] approval program.
+	ApprovalProgram []byte `json:"approval-program"`
+
+	// ClearStateProgram \[clearp\] approval program.
+	ClearStateProgram []byte `json:"clear-state-program"`
+
+	// Creator The address that created this application. This is the address where the parameters and global state for this application can be found.
+	Creator string `json:"creator"`
+
+	// ExtraProgramPages \[epp\] the amount of extra program pages available to this app.
+	ExtraProgramPages *int `json:"extra-program-pages,omitempty"`
+
+	// GlobalState Represents a key-value store for use in an application.
+	GlobalState *TealKeyValueStore `json:"global-state,omitempty"`
+
+	// GlobalStateSchema Specifies maximums on the number of each type that may be stored.
+	GlobalStateSchema *ApplicationStateSchema `json:"global-state-schema,omitempty"`
+
+	// LocalStateSchema Specifies maximums on the number of each type that may be stored.
+	LocalStateSchema *ApplicationStateSchema `json:"local-state-schema,omitempty"`
+}
+
 // ApplicationStateOperation An operation against an application's global/local/box state.
 type ApplicationStateOperation struct {
 	// Account For local state changes, the address of the account associated with the local state.
@@ -70,6 +243,97 @@ type ApplicationStateOperation struct {
 
 	// Operation Operation type. Value `w` is **write**, `d` is **delete**.
 	Operation string `json:"operation"`
+}
+
+// ApplicationStateSchema Specifies maximums on the number of each type that may be stored.
+type ApplicationStateSchema struct {
+	// NumByteSlice \[nbs\] num of byte slices.
+	NumByteSlice int `json:"num-byte-slice"`
+
+	// NumUint \[nui\] num of uints.
+	NumUint int `json:"num-uint"`
+}
+
+// Asset Specifies both the unique identifier and the parameters for an asset
+type Asset struct {
+	// Index unique asset identifier
+	Index int `json:"index"`
+
+	// Params AssetParams specifies the parameters for an asset.
+	//
+	// \[apar\] when part of an AssetConfig transaction.
+	//
+	// Definition:
+	// data/transactions/asset.go : AssetParams
+	Params AssetParams `json:"params"`
+}
+
+// AssetHolding Describes an asset held by an account.
+//
+// Definition:
+// data/basics/userBalance.go : AssetHolding
+type AssetHolding struct {
+	// Amount \[a\] number of units held.
+	Amount int `json:"amount"`
+
+	// AssetID Asset ID of the holding.
+	AssetID int `json:"asset-id"`
+
+	// IsFrozen \[f\] whether or not the holding is frozen.
+	IsFrozen bool `json:"is-frozen"`
+}
+
+// AssetParams AssetParams specifies the parameters for an asset.
+//
+// \[apar\] when part of an AssetConfig transaction.
+//
+// Definition:
+// data/transactions/asset.go : AssetParams
+type AssetParams struct {
+	// Clawback \[c\] Address of account used to clawback holdings of this asset.  If empty, clawback is not permitted.
+	Clawback *string `json:"clawback,omitempty"`
+
+	// Creator The address that created this asset. This is the address where the parameters for this asset can be found, and also the address where unwanted asset units can be sent in the worst case.
+	Creator string `json:"creator"`
+
+	// Decimals \[dc\] The number of digits to use after the decimal point when displaying this asset. If 0, the asset is not divisible. If 1, the base unit of the asset is in tenths. If 2, the base unit of the asset is in hundredths, and so on. This value must be between 0 and 19 (inclusive).
+	Decimals int `json:"decimals"`
+
+	// DefaultFrozen \[df\] Whether holdings of this asset are frozen by default.
+	DefaultFrozen *bool `json:"default-frozen,omitempty"`
+
+	// Freeze \[f\] Address of account used to freeze holdings of this asset.  If empty, freezing is not permitted.
+	Freeze *string `json:"freeze,omitempty"`
+
+	// Manager \[m\] Address of account used to manage the keys of this asset and to destroy it.
+	Manager *string `json:"manager,omitempty"`
+
+	// MetadataHash \[am\] A commitment to some unspecified asset metadata. The format of this metadata is up to the application.
+	MetadataHash *[]byte `json:"metadata-hash,omitempty"`
+
+	// Name \[an\] Name of this asset, as supplied by the creator. Included only when the asset name is composed of printable utf-8 characters.
+	Name *string `json:"name,omitempty"`
+
+	// NameB64 Base64 encoded name of this asset, as supplied by the creator.
+	NameB64 *[]byte `json:"name-b64,omitempty"`
+
+	// Reserve \[r\] Address of account holding reserve (non-minted) units of this asset.
+	Reserve *string `json:"reserve,omitempty"`
+
+	// Total \[t\] The total number of units of this asset.
+	Total int `json:"total"`
+
+	// UnitName \[un\] Name of a unit of this asset, as supplied by the creator. Included only when the name of a unit of this asset is composed of printable utf-8 characters.
+	UnitName *string `json:"unit-name,omitempty"`
+
+	// UnitNameB64 Base64 encoded name of a unit of this asset, as supplied by the creator.
+	UnitNameB64 *[]byte `json:"unit-name-b64,omitempty"`
+
+	// Url \[au\] URL where more information about the asset can be retrieved. Included only when the URL is composed of printable utf-8 characters.
+	Url *string `json:"url,omitempty"`
+
+	// UrlB64 Base64 encoded URL where more information about the asset can be retrieved.
+	UrlB64 *[]byte `json:"url-b64,omitempty"`
 }
 
 // AvmValue Represents an AVM value.
@@ -255,6 +519,29 @@ type SimulationTransactionExecTrace struct {
 // StateDelta Application state delta.
 type StateDelta = []EvalDeltaKeyValue
 
+// TealKeyValue Represents a key-value pair in an application store.
+type TealKeyValue struct {
+	Key string `json:"key"`
+
+	// Value Represents a TEAL value.
+	Value TealValue `json:"value"`
+}
+
+// TealKeyValueStore Represents a key-value store for use in an application.
+type TealKeyValueStore = []TealKeyValue
+
+// TealValue Represents a TEAL value.
+type TealValue struct {
+	// Bytes \[tb\] bytes value.
+	Bytes string `json:"bytes"`
+
+	// Type \[tt\] value type. Value `1` refers to **bytes**, value `2` refers to **uint**
+	Type int `json:"type"`
+
+	// Uint \[ui\] uint value.
+	Uint int `json:"uint"`
+}
+
 // Version algod version information.
 type Version struct {
 	Build          BuildVersion `json:"build"`
@@ -262,6 +549,21 @@ type Version struct {
 	GenesisId      string       `json:"genesis_id"`
 	Versions       []string     `json:"versions"`
 }
+
+// AccountInformationParams defines parameters for AccountInformation.
+type AccountInformationParams struct {
+	// Format Configures whether the response object is JSON or MessagePack encoded. If not provided, defaults to JSON.
+	Format *AccountInformationParamsFormat `form:"format,omitempty" json:"format,omitempty"`
+
+	// Exclude When set to `all` will exclude asset holdings, application local state, created asset parameters, any created application parameters. Defaults to `none`.
+	Exclude *AccountInformationParamsExclude `form:"exclude,omitempty" json:"exclude,omitempty"`
+}
+
+// AccountInformationParamsFormat defines parameters for AccountInformation.
+type AccountInformationParamsFormat string
+
+// AccountInformationParamsExclude defines parameters for AccountInformation.
+type AccountInformationParamsExclude string
 
 // GetBlockParams defines parameters for GetBlock.
 type GetBlockParams struct {
@@ -360,6 +662,9 @@ type ClientInterface interface {
 	// Metrics request
 	Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// AccountInformation request
+	AccountInformation(ctx context.Context, address string, params *AccountInformationParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetBlock request
 	GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -393,6 +698,18 @@ type ClientInterface interface {
 
 func (c *Algod) Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewMetricsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) AccountInformation(ctx context.Context, address string, params *AccountInformationParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountInformationRequest(c.Server, address, params)
 	if err != nil {
 		return nil, err
 	}
@@ -540,6 +857,78 @@ func NewMetricsRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAccountInformationRequest generates requests for AccountInformation
+func NewAccountInformationRequest(server string, address string, params *AccountInformationParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "address", runtime.ParamLocationPath, address)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/accounts/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Format != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "format", runtime.ParamLocationQuery, *params.Format); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Exclude != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "exclude", runtime.ParamLocationQuery, *params.Exclude); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -980,6 +1369,9 @@ type ClientWithResponsesInterface interface {
 	// MetricsWithResponse request
 	MetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MetricsResponse, error)
 
+	// AccountInformationWithResponse request
+	AccountInformationWithResponse(ctx context.Context, address string, params *AccountInformationParams, reqEditors ...RequestEditorFn) (*AccountInformationResponse, error)
+
 	// GetBlockWithResponse request
 	GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error)
 
@@ -1026,6 +1418,31 @@ func (r MetricsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r MetricsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AccountInformationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Account
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AccountInformationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AccountInformationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1460,6 +1877,15 @@ func (c *ClientWithResponses) MetricsWithResponse(ctx context.Context, reqEditor
 	return ParseMetricsResponse(rsp)
 }
 
+// AccountInformationWithResponse request returning *AccountInformationResponse
+func (c *ClientWithResponses) AccountInformationWithResponse(ctx context.Context, address string, params *AccountInformationParams, reqEditors ...RequestEditorFn) (*AccountInformationResponse, error) {
+	rsp, err := c.AccountInformation(ctx, address, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountInformationResponse(rsp)
+}
+
 // GetBlockWithResponse request returning *GetBlockResponse
 func (c *ClientWithResponses) GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error) {
 	rsp, err := c.GetBlock(ctx, round, params, reqEditors...)
@@ -1561,6 +1987,65 @@ func ParseMetricsResponse(rsp *http.Response) (*MetricsResponse, error) {
 	response := &MetricsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseAccountInformationResponse parses an HTTP response from a AccountInformationWithResponse call
+func ParseAccountInformationResponse(rsp *http.Response) (*AccountInformationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AccountInformationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Account
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case rsp.StatusCode == 200:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 400:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 401:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 500:
+		// Content-type (application/msgpack) unsupported
+
 	}
 
 	return response, nil
