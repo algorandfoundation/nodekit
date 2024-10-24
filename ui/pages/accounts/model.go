@@ -1,13 +1,14 @@
 package accounts
 
 import (
+	"sort"
+	"strconv"
+
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-	"sort"
-	"strconv"
 )
 
 type ViewModel struct {

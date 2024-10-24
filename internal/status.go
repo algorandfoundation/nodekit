@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+
 	"github.com/algorandfoundation/hack-tui/api"
 )
 
