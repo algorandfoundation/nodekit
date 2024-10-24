@@ -21,7 +21,7 @@ jobs:
           echo 'token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' >> .algorun.yaml
 
       - name: Start Docker Compose
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Install dependencies
         run: go get .
