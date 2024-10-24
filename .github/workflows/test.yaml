@@ -14,14 +14,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io docker-compose
-
       - name: setup .algorun.yaml
         run: |
-          touch .algoran.yaml
+          touch .algorun.yaml
           echo 'server: http://localhost:8080' >> .algorun.yaml
           echo 'token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' >> .algorun.yaml
 
