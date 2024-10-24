@@ -3,12 +3,22 @@ package controls
 import (
 	"bytes"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
 	"testing"
 	"time"
 )
 
-func Test_Controls(t *testing.T) {
+func Test_Snapshot(t *testing.T) {
+	t.Run("Visible", func(t *testing.T) {
+		model := New(" test ")
+		got := ansi.Strip(model.View())
+		golden.RequireEqual(t, []byte(got))
+	})
+}
+
+func Test_Messages(t *testing.T) {
 	expected := "(q)uit | (d)elete | (g)enerate | (t)xn | (h)ide"
 	// Create the Model
 	m := New(expected)
