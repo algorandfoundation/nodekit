@@ -19,6 +19,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker.io docker-compose
 
+      - name: setup .algorun.yaml
+        run: |
+          touch .algoran.yaml
+          echo 'server: http://localhost:8080' >> .algorun.yaml
+          echo 'token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' >> .algorun.yaml
+
       - name: Start Docker Compose
         run: docker-compose up -d
 
