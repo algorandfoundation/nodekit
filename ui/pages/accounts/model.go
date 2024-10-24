@@ -1,13 +1,14 @@
 package accounts
 
 import (
+	"sort"
+	"strconv"
+
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-	"sort"
-	"strconv"
 )
 
 type ViewModel struct {
@@ -24,7 +25,7 @@ func New(state *internal.StateModel) ViewModel {
 		Width:    0,
 		Height:   0,
 		Data:     state.Accounts,
-		controls: controls.New(" (g)enerate | " + green.Render("(a)ccounts") + " | (k)eys | (t)xn "),
+		controls: controls.New(" (g)enerate | " + green.Render("(a)ccounts") + " | (k)eys "),
 	}
 
 	m.table = table.New(
