@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/algorandfoundation/hack-tui/api"
-	"time"
 )
 
 type StateModel struct {
@@ -17,25 +16,12 @@ type StateModel struct {
 	Watching bool
 }
 
-func getAverage(data []float64) float64 {
-	sum := 0.0
-	for _, element := range data {
-		sum += element
-	}
-	return sum / (float64(len(data)))
-}
-func getAverageDuration(timings []time.Duration) time.Duration {
-	sum := 0.0
-	for _, element := range timings {
-		sum += element.Seconds()
-	}
-	avg := sum / (float64(len(timings)))
-	return time.Duration(avg * float64(time.Second))
-}
-
 // TODO: allow context to handle loop
 func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client *api.ClientWithResponses) {
 	s.Watching = true
+	if s.Metrics.Window == 0 {
+		s.Metrics.Window = 100
+	}
 
 	err := s.Status.Fetch(ctx, client)
 	if err != nil {
@@ -44,17 +30,10 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 
 	lastRound := s.Status.LastRound
 
-	// Collection of Round Durations
-	timings := make([]time.Duration, 0)
-	// Collection of Transaction Counts
-	txns := make([]float64, 0)
-
 	for {
 		if !s.Watching {
 			break
 		}
-		// Collect Time of Round
-		startTime := time.Now()
 		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
 		if err != nil {
 			cb(nil, err)
@@ -62,10 +41,6 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if status.StatusCode() != 200 {
 			cb(nil, errors.New(status.Status()))
 		}
-		// Store round timing
-		endTime := time.Now()
-		dur := endTime.Sub(startTime)
-		timings = append(timings, dur)
 
 		// Update Status
 		s.Status.LastRound = uint64(status.JSON200.LastRound)
@@ -73,32 +48,15 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		// Fetch Keys
 		s.UpdateKeys(ctx, client)
 
-		// Fetch Block
-		var format api.GetBlockParamsFormat = "json"
-		block, err := client.GetBlockWithResponse(ctx, int(lastRound), &api.GetBlockParams{
-			Format: &format,
-		})
-		if err != nil {
-			cb(nil, err)
-		}
-
-		// Check for transactions
-		if block.JSON200.Block["txns"] != nil {
-			// Get the average duration in seconds (TPS)
-			txnCount := float64(len(block.JSON200.Block["txns"].([]any)))
-			txns = append(txns, txnCount/getAverageDuration(timings).Seconds())
-		} else {
-			txns = append(txns, 0)
-		}
-
-		// Fetch RX/TX every 5th round
+		// Run Round Averages and RX/TX every 5 rounds
 		if s.Status.LastRound%5 == 0 {
-			s.UpdateMetrics(ctx, client, timings, txns)
-		}
-		// Trim data
-		if len(timings) >= 100 {
-			timings = timings[1:]
-			txns = txns[1:]
+			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
+			if err != nil {
+				cb(nil, err)
+			}
+			s.Metrics.RoundTime = bm.AvgTime
+			s.Metrics.TPS = bm.TPS
+			s.UpdateMetricsFromRPC(ctx, client)
 		}
 
 		lastRound = s.Status.LastRound
@@ -110,20 +68,7 @@ func (s *StateModel) Stop() {
 	s.Watching = false
 }
 
-func (s *StateModel) UpdateMetrics(
-	ctx context.Context,
-	client *api.ClientWithResponses,
-	timings []time.Duration,
-	txns []float64,
-) {
-	if s == nil {
-		panic("StateModel is nil while UpdateMetrics is called")
-	}
-	// Set Metrics
-	s.Metrics.RoundTime = getAverageDuration(timings)
-	s.Metrics.Window = len(timings)
-	s.Metrics.TPS = getAverage(txns)
-
+func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.ClientWithResponses) {
 	// Fetch RX/TX
 	res, err := GetMetrics(ctx, client)
 	if err != nil {
@@ -135,7 +80,6 @@ func (s *StateModel) UpdateMetrics(
 		s.Metrics.RX = res["algod_network_received_bytes_total"]
 	}
 }
-
 func (s *StateModel) UpdateAccounts() {
 	s.Accounts = AccountsFromState(s)
 }
