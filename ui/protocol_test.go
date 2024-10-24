@@ -2,15 +2,14 @@ package ui
 
 import (
 	"bytes"
-	"testing"
-	"time"
-
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
+	"testing"
+	"time"
 )
 
-func Test_StatusViewRender(t *testing.T) {
+func Test_ProtocolViewRender(t *testing.T) {
 	state := internal.StateModel{
 		Status: internal.StatusModel{
 			LastRound:   1337,
@@ -24,23 +23,20 @@ func Test_StatusViewRender(t *testing.T) {
 			TPS:       0,
 		},
 	}
+
 	// Create the Model
-	m := StatusViewModel{
-		Data:          &state,
-		TerminalWidth: 80,
-		IsVisible:     true,
-	}
+	m := MakeProtocolViewModel(&state)
 
 	tm := teatest.NewTestModel(
 		t, m,
-		teatest.WithInitialTermSize(80, 40),
+		teatest.WithInitialTermSize(120, 80),
 	)
 
 	// Wait for prompt to exit
 	teatest.WaitFor(
 		t, tm.Output(),
 		func(bts []byte) bool {
-			return bytes.Contains(bts, []byte("Latest Round: 1337"))
+			return bytes.Contains(bts, []byte("[UPDATE AVAILABLE]"))
 		},
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),

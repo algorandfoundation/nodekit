@@ -2,15 +2,21 @@ package ui
 
 import (
 	"bytes"
-	"testing"
-	"time"
-
+	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
+	"testing"
+	"time"
 )
 
-func Test_StatusViewRender(t *testing.T) {
+func Test_ViewportViewRender(t *testing.T) {
+	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	client, err := api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	if err != nil {
+		t.Fatal(err)
+	}
 	state := internal.StateModel{
 		Status: internal.StatusModel{
 			LastRound:   1337,
@@ -25,32 +31,25 @@ func Test_StatusViewRender(t *testing.T) {
 		},
 	}
 	// Create the Model
-	m := StatusViewModel{
-		Data:          &state,
-		TerminalWidth: 80,
-		IsVisible:     true,
+	m, err := MakeViewportViewModel(&state, client)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	tm := teatest.NewTestModel(
 		t, m,
-		teatest.WithInitialTermSize(80, 40),
+		teatest.WithInitialTermSize(160, 40),
 	)
 
 	// Wait for prompt to exit
 	teatest.WaitFor(
 		t, tm.Output(),
 		func(bts []byte) bool {
-			return bytes.Contains(bts, []byte("Latest Round: 1337"))
+			return bytes.Contains(bts, []byte("Protocol Voting"))
 		},
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
 	)
-
-	// Send hide key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("h"),
-	})
 
 	// Send quit key
 	tm.Send(tea.KeyMsg{

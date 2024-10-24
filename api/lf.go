@@ -19,6 +19,33 @@ const (
 	Api_keyScopes = "api_key.Scopes"
 )
 
+// Defines values for GetBlockParamsFormat.
+const (
+	Json    GetBlockParamsFormat = "json"
+	Msgpack GetBlockParamsFormat = "msgpack"
+)
+
+// AccountParticipation AccountParticipation describes the parameters used by this account in consensus protocol.
+type AccountParticipation struct {
+	// SelectionParticipationKey \[sel\] Selection public key (if any) currently registered for this round.
+	SelectionParticipationKey []byte `json:"selection-participation-key"`
+
+	// StateProofKey \[stprf\] Root of the state proof key (if any)
+	StateProofKey *[]byte `json:"state-proof-key,omitempty"`
+
+	// VoteFirstValid \[voteFst\] First round for which this participation is valid.
+	VoteFirstValid int `json:"vote-first-valid"`
+
+	// VoteKeyDilution \[voteKD\] Number of subkeys in each batch of participation keys.
+	VoteKeyDilution int `json:"vote-key-dilution"`
+
+	// VoteLastValid \[voteLst\] Last round for which this participation is valid.
+	VoteLastValid int `json:"vote-last-valid"`
+
+	// VoteParticipationKey \[vote\] root participation public key (if any) currently registered for this round.
+	VoteParticipationKey []byte `json:"vote-participation-key"`
+}
+
 // AccountStateDelta Application state delta.
 type AccountStateDelta struct {
 	Address string `json:"address"`
@@ -57,6 +84,16 @@ type AvmValue struct {
 	Uint *int `json:"uint,omitempty"`
 }
 
+// BuildVersion defines model for BuildVersion.
+type BuildVersion struct {
+	Branch      string `json:"branch"`
+	BuildNumber int64  `json:"build_number"`
+	Channel     string `json:"channel"`
+	CommitHash  string `json:"commit_hash"`
+	Major       int64  `json:"major"`
+	Minor       int64  `json:"minor"`
+}
+
 // ErrorResponse An error response with optional data field.
 type ErrorResponse struct {
 	Data    *map[string]interface{} `json:"data,omitempty"`
@@ -81,6 +118,33 @@ type EvalDeltaKeyValue struct {
 
 	// Value Represents a TEAL value delta.
 	Value EvalDelta `json:"value"`
+}
+
+// ParticipationKey Represents a participation key used by the node.
+type ParticipationKey struct {
+	// Address Address the key was generated for.
+	Address string `json:"address"`
+
+	// EffectiveFirstValid When registered, this is the first round it may be used.
+	EffectiveFirstValid *int `json:"effective-first-valid,omitempty"`
+
+	// EffectiveLastValid When registered, this is the last round it may be used.
+	EffectiveLastValid *int `json:"effective-last-valid,omitempty"`
+
+	// Id The key's ParticipationID.
+	Id string `json:"id"`
+
+	// Key AccountParticipation describes the parameters used by this account in consensus protocol.
+	Key AccountParticipation `json:"key"`
+
+	// LastBlockProposal Round when this key was last used to propose a block.
+	LastBlockProposal *int `json:"last-block-proposal,omitempty"`
+
+	// LastStateProof Round when this key was last used to generate a state proof.
+	LastStateProof *int `json:"last-state-proof,omitempty"`
+
+	// LastVote Round when this key was last used to vote.
+	LastVote *int `json:"last-vote,omitempty"`
 }
 
 // PendingTransactionResponse Details about a pending transaction. If the transaction was recently confirmed, includes confirmation details like the round and reward details.
@@ -191,6 +255,35 @@ type SimulationTransactionExecTrace struct {
 // StateDelta Application state delta.
 type StateDelta = []EvalDeltaKeyValue
 
+// Version algod version information.
+type Version struct {
+	Build          BuildVersion `json:"build"`
+	GenesisHashB64 []byte       `json:"genesis_hash_b64"`
+	GenesisId      string       `json:"genesis_id"`
+	Versions       []string     `json:"versions"`
+}
+
+// GetBlockParams defines parameters for GetBlock.
+type GetBlockParams struct {
+	// Format Configures whether the response object is JSON or MessagePack encoded. If not provided, defaults to JSON.
+	Format *GetBlockParamsFormat `form:"format,omitempty" json:"format,omitempty"`
+}
+
+// GetBlockParamsFormat defines parameters for GetBlock.
+type GetBlockParamsFormat string
+
+// GenerateParticipationKeysParams defines parameters for GenerateParticipationKeys.
+type GenerateParticipationKeysParams struct {
+	// Dilution Key dilution for two-level participation keys (defaults to sqrt of validity window).
+	Dilution *int `form:"dilution,omitempty" json:"dilution,omitempty"`
+
+	// First First round for participation key.
+	First int `form:"first" json:"first"`
+
+	// Last Last round for participation key.
+	Last int `form:"last" json:"last"`
+}
+
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
@@ -267,15 +360,123 @@ type ClientInterface interface {
 	// Metrics request
 	Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetBlock request
+	GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetParticipationKeys request
+	GetParticipationKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddParticipationKeyWithBody request with any body
+	AddParticipationKeyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GenerateParticipationKeys request
+	GenerateParticipationKeys(ctx context.Context, address string, params *GenerateParticipationKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteParticipationKeyByID request
+	DeleteParticipationKeyByID(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetParticipationKeyByID request
+	GetParticipationKeyByID(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppendKeysWithBody request with any body
+	AppendKeysWithBody(ctx context.Context, participationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetStatus request
 	GetStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// WaitForBlock request
 	WaitForBlock(ctx context.Context, round int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetVersion request
+	GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Algod) Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewMetricsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBlockRequest(c.Server, round, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) GetParticipationKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetParticipationKeysRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) AddParticipationKeyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddParticipationKeyRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) GenerateParticipationKeys(ctx context.Context, address string, params *GenerateParticipationKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenerateParticipationKeysRequest(c.Server, address, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) DeleteParticipationKeyByID(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteParticipationKeyByIDRequest(c.Server, participationId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) GetParticipationKeyByID(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetParticipationKeyByIDRequest(c.Server, participationId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) AppendKeysWithBody(ctx context.Context, participationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppendKeysRequestWithBody(c.Server, participationId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +511,18 @@ func (c *Algod) WaitForBlock(ctx context.Context, round int, reqEditors ...Reque
 	return c.Client.Do(req)
 }
 
+func (c *Algod) GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetVersionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewMetricsRequest generates requests for Metrics
 func NewMetricsRequest(server string) (*http.Request, error) {
 	var err error
@@ -333,6 +546,302 @@ func NewMetricsRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetBlockRequest generates requests for GetBlock
+func NewGetBlockRequest(server string, round int, params *GetBlockParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "round", runtime.ParamLocationPath, round)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/blocks/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Format != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "format", runtime.ParamLocationQuery, *params.Format); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetParticipationKeysRequest generates requests for GetParticipationKeys
+func NewGetParticipationKeysRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddParticipationKeyRequestWithBody generates requests for AddParticipationKey with any type of body
+func NewAddParticipationKeyRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGenerateParticipationKeysRequest generates requests for GenerateParticipationKeys
+func NewGenerateParticipationKeysRequest(server string, address string, params *GenerateParticipationKeysParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "address", runtime.ParamLocationPath, address)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation/generate/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Dilution != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "dilution", runtime.ParamLocationQuery, *params.Dilution); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "first", runtime.ParamLocationQuery, params.First); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "last", runtime.ParamLocationQuery, params.Last); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteParticipationKeyByIDRequest generates requests for DeleteParticipationKeyByID
+func NewDeleteParticipationKeyByIDRequest(server string, participationId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "participation-id", runtime.ParamLocationPath, participationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetParticipationKeyByIDRequest generates requests for GetParticipationKeyByID
+func NewGetParticipationKeyByIDRequest(server string, participationId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "participation-id", runtime.ParamLocationPath, participationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppendKeysRequestWithBody generates requests for AppendKeys with any type of body
+func NewAppendKeysRequestWithBody(server string, participationId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "participation-id", runtime.ParamLocationPath, participationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/participation/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -398,6 +907,33 @@ func NewWaitForBlockRequest(server string, round int) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetVersionRequest generates requests for GetVersion
+func NewGetVersionRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/versions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Algod) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -444,11 +980,35 @@ type ClientWithResponsesInterface interface {
 	// MetricsWithResponse request
 	MetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MetricsResponse, error)
 
+	// GetBlockWithResponse request
+	GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error)
+
+	// GetParticipationKeysWithResponse request
+	GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error)
+
+	// AddParticipationKeyWithBodyWithResponse request with any body
+	AddParticipationKeyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddParticipationKeyResponse, error)
+
+	// GenerateParticipationKeysWithResponse request
+	GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *GenerateParticipationKeysParams, reqEditors ...RequestEditorFn) (*GenerateParticipationKeysResponse, error)
+
+	// DeleteParticipationKeyByIDWithResponse request
+	DeleteParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*DeleteParticipationKeyByIDResponse, error)
+
+	// GetParticipationKeyByIDWithResponse request
+	GetParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*GetParticipationKeyByIDResponse, error)
+
+	// AppendKeysWithBodyWithResponse request with any body
+	AppendKeysWithBodyWithResponse(ctx context.Context, participationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppendKeysResponse, error)
+
 	// GetStatusWithResponse request
 	GetStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetStatusResponse, error)
 
 	// WaitForBlockWithResponse request
 	WaitForBlockWithResponse(ctx context.Context, round int, reqEditors ...RequestEditorFn) (*WaitForBlockResponse, error)
+
+	// GetVersionWithResponse request
+	GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error)
 }
 
 type MetricsResponse struct {
@@ -466,6 +1026,197 @@ func (r MetricsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r MetricsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetBlockResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Block Block header data.
+		Block map[string]interface{} `json:"block"`
+
+		// Cert Optional certificate object. This is only included when the format is set to message pack.
+		Cert *map[string]interface{} `json:"cert,omitempty"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON404 *ErrorResponse
+	JSON500 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBlockResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBlockResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetParticipationKeysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ParticipationKey
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetParticipationKeysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetParticipationKeysResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddParticipationKeyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// PartId encoding of the participation ID.
+		PartId string `json:"partId"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON404 *ErrorResponse
+	JSON500 *ErrorResponse
+	JSON503 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AddParticipationKeyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddParticipationKeyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GenerateParticipationKeysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *string
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GenerateParticipationKeysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GenerateParticipationKeysResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteParticipationKeyByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteParticipationKeyByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteParticipationKeyByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetParticipationKeyByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ParticipationKey
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetParticipationKeyByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetParticipationKeyByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AppendKeysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ParticipationKey
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AppendKeysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppendKeysResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -678,6 +1429,28 @@ func (r WaitForBlockResponse) StatusCode() int {
 	return 0
 }
 
+type GetVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Version
+}
+
+// Status returns HTTPResponse.Status
+func (r GetVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // MetricsWithResponse request returning *MetricsResponse
 func (c *ClientWithResponses) MetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MetricsResponse, error) {
 	rsp, err := c.Metrics(ctx, reqEditors...)
@@ -685,6 +1458,69 @@ func (c *ClientWithResponses) MetricsWithResponse(ctx context.Context, reqEditor
 		return nil, err
 	}
 	return ParseMetricsResponse(rsp)
+}
+
+// GetBlockWithResponse request returning *GetBlockResponse
+func (c *ClientWithResponses) GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error) {
+	rsp, err := c.GetBlock(ctx, round, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBlockResponse(rsp)
+}
+
+// GetParticipationKeysWithResponse request returning *GetParticipationKeysResponse
+func (c *ClientWithResponses) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error) {
+	rsp, err := c.GetParticipationKeys(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetParticipationKeysResponse(rsp)
+}
+
+// AddParticipationKeyWithBodyWithResponse request with arbitrary body returning *AddParticipationKeyResponse
+func (c *ClientWithResponses) AddParticipationKeyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddParticipationKeyResponse, error) {
+	rsp, err := c.AddParticipationKeyWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddParticipationKeyResponse(rsp)
+}
+
+// GenerateParticipationKeysWithResponse request returning *GenerateParticipationKeysResponse
+func (c *ClientWithResponses) GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *GenerateParticipationKeysParams, reqEditors ...RequestEditorFn) (*GenerateParticipationKeysResponse, error) {
+	rsp, err := c.GenerateParticipationKeys(ctx, address, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGenerateParticipationKeysResponse(rsp)
+}
+
+// DeleteParticipationKeyByIDWithResponse request returning *DeleteParticipationKeyByIDResponse
+func (c *ClientWithResponses) DeleteParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*DeleteParticipationKeyByIDResponse, error) {
+	rsp, err := c.DeleteParticipationKeyByID(ctx, participationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteParticipationKeyByIDResponse(rsp)
+}
+
+// GetParticipationKeyByIDWithResponse request returning *GetParticipationKeyByIDResponse
+func (c *ClientWithResponses) GetParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...RequestEditorFn) (*GetParticipationKeyByIDResponse, error) {
+	rsp, err := c.GetParticipationKeyByID(ctx, participationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetParticipationKeyByIDResponse(rsp)
+}
+
+// AppendKeysWithBodyWithResponse request with arbitrary body returning *AppendKeysResponse
+func (c *ClientWithResponses) AppendKeysWithBodyWithResponse(ctx context.Context, participationId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppendKeysResponse, error) {
+	rsp, err := c.AppendKeysWithBody(ctx, participationId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppendKeysResponse(rsp)
 }
 
 // GetStatusWithResponse request returning *GetStatusResponse
@@ -705,6 +1541,15 @@ func (c *ClientWithResponses) WaitForBlockWithResponse(ctx context.Context, roun
 	return ParseWaitForBlockResponse(rsp)
 }
 
+// GetVersionWithResponse request returning *GetVersionResponse
+func (c *ClientWithResponses) GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error) {
+	rsp, err := c.GetVersion(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetVersionResponse(rsp)
+}
+
 // ParseMetricsResponse parses an HTTP response from a MetricsWithResponse call
 func ParseMetricsResponse(rsp *http.Response) (*MetricsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -716,6 +1561,408 @@ func ParseMetricsResponse(rsp *http.Response) (*MetricsResponse, error) {
 	response := &MetricsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetBlockResponse parses an HTTP response from a GetBlockWithResponse call
+func ParseGetBlockResponse(rsp *http.Response) (*GetBlockResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBlockResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Block Block header data.
+			Block map[string]interface{} `json:"block"`
+
+			// Cert Optional certificate object. This is only included when the format is set to message pack.
+			Cert *map[string]interface{} `json:"cert,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case rsp.StatusCode == 200:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 400:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 401:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 404:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 500:
+		// Content-type (application/msgpack) unsupported
+
+	}
+
+	return response, nil
+}
+
+// ParseGetParticipationKeysResponse parses an HTTP response from a GetParticipationKeysWithResponse call
+func ParseGetParticipationKeysResponse(rsp *http.Response) (*GetParticipationKeysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetParticipationKeysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ParticipationKey
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddParticipationKeyResponse parses an HTTP response from a AddParticipationKeyWithResponse call
+func ParseAddParticipationKeyResponse(rsp *http.Response) (*AddParticipationKeyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddParticipationKeyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// PartId encoding of the participation ID.
+			PartId string `json:"partId"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGenerateParticipationKeysResponse parses an HTTP response from a GenerateParticipationKeysWithResponse call
+func ParseGenerateParticipationKeysResponse(rsp *http.Response) (*GenerateParticipationKeysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GenerateParticipationKeysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest string
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteParticipationKeyByIDResponse parses an HTTP response from a DeleteParticipationKeyByIDWithResponse call
+func ParseDeleteParticipationKeyByIDResponse(rsp *http.Response) (*DeleteParticipationKeyByIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteParticipationKeyByIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetParticipationKeyByIDResponse parses an HTTP response from a GetParticipationKeyByIDWithResponse call
+func ParseGetParticipationKeyByIDResponse(rsp *http.Response) (*GetParticipationKeyByIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetParticipationKeyByIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ParticipationKey
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppendKeysResponse parses an HTTP response from a AppendKeysWithResponse call
+func ParseAppendKeysResponse(rsp *http.Response) (*AppendKeysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppendKeysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ParticipationKey
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
 	}
 
 	return response, nil
@@ -965,6 +2212,32 @@ func ParseWaitForBlockResponse(rsp *http.Response) (*WaitForBlockResponse, error
 			return nil, err
 		}
 		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetVersionResponse parses an HTTP response from a GetVersionWithResponse call
+func ParseGetVersionResponse(rsp *http.Response) (*GetVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Version
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 

@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
@@ -34,16 +36,54 @@ var (
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
-		// TODO: Add default application
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.SetOutput(cmd.OutOrStdout())
+			client, err := getClient()
+			cobra.CheckErr(err)
 
-			if viper.GetString("server") == "" {
-				return errors.New(ui.Magenta("server is required"))
+			partkeys, err := internal.GetPartKeys(context.Background(), client)
+
+			state := internal.StateModel{
+				Status: internal.StatusModel{
+					State:       "SYNCING",
+					Version:     "NA",
+					Network:     "NA",
+					Voting:      false,
+					NeedsUpdate: true,
+					LastRound:   0,
+				},
+				Metrics: internal.MetricsModel{
+					RoundTime: 0,
+					TPS:       0,
+					RX:        0,
+					TX:        0,
+				},
+				ParticipationKeys: partkeys,
 			}
+			state.Accounts = internal.AccountsFromState(&state)
 
-			log.Info(ui.Purple("Arguments: " + strings.Join(args, " ") + "Server: " + viper.GetString("server")))
-			return nil
+			// Fetch current state
+			err = state.Status.Fetch(context.Background(), client)
+			cobra.CheckErr(err)
+
+			m, err := ui.MakeViewportViewModel(&state, client)
+			cobra.CheckErr(err)
+
+			p := tea.NewProgram(
+				m,
+				tea.WithAltScreen(),
+			)
+			go func() {
+				state.Watch(func(status *internal.StateModel, err error) {
+					cobra.CheckErr(err)
+					p.Send(state)
+				}, context.Background(), client)
+			}()
+			_, err = p.Run()
+			//for {
+			//	time.Sleep(10 * time.Second)
+			//}
+			return err
 		},
 	}
 )

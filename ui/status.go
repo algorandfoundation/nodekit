@@ -1,18 +1,21 @@
 package ui
 
 import (
-	"context"
-	"github.com/algorandfoundation/hack-tui/api"
+	"fmt"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // StatusViewModel is extended from the internal.StatusModel
 type StatusViewModel struct {
-	internal.StatusModel
-	IsVisible bool
+	Data           *internal.StateModel
+	TerminalWidth  int
+	TerminalHeight int
+	IsVisible      bool
 }
 
 // Init has no I/O right now
@@ -22,69 +25,87 @@ func (m StatusViewModel) Init() tea.Cmd {
 
 // Update is called when the user interacts with the render
 func (m StatusViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m.HandleMessage(msg)
+}
+
+// HandleMessage is called when the user interacts with the render
+func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	// Is it a heartbeat of the latest round?
-	case uint64:
-		m.LastRound = msg
-
+	case internal.StateModel:
+		m.Data = &msg
+	// Is it a resize event?
+	case tea.WindowSizeMsg:
+		m.TerminalWidth = msg.Width
+		m.TerminalHeight = msg.Height
 	// Is it a key press?
 	case tea.KeyMsg:
-
-		// Cool, what was the actual key pressed?
 		switch msg.String() {
-
-		// These keys should exit the program.
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
-		// The H key should hide the round
+		// always hide on H press
 		case "h":
 			m.IsVisible = !m.IsVisible
 		}
 	}
-
 	// Return the updated model to the Bubble Tea runtime for processing.
-	return m, waitForUint64(m.HeartBeat)
+	return m, nil
 }
 
 // View handles the render cycle
 func (m StatusViewModel) View() string {
-	// The Last Round
-	round := strconv.Itoa(int(m.LastRound))
-
-	// Handle Visibility
-	if m.IsVisible {
-		round = strings.Repeat("*", len(round))
+	if !m.IsVisible {
+		return ""
 	}
 
-	// Display Text
-	s := Purple("The Current Round is "+round) + "\n"
+	if m.TerminalWidth <= 0 {
+		return "Loading...\n\n\n\n\n\n"
+	}
 
-	// The footer
-	s += Muted("Press q to quit. Press h to hide Round")
+	isCompact := m.TerminalWidth < 90
 
-	// Send the UI for rendering
-	return s
+	var size int
+	if isCompact {
+		size = m.TerminalWidth
+	} else {
+		size = m.TerminalWidth / 2
+	}
+	beginning := blue.Render(" Latest Round: ") + strconv.Itoa(int(m.Data.Status.LastRound))
+	end := yellow.Render(strings.ToUpper(m.Data.Status.State)) + " "
+	middle := strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+
+	// Last Round
+	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
+
+	beginning = blue.Render(" Round time: ") + fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
+	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.TX/1024) + green.Render("TX ")
+	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+
+	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
+
+	beginning = blue.Render(" TPS: ") + fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
+	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.RX/1024) + green.Render("RX ")
+	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+
+	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
+
+	return topSections(max(0, size)).Render(
+		lipgloss.JoinVertical(lipgloss.Left,
+			row1,
+			"",
+			cyan.Render(" -- "+strconv.Itoa(m.Data.Metrics.Window)+" round average --"),
+			row2,
+			row3,
+		))
 }
 
 // MakeStatusViewModel constructs the model to be used in a tea.Program
-func MakeStatusViewModel(client *api.ClientWithResponses) (tea.Model, error) {
+func MakeStatusViewModel(state *internal.StateModel) StatusViewModel {
 	// Create the Model
-	m := StatusViewModel{}
-	m.HeartBeat = make(chan uint64)
-	ctx := context.Background()
-	err := m.Fetch(ctx, client)
-	if err != nil {
-		return nil, err
+	m := StatusViewModel{
+		Data:          state,
+		TerminalWidth: 80,
+		IsVisible:     true,
 	}
-
-	// Watch for block changes
-	go func() {
-		err := m.Watch(ctx, client)
-		// TODO: Update render and better error handling
-		if err != nil {
-			panic(err)
-		}
-	}()
-	return m, nil
+	return m
 }

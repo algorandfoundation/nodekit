@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -23,12 +25,35 @@ var statusCmd = &cobra.Command{
 		// Get Algod from configuration
 		client, err := getClient()
 		cobra.CheckErr(err)
-
-		// Create the TUI
-		view, err := ui.MakeStatusViewModel(client)
+		state := internal.StateModel{
+			Status: internal.StatusModel{
+				State:       "SYNCING",
+				Version:     "NA",
+				Network:     "NA",
+				Voting:      false,
+				NeedsUpdate: true,
+				LastRound:   0,
+			},
+			Metrics: internal.MetricsModel{
+				RoundTime: 0,
+				TPS:       0,
+				RX:        0,
+				TX:        0,
+			},
+			ParticipationKeys: nil,
+		}
+		err = state.Status.Fetch(context.Background(), client)
 		cobra.CheckErr(err)
-		p := tea.NewProgram(view)
+		// Create the TUI
+		view := ui.MakeStatusViewModel(&state)
 
+		p := tea.NewProgram(view, tea.WithAltScreen())
+		go func() {
+			state.Watch(func(status *internal.StateModel, err error) {
+				cobra.CheckErr(err)
+				p.Send(state)
+			}, context.Background(), client)
+		}()
 		// Execute the Command
 		if _, err := p.Run(); err != nil {
 			fmt.Printf("Alas, there's been an error: %v", err)

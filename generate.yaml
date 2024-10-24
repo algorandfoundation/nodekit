@@ -10,3 +10,11 @@ output-options:
     - Metrics
     - GetStatus
     - WaitForBlock
+    - GetVersion
+    - GetParticipationKeys
+    - AddParticipationKey
+    - GenerateParticipationKeys
+    - DeleteParticipationKeyByID
+    - GetParticipationKeyByID
+    - AppendKeys
+    - GetBlock

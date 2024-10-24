@@ -27,3 +27,6 @@ go.work.sum
 
 # env file
 .env
+
+# user-created file
+.algorun.y*ml
