@@ -74,7 +74,6 @@ func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[s
 			}
 		} else {
 			val.Keys++
-			//val.
 			values[key.Address] = val
 		}
 	}

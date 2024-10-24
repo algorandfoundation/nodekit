@@ -9,7 +9,6 @@ import (
 
 // StatusModel represents a status response from algod.Status
 type StatusModel struct {
-	Metrics     MetricsModel
 	State       string
 	Version     string
 	Network     string
@@ -20,7 +19,7 @@ type StatusModel struct {
 
 // String prints the last round value
 func (m *StatusModel) String() string {
-	return fmt.Sprintf("\nLastRound: %d\nRoundTime: %f \nTPS: %f", m.LastRound, m.Metrics.RoundTime.Seconds(), m.Metrics.TPS)
+	return fmt.Sprintf("\nLastRound: %d\n", m.LastRound)
 }
 
 // Fetch handles algod.Status
