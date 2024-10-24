@@ -2,28 +2,29 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/api"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/exp/teatest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/exp/teatest"
 )
 
 func Test_ExecuteInvalidStatusCommand(t *testing.T) {
-	client, err := api.NewClientWithResponses("http://255.255.255.255:4001")
+	client, err := api.NewClientWithResponses("http://255.255.255.255:8080")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Test Invalid Node
 	_, err = MakeStatusViewModel(client)
-	if !strings.Contains(err.Error(), "dial tcp 255.255.255.255:4001") {
+	if !strings.Contains(err.Error(), "dial tcp 255.255.255.255:8080") {
 		t.Fatal(err)
 	}
 }
 func Test_ExecuteStatusCommand(t *testing.T) {
-	client, err := api.NewClientWithResponses("https://mainnet-api.4160.nodely.dev")
+	client, err := api.NewClientWithResponses("http://localhost:8080")
 	if err != nil {
 		t.Fatal(err)
 	}
