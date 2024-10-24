@@ -13,13 +13,19 @@ func (m ViewModel) View() string {
 	urlStyle := lipgloss.NewStyle().
 		Width(m.Width - 2)
 
-	red := lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	red := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("9")).
+		Width(m.Width - 2)
+
+	yellow := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("11")).
+		Width(m.Width - 2)
+
+	var Padding1 = lipgloss.NewStyle().Padding().Render
 
 	if m.asciiQR == "" || m.urlTxn == "" {
 		return lipgloss.JoinVertical(
 			lipgloss.Left,
-			m.asciiQR,
-			m.urlTxn,
 			"No QR Code or TxnURL available",
 			"\n",
 			m.controls.View())
@@ -33,7 +39,9 @@ func (m ViewModel) View() string {
 	}
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		urlStyle.Render(m.urlTxn),
+		yellow.Render(m.hint),
+		Padding1(),
 		qrStyle.Render(m.asciiQR),
+		urlStyle.Render(m.urlTxn),
 		m.controls.View())
 }

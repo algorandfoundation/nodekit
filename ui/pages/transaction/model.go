@@ -27,9 +27,10 @@ type ViewModel struct {
 	// Components
 	controls controls.Model
 
-	// QR Code and URL
+	// QR Code, URL and hint text
 	asciiQR string
 	urlTxn  string
+	hint    string
 }
 
 // New creates and instance of the ViewModel with a default controls.Model

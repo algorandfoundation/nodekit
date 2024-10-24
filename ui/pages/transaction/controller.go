@@ -1,6 +1,8 @@
 package transaction
 
 import (
+	"fmt"
+
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/hack-tui/api"
@@ -17,29 +19,30 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *ViewModel) UpdateTxnURLAndQRCode() error {
-
 	accountStatus := m.State.Accounts[m.Data.Address].Status
 
-	var isOnline bool
-
-	switch accountStatus {
-	case "Offline":
-		isOnline = false
-	case "Online":
-		isOnline = true
-	case "NotParticipating": // This status means the account can never participate in consensus
-		m.urlTxn = ""
-		m.asciiQR = ""
-		return nil
-	}
-
-	// Construct Transaction
-	tx := types.Transaction{}
+	m.hint = ""
 
 	senderAddress, err := types.DecodeAddress(m.Data.Address)
 	if err != nil {
 		return err
 	}
+
+	var isOnline bool
+	switch accountStatus {
+	case "Online":
+		isOnline = true
+	case "Offline":
+		isOnline = false
+	case "NotParticipating": // This status means the account can never participate in consensus
+		m.urlTxn = ""
+		m.asciiQR = ""
+		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", senderAddress)
+		return nil
+	}
+
+	// Construct Transaction
+	tx := types.Transaction{}
 
 	if !isOnline { // TX take account online
 		var stateProofPk types.MerkleVerifier
@@ -61,6 +64,13 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 			},
 		}
 
+		// Update hint if no error
+		defer func() {
+			if err == nil {
+				m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", senderAddress)
+			}
+		}()
+
 	} else { // TX to take account offline
 		tx = types.Transaction{
 			Type: types.KeyRegistrationTx,
@@ -69,6 +79,13 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 				Fee:    1000, //TODO: get proper fee
 			},
 		}
+
+		// Update hint if no error
+		defer func() {
+			if err == nil {
+				m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", senderAddress)
+			}
+		}()
 	}
 
 	// Construct QR Code
@@ -89,7 +106,6 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 
 	m.urlTxn = kr.String()
 	m.asciiQR = qrCode
-
 	return nil
 }
 
