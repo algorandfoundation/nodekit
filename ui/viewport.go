@@ -126,14 +126,16 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.page = KeysPage
 			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 		case "t":
-			if m.page == AccountsPage {
-				return m, nil
-			}
 			m.page = TransactionPage
-			// If there isn't a key already, select the first record
+			// If there isn't a key already, select the first record for that account
 			if m.keysPage.SelectedKey() == nil && m.Data != nil {
 				data := *m.Data.ParticipationKeys
-				return m, keys.EmitKeySelected(&data[0])
+				acct := m.accountsPage.SelectedAccount()
+				for i, key := range data {
+					if key.Address == acct.Address {
+						return m, keys.EmitKeySelected(&data[i])
+					}
+				}
 			}
 			// Navigate to the transaction page
 			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())

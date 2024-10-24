@@ -15,9 +15,6 @@ type ViewModel struct {
 	// Height is the last known vertical lines
 	Height int
 
-	// QRWontFit is a flag to indicate the QR code is too large to display
-	QRWontFit bool
-
 	// Participation Key
 	Data api.ParticipationKey
 
@@ -37,6 +34,6 @@ type ViewModel struct {
 func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
 		State:    state,
-		controls: controls.New(" (a)ccounts | (k)eys | shift+tab: back "),
+		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn") + " | shift+tab: back "),
 	}
 }

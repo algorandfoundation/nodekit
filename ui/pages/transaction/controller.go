@@ -113,10 +113,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if msg.Width != 0 && msg.Height != 0 {
 			m.Width = msg.Width
-			m.Height = max(0, msg.Height-lipgloss.Height(m.controls.View()))
-
-			// If the QR code is too large, set the flag
-			m.QRWontFit = lipgloss.Width(m.asciiQR) > m.Width || lipgloss.Height(m.asciiQR) > m.Height
+			m.Height = max(0, msg.Height-lipgloss.Height(m.controls.View())-3)
 		}
 	}
 
