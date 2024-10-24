@@ -37,6 +37,6 @@ type ViewModel struct {
 func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
 		State:    state,
-		controls: controls.New(" (a)ccounts | (k)eys | (t)xn "),
+		controls: controls.New(" (a)ccounts | (k)eys | shift+tab: back "),
 	}
 }

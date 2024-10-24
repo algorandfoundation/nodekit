@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -19,14 +20,10 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *ViewModel) UpdateTxnURLAndQRCode() error {
+
 	accountStatus := m.State.Accounts[m.Data.Address].Status
 
 	m.hint = ""
-
-	senderAddress, err := types.DecodeAddress(m.Data.Address)
-	if err != nil {
-		return err
-	}
 
 	var isOnline bool
 	switch accountStatus {
@@ -37,65 +34,54 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 	case "NotParticipating": // This status means the account can never participate in consensus
 		m.urlTxn = ""
 		m.asciiQR = ""
-		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", senderAddress)
+		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.Data.Address)
 		return nil
 	}
 
-	// Construct Transaction
-	tx := types.Transaction{}
+	fee := uint64(1000)
 
-	if !isOnline { // TX take account online
-		var stateProofPk types.MerkleVerifier
-		copy(stateProofPk[:], (*m.Data.Key.StateProofKey)[:])
+	kr := &encoder.AUrlTxn{}
 
-		tx = types.Transaction{
-			Type: types.KeyRegistrationTx,
-			Header: types.Header{
-				Sender: senderAddress,
-				Fee:    1000, //TODO: get proper fee
+	if !isOnline {
+
+		// TX take account online
+
+		votePartKey := base64.RawURLEncoding.EncodeToString(m.Data.Key.VoteParticipationKey)
+		selPartKey := base64.RawURLEncoding.EncodeToString(m.Data.Key.SelectionParticipationKey)
+		spKey := base64.RawURLEncoding.EncodeToString(*m.Data.Key.StateProofKey)
+		firstValid := uint64(m.Data.Key.VoteFirstValid)
+		lastValid := uint64(m.Data.Key.VoteLastValid)
+		vkDilution := uint64(m.Data.Key.VoteKeyDilution)
+
+		kr = &encoder.AUrlTxn{
+			AUrlTxnKeyCommon: encoder.AUrlTxnKeyCommon{
+				Sender: m.Data.Address,
+				Type:   string(types.KeyRegistrationTx),
+				Fee:    &fee,
 			},
-			KeyregTxnFields: types.KeyregTxnFields{
-				VotePK:          types.VotePK(m.Data.Key.VoteParticipationKey),
-				SelectionPK:     types.VRFPK(m.Data.Key.SelectionParticipationKey),
-				StateProofPK:    types.MerkleVerifier(stateProofPk),
-				VoteFirst:       types.Round(m.Data.Key.VoteFirstValid),
-				VoteLast:        types.Round(m.Data.Key.VoteLastValid),
-				VoteKeyDilution: uint64(m.Data.Key.VoteKeyDilution),
-			},
-		}
-
-		// Update hint if no error
-		defer func() {
-			if err == nil {
-				m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", senderAddress)
-			}
-		}()
-
-	} else { // TX to take account offline
-		tx = types.Transaction{
-			Type: types.KeyRegistrationTx,
-			Header: types.Header{
-				Sender: senderAddress,
-				Fee:    1000, //TODO: get proper fee
+			AUrlTxnKeyreg: encoder.AUrlTxnKeyreg{
+				VotePK:          &votePartKey,
+				SelectionPK:     &selPartKey,
+				StateProofPK:    &spKey,
+				VoteFirst:       &firstValid,
+				VoteLast:        &lastValid,
+				VoteKeyDilution: &vkDilution,
 			},
 		}
 
-		// Update hint if no error
-		defer func() {
-			if err == nil {
-				m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", senderAddress)
-			}
-		}()
-	}
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", m.Data.Address)
 
-	// Construct QR Code
-	kr, err := encoder.MakeQRKeyRegRequest(
-		encoder.RawTxn{
-			Txn: tx,
-		})
+	} else {
 
-	if err != nil {
-		return err
+		// TX to take account offline
+		kr = &encoder.AUrlTxn{
+			AUrlTxnKeyCommon: encoder.AUrlTxnKeyCommon{
+				Sender: m.Data.Address,
+				Type:   string(types.KeyRegistrationTx),
+				Fee:    &fee,
+			}}
+
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", m.Data.Address)
 	}
 
 	qrCode, err := kr.ProduceQRCode()
