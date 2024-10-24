@@ -230,7 +230,7 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		accountsPage:    accounts.New(state),
 		keysPage:        keys.New("", state.ParticipationKeys),
 		generatePage:    generate.New("", client),
-		transactionPage: transaction.New(state, client),
+		transactionPage: transaction.New(client),
 
 		// Current Page
 		page: AccountsPage,

@@ -54,11 +54,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 			Type: types.KeyRegistrationTx,
 			Header: types.Header{
 				Sender: senderAddress,
-				Fee:    0, //TODO: get proper fee
-				//FirstValid:  types.Round(*m.Data.EffectiveFirstValid),
-				//LastValid:   types.Round(*m.Data.EffectiveLastValid),
-				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
-				GenesisID:   m.NetworkParams.Network,
+				Fee:    1000, //TODO: get proper fee
 			},
 			KeyregTxnFields: types.KeyregTxnFields{
 				VotePK:          types.VotePK(m.Data.Key.VoteParticipationKey),
@@ -75,11 +71,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 			Type: types.KeyRegistrationTx,
 			Header: types.Header{
 				Sender: senderAddress,
-				Fee:    0, //TODO: get proper fee
-				//FirstValid: types.Round(*m.Data.EffectiveFirstValid), //TODO: Determine if this is needed
-				//LastValid:   types.Round(*m.Data.EffectiveLastValid),
-				GenesisHash: types.Digest(m.NetworkParams.GenesisHash),
-				GenesisID:   m.NetworkParams.Network,
+				Fee:    1000, //TODO: get proper fee
 			},
 		}
 	}
