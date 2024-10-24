@@ -31,7 +31,11 @@ type BlockMetrics struct {
 
 func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round uint64, window int) (*BlockMetrics, error) {
 	var avgs BlockMetrics
-
+	if round < uint64(window) {
+		avgs.AvgTime = 0
+		avgs.TPS = 0
+		return &avgs, nil
+	}
 	var format api.GetBlockParamsFormat = "json"
 	a, err := client.GetBlockWithResponse(ctx, int(round), &api.GetBlockParams{
 		Format: &format,
