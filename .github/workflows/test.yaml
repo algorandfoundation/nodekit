@@ -13,6 +13,8 @@ jobs:
 
       - name: Setup Go
         uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
 
       - name: setup .algorun.yaml
         run: |
