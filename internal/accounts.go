@@ -45,6 +45,10 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
 	}
 
+	if r.JSON200 == nil {
+		return "N/A", errors.New("Failed to get account information. JSON200 is nil")
+	}
+
 	return r.JSON200.Status, nil
 }
 
