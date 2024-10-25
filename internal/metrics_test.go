@@ -2,10 +2,11 @@ package internal
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"strconv"
 	"testing"
+
+	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 
 func Test_GetMetrics(t *testing.T) {
@@ -14,7 +15,7 @@ func Test_GetMetrics(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err := api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 
 	metrics, err := GetMetrics(context.Background(), client)
 	if err != nil {

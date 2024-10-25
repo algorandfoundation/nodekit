@@ -3,9 +3,10 @@ package internal
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
-	"testing"
 )
 
 func Test_ListParticipationKeys(t *testing.T) {
@@ -27,7 +28,7 @@ func Test_ListParticipationKeys(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err = api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +60,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err = api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +101,7 @@ func Test_GenerateParticipationKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err = api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +127,7 @@ func Test_DeleteParticipationKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err := api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 	if err != nil {
 		t.Fatal(err)
 	}

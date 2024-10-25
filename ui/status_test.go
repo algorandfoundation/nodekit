@@ -2,11 +2,12 @@ package ui
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
-	"testing"
-	"time"
 )
 
 func Test_StatusViewRender(t *testing.T) {

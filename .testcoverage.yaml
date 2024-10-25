@@ -1,0 +1,26 @@
+profile: cover.out
+
+# (optional; but recommended to set)
+# When specified reported file paths will not contain local prefix in the output
+local-prefix: "github.com/algorandfoundation/hack-tui"
+
+# Holds coverage thresholds percentages, values should be in range [0-100]
+threshold:
+  # (optional; default 0)
+  # The minimum coverage that each file should have
+  file: 0
+
+  # (optional; default 0)
+  # The minimum coverage that each package should have
+  package: 0
+
+  # (optional; default 0)
+  # The minimum total coverage project should have
+  total: 0
+
+# Holds regexp rules which will exclude matched files or packages
+# from coverage statistics
+exclude:
+  # Exclude files or packages matching their paths
+  paths:
+    - api/if.go

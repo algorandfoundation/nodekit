@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+
+      - name: setup .algorun.yaml
+        run: |
+          touch .algorun.yaml
+          echo 'server: http://localhost:8080' >> .algorun.yaml
+          echo 'token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' >> .algorun.yaml
+
+      - name: Start Docker Compose
+        run: docker compose up -d
+
+      - name: Install dependencies
+        run: go get .
+
+      - name: Check formatting
+        run: |
+          fmt_files=$(gofmt -l .)
+          if [ -n "$fmt_files" ]; then
+            echo "Go code is not formatted. Please run 'go fmt'."
+            gofmt -d .
+            exit 1
+          fi
+
+      - name: Tidy go.mod and go.sum
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+          if [ $? -ne 0 ]; then
+            echo "go.mod or go.sum is not tidy. Please run 'go mod tidy'."
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build -o bin/algorun *.go
+
+      - name: Test with the Go CLI
+        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+
+      - name: check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yaml
