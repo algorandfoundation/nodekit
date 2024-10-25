@@ -23,6 +23,7 @@ var (
 	cyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	yellow  = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
 	green   = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+	red     = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	Magenta = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("5")).
 		Render

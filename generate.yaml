@@ -18,3 +18,4 @@ output-options:
     - GetParticipationKeyByID
     - AppendKeys
     - GetBlock
+    - AccountInformation

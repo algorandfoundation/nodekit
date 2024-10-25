@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
@@ -20,6 +21,7 @@ const (
 	KeysPage        ViewportPage = "keys"
 	GeneratePage    ViewportPage = "generate"
 	TransactionPage ViewportPage = "transaction"
+	ErrorPage       ViewportPage = "error"
 )
 
 type ViewportViewModel struct {
@@ -40,6 +42,10 @@ type ViewportViewModel struct {
 
 	page   ViewportPage
 	client *api.ClientWithResponses
+
+	// Error Handler
+	errorMsg  *string
+	errorPage ErrorViewModel
 }
 
 type DeleteFinished string
@@ -72,6 +78,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case error:
+		strMsg := msg.Error()
+		m.errorMsg = &strMsg
 	// When the state updates
 	case internal.StateModel:
 		m.Data = &msg
@@ -107,7 +116,13 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == KeysPage {
 				m.page = TransactionPage
-				return m, nil
+				// If there isn't a key already, select the first record
+				if m.keysPage.SelectedKey() == nil && m.Data != nil {
+					data := *m.Data.ParticipationKeys
+					return m, keys.EmitKeySelected(&data[0])
+				}
+				// Navigate to the transaction page
+				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
 		case "g":
 			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
@@ -120,10 +135,15 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 		case "t":
 			m.page = TransactionPage
-			// If there isn't a key already, select the first record
+			// If there isn't a key already, select the first record for that account
 			if m.keysPage.SelectedKey() == nil && m.Data != nil {
 				data := *m.Data.ParticipationKeys
-				return m, keys.EmitKeySelected(&data[0])
+				acct := m.accountsPage.SelectedAccount()
+				for i, key := range data {
+					if key.Address == acct.Address {
+						return m, keys.EmitKeySelected(&data[i])
+					}
+				}
 			}
 			// Navigate to the transaction page
 			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
@@ -158,6 +178,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		//}
+		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
 		return m, tea.Batch(cmds...)
@@ -180,6 +201,13 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the viewport.Model
 func (m ViewportViewModel) View() string {
+	errMsg := m.errorMsg
+
+	if errMsg != nil {
+		m.errorPage.Message = *errMsg
+		m.page = ErrorPage
+	}
+
 	// Handle Page render
 	var page tea.Model
 	switch m.page {
@@ -191,6 +219,8 @@ func (m ViewportViewModel) View() string {
 		page = m.keysPage
 	case TransactionPage:
 		page = m.transactionPage
+	case ErrorPage:
+		page = m.errorPage
 	}
 
 	if page == nil {
@@ -229,12 +259,14 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		accountsPage:    accounts.New(state),
 		keysPage:        keys.New("", state.ParticipationKeys),
 		generatePage:    generate.New("", client),
-		transactionPage: transaction.New(),
+		transactionPage: transaction.New(state),
 
 		// Current Page
 		page: AccountsPage,
 		// RPC client
 		client: client,
+
+		errorPage: NewErrorViewModel(""),
 	}
 
 	return &m, nil

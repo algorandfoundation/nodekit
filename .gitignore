@@ -25,6 +25,9 @@ bin
 go.work
 go.work.sum
 
+# IDE
+.vscode/
+
 # env file
 .env
 

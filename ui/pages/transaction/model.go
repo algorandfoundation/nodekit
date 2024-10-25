@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -17,16 +18,22 @@ type ViewModel struct {
 	// Participation Key
 	Data api.ParticipationKey
 
+	// Pointer to the State
+	State *internal.StateModel
+
 	// Components
 	controls controls.Model
 
-	// TODO: add URL
-	// urlTxn   string
+	// QR Code, URL and hint text
+	asciiQR string
+	urlTxn  string
+	hint    string
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
-func New() ViewModel {
+func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
-		controls: controls.New(" (a)ccunts | (k)eys | " + green.Render("(t)xn ")),
+		State:    state,
+		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn") + " | shift+tab: back "),
 	}
 }

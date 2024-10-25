@@ -1,13 +1,14 @@
 package keys
 
 import (
+	"sort"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-	"sort"
 )
 
 type ViewModel struct {
