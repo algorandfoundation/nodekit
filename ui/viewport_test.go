@@ -2,18 +2,19 @@ package ui
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
-	"testing"
-	"time"
 )
 
 func Test_ViewportViewRender(t *testing.T) {
 	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	client, err := api.NewClientWithResponses("http://localhost:4001", api.WithRequestEditorFn(apiToken.Intercept))
+	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 	if err != nil {
 		t.Fatal(err)
 	}
