@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
@@ -30,11 +29,9 @@ type Account struct {
 	LastModified int
 }
 
-func getAddressesFromGenesis() ([]string, string, string, error) {
-
-	// TODO: replace with calls to GetGenesis
-
-	resp, err := http.Get("http://localhost:8080/genesis")
+// Gets the list of addresses created at genesis from the genesis file
+func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string, string, error) {
+	resp, err := client.GetGenesis(context.Background())
 	if err != nil {
 		return []string{}, "", "", err
 	}

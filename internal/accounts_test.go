@@ -19,7 +19,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 
-	addresses, rewardsPool, feeSink, err := getAddressesFromGenesis()
+	addresses, rewardsPool, feeSink, err := getAddressesFromGenesis(client)
 
 	if err != nil {
 		t.Fatal(err)
