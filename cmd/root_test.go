@@ -8,7 +8,8 @@ import (
 
 // Test the stub root command
 func Test_ExecuteRootCommand(t *testing.T) {
-	viper.Set("server", "https://mainnet-api.4160.nodely.dev:443")
+	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	viper.Set("server", "http://localhost:8080")
 
 	// Execute
 	err := rootCmd.Execute()

@@ -3,10 +3,6 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"io"
-	"os"
-	"strings"
-
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
@@ -15,6 +11,9 @@ import (
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
+	"os"
+	"strings"
 )
 
 const BANNER = `
@@ -43,6 +42,7 @@ var (
 			cobra.CheckErr(err)
 
 			partkeys, err := internal.GetPartKeys(context.Background(), client)
+			cobra.CheckErr(err)
 
 			state := internal.StateModel{
 				Status: internal.StatusModel{
@@ -80,6 +80,7 @@ var (
 						p.Send(state)
 					}
 					if err != nil {
+						p.Send(state)
 						p.Send(err)
 					}
 				}, context.Background(), client)

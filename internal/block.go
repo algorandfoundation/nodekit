@@ -44,9 +44,15 @@ func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round
 	if err != nil {
 		return nil, err
 	}
+	if a.StatusCode() != 200 {
+		return nil, errors.New("invalid status code")
+	}
 	b, err := client.GetBlockWithResponse(ctx, int(round)-window, &api.GetBlockParams{
 		Format: &format,
 	})
+	if a.StatusCode() != 200 {
+		return nil, errors.New("invalid status code")
+	}
 	if err != nil {
 		return nil, err
 	}
