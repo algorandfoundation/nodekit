@@ -62,42 +62,43 @@ func Test_AccountsFromState(t *testing.T) {
 
 	// Test AccountFromState
 
-	params := api.GenerateParticipationKeysParams{
-		Dilution: nil,
-		First:    0,
-		Last:     10000,
-	}
-
-	// Generate ParticipationKeys for all addresses
-	var participationKeys []api.ParticipationKey
-	for _, address := range addresses {
-		key, err := GenerateKeyPair(context.Background(), client, address, &params)
-		if err != nil {
-			t.Fatal(err)
+	// Prepare expected results
+	// Only include addresses with "Online" status
+	onlineAddresses := make(map[string]string)
+	for address, status := range mapAddressOnlineStatus {
+		if status == "Online" {
+			onlineAddresses[address] = status
 		}
-		participationKeys = append(participationKeys, *key)
 	}
 
-	// Mock StateModel
-	state := &StateModel{
-		ParticipationKeys: &participationKeys,
-	}
-
-	// Call AccountsFromState
-	accounts := AccountsFromState(state, client)
-
-	// Create expectedAccounts dynamically
+	// Create expectedAccounts dynamically from Online accounts, corresponding to our part keys
 	expectedAccounts := make(map[string]Account)
-	for _, address := range addresses {
+	for address, status := range onlineAddresses {
 		expectedAccounts[address] = Account{
 			Address:      address,
-			Status:       mapAddressOnlineStatus[address],
+			Status:       status,
 			Balance:      0,
 			Expires:      time.Unix(0, 0),
 			Keys:         1,
 			LastModified: 0,
 		}
 	}
+
+	// Get Part Keys
+	// There should be at two online accounts in tuinet, so we can use them to test.
+	partKeys, err := GetPartKeys(context.Background(), client)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock StateModel
+	state := &StateModel{
+		ParticipationKeys: partKeys,
+	}
+
+	// Call AccountsFromState
+	accounts := AccountsFromState(state, client)
 
 	// Assert results
 	assert.Equal(t, expectedAccounts, accounts)
