@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"strconv"
@@ -60,7 +61,7 @@ func (m ProtocolViewModel) View() string {
 	if m.TerminalWidth <= 0 {
 		return "Loading...\n\n\n\n\n\n"
 	}
-	beginning := blue.Render(" Node: ") + m.Data.Version
+	beginning := style.Blue.Render(" Node: ") + m.Data.Version
 
 	isCompact := m.TerminalWidth < 90
 
@@ -70,7 +71,7 @@ func (m ProtocolViewModel) View() string {
 
 	end := ""
 	if m.Data.NeedsUpdate && !isCompact {
-		end += green.Render("[UPDATE AVAILABLE] ")
+		end += style.Green.Render("[UPDATE AVAILABLE] ")
 	}
 
 	var size int
@@ -88,16 +89,16 @@ func (m ProtocolViewModel) View() string {
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, blue.Render(" Network: ")+m.Data.Network)
+	rows = append(rows, style.Blue.Render(" Network: ")+m.Data.Network)
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
+	rows = append(rows, style.Blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
 
 	if isCompact && m.Data.NeedsUpdate {
-		rows = append(rows, blue.Render(" Upgrade Available: ")+green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
+		rows = append(rows, style.Blue.Render(" Upgrade Available: ")+style.Green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
 	}
-	return WithTitle("Protocol", topSections(max(0, size)).Render(lipgloss.JoinVertical(lipgloss.Left,
+	return style.WithTitle("Protocol", style.ApplyBorder(max(0, size-2), 5, "5").Render(lipgloss.JoinVertical(lipgloss.Left,
 		rows...,
 	)))
 }

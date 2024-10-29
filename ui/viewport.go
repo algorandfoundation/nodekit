@@ -168,20 +168,18 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Handle the page resize event
-		//switch m.page {
-		//case AccountsPage:
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case KeysPage:
+
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case GeneratePage:
+
 		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case TransactionPage:
+
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//}
+
 		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
@@ -198,6 +196,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
 	case TransactionPage:
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	case ErrorPage:
+		m.errorPage, cmd = m.errorPage.HandleMessage(msg)
 	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)

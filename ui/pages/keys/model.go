@@ -1,11 +1,11 @@
 package keys
 
 import (
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	"sort"
 
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
-	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
@@ -28,7 +28,7 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		Width:   80,
 		Height:  24,
 
-		controls: controls.New(" (g)enerate | (a)ccounts | " + green.Render("(k)eys") + " | (t)xn | (d)elete "),
+		controls: controls.New(" (g)enerate | (a)ccounts | " + style.Green.Render("(k)eys") + " | (t)xn | (d)elete "),
 
 		table: table.New(),
 	}
@@ -70,7 +70,7 @@ func (m ViewModel) SelectedKey() *api.ParticipationKey {
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	avgWidth := (width - lipgloss.Width(pages.Padding1("")) - 14) / 13
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 13
 	return []table.Column{
 		{Title: "ID", Width: avgWidth},
 		{Title: "Address", Width: avgWidth},

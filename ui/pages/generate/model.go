@@ -7,6 +7,8 @@ import (
 )
 
 type ViewModel struct {
+	Width      int
+	Height     int
 	Address    string
 	Inputs     []textinput.Model
 	client     *api.ClientWithResponses

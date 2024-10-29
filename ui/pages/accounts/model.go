@@ -1,12 +1,12 @@
 package accounts
 
 import (
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	"sort"
 	"strconv"
 
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
-	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -25,7 +25,7 @@ func New(state *internal.StateModel) ViewModel {
 		Width:    0,
 		Height:   0,
 		Data:     state.Accounts,
-		controls: controls.New(" (g)enerate | " + green.Render("(a)ccounts") + " | (k)eys | (t)xn "),
+		controls: controls.New(" (g)enerate | " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn "),
 	}
 
 	m.table = table.New(
@@ -56,7 +56,7 @@ func (m ViewModel) SelectedAccount() internal.Account {
 	return account
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
-	avgWidth := (width - lipgloss.Width(pages.Padding1("")) - 14) / 5
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 5
 	return []table.Column{
 		{Title: "Account", Width: avgWidth},
 		{Title: "Keys", Width: avgWidth},
