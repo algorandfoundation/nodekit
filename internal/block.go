@@ -18,7 +18,7 @@ func GetBlock(ctx context.Context, client *api.ClientWithResponses, round uint64
 	}
 
 	if block.StatusCode() != 200 {
-		return nil, errors.New("invalid status code")
+		return nil, errors.New(block.Status())
 	}
 
 	return block.JSON200.Block, nil
@@ -44,12 +44,19 @@ func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round
 	if err != nil {
 		return nil, err
 	}
+	if a.StatusCode() != 200 {
+		return nil, errors.New(a.Status())
+	}
 	b, err := client.GetBlockWithResponse(ctx, int(round)-window, &api.GetBlockParams{
 		Format: &format,
 	})
 	if err != nil {
 		return nil, err
 	}
+	if b.StatusCode() != 200 {
+		return nil, errors.New(b.Status())
+	}
+
 	// Push to the transactions count list
 	aTimestamp := time.Duration(a.JSON200.Block["ts"].(float64)) * time.Second
 	bTimestamp := time.Duration(b.JSON200.Block["ts"].(float64)) * time.Second

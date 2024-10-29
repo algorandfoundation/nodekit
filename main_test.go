@@ -6,6 +6,7 @@ import (
 )
 
 func Test_Main(t *testing.T) {
-	viper.Set("server", "https://mainnet-api.4160.nodely.dev")
+	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	viper.Set("server", "http://localhost:8080")
 	main()
 }

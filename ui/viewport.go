@@ -83,6 +83,10 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.errorMsg = &strMsg
 	// When the state updates
 	case internal.StateModel:
+		if m.errorMsg != nil {
+			m.errorMsg = nil
+			m.page = AccountsPage
+		}
 		m.Data = &msg
 		// Navigate to the transaction page when a partkey is selected
 	case *api.ParticipationKey:

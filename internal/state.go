@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
 )
@@ -15,6 +16,14 @@ type StateModel struct {
 	// TODO: handle contexts instead of adding it to state
 	Admin    bool
 	Watching bool
+}
+
+func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err error)) {
+	if err != nil {
+		s.Status.State = "DOWN"
+		cb(nil, err)
+		time.Sleep(time.Second * 3)
+	}
 }
 
 // TODO: allow context to handle loop
@@ -36,13 +45,16 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			break
 		}
 		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
+		s.waitAfterError(err, cb)
 		if err != nil {
-			cb(nil, err)
+			continue
 		}
 		if status.StatusCode() != 200 {
-			cb(nil, errors.New(status.Status()))
-			return
+			s.waitAfterError(errors.New(status.Status()), cb)
+			continue
 		}
+
+		s.Status.State = "Unknown"
 
 		// Update Status
 		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.UpgradeNodeVote)
@@ -53,8 +65,9 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		// Run Round Averages and RX/TX every 5 rounds
 		if s.Status.LastRound%5 == 0 {
 			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
+			s.waitAfterError(err, cb)
 			if err != nil {
-				cb(nil, err)
+				continue
 			}
 			s.Metrics.RoundTime = bm.AvgTime
 			s.Metrics.TPS = bm.TPS
