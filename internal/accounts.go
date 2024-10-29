@@ -2,8 +2,10 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
@@ -27,6 +29,78 @@ type Account struct {
 	LastModified int
 }
 
+// Gets the list of addresses created at genesis from the genesis file
+func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string, string, error) {
+	resp, err := client.GetGenesis(context.Background())
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return []string{}, "", "", errors.New(fmt.Sprintf("Failed to get genesis file. Received error code: %d", resp.StatusCode))
+	}
+
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	// Unmarshal the JSON response into a map
+	var jsonResponse map[string]interface{}
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	// Two special addresses
+	rewardsPool := "7777777777777777777777777777777777777777777777777774MSJUVU"
+	feeSink := "A7NMWS3NT3IUDMLVO26ULGXGIIOUQ3ND2TXSER6EBGRZNOBOUIQXHIBGDE"
+	rewardsPoolIncluded := false
+	feeSinkIncluded := false
+
+	// Loop over each entry in the "alloc" list and collect the "addr" values
+	var addresses []string
+	if allocList, ok := jsonResponse["alloc"].([]interface{}); ok {
+		for _, entry := range allocList {
+			if entryMap, ok := entry.(map[string]interface{}); ok {
+				if addr, ok := entryMap["addr"].(string); ok {
+					if addr == rewardsPool {
+						rewardsPoolIncluded = true
+					} else if addr == feeSink {
+						feeSinkIncluded = true
+					} else {
+						addresses = append(addresses, addr)
+					}
+				} else {
+					return []string{}, "", "", fmt.Errorf("In genesis.json no addr string found in list element entry:  %+v", entry)
+				}
+			} else {
+				return []string{}, "", "", fmt.Errorf("In genesis.json list element of alloc-field is not a map:  %+v", entry)
+			}
+		}
+	} else {
+		return []string{}, "", "", errors.New("alloc is not a list")
+	}
+
+	if !rewardsPoolIncluded || !feeSinkIncluded {
+		return []string{}, "", "", errors.New("Expected RewardsPool and/or FeeSink addresses NOT found in genesis file")
+	}
+
+	return addresses, rewardsPool, feeSink, nil
+}
+
+func isValidStatus(status string) bool {
+	validStatuses := map[string]bool{
+		"Online":            true,
+		"Offline":           true,
+		"Not Participating": true,
+	}
+	return validStatuses[status]
+}
+
 // Get Online Status of Account
 func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (string, error) {
 	var format api.AccountInformationParamsFormat = "json"
@@ -43,6 +117,10 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 
 	if r.StatusCode() != 200 {
 		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
+	}
+
+	if r.JSON200 == nil {
+		return "N/A", errors.New("Failed to get account information. JSON200 is nil")
 	}
 
 	return r.JSON200.Status, nil

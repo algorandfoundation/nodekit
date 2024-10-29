@@ -31,7 +31,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 		isOnline = true
 	case "Offline":
 		isOnline = false
-	case "NotParticipating": // This status means the account can never participate in consensus
+	case "Not Participating": // This status means the account can never participate in consensus
 		m.urlTxn = ""
 		m.asciiQR = ""
 		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.Data.Address)
