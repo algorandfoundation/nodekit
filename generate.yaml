@@ -19,3 +19,4 @@ output-options:
     - AppendKeys
     - GetBlock
     - AccountInformation
+    - GetGenesis
