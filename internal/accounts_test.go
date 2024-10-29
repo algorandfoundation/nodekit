@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -71,7 +70,8 @@ func Test_AccountsFromState(t *testing.T) {
 		}
 	}
 
-	// Create expectedAccounts dynamically from Online accounts, corresponding to our part keys
+	// Create expectedAccounts dynamically from Online accounts, and mocked participation keys
+	mockedPartKeys := make([]api.ParticipationKey, 0)
 	expectedAccounts := make(map[string]Account)
 	for address, status := range onlineAddresses {
 		expectedAccounts[address] = Account{
@@ -82,19 +82,29 @@ func Test_AccountsFromState(t *testing.T) {
 			Keys:         1,
 			LastModified: 0,
 		}
-	}
 
-	// Get Part Keys
-	// There should be at two online accounts in tuinet, so we can use them to test.
-	partKeys, err := GetPartKeys(context.Background(), client)
-
-	if err != nil {
-		t.Fatal(err)
+		mockedPartKeys = append(mockedPartKeys, api.ParticipationKey{
+			Address:             address,
+			EffectiveFirstValid: nil,
+			EffectiveLastValid:  nil,
+			Id:                  "",
+			Key: api.AccountParticipation{
+				SelectionParticipationKey: nil,
+				StateProofKey:             nil,
+				VoteParticipationKey:      nil,
+				VoteFirstValid:            0,
+				VoteLastValid:             9999999,
+				VoteKeyDilution:           0,
+			},
+			LastBlockProposal: nil,
+			LastStateProof:    nil,
+			LastVote:          nil,
+		})
 	}
 
 	// Mock StateModel
 	state := &StateModel{
-		ParticipationKeys: partKeys,
+		ParticipationKeys: &mockedPartKeys,
 	}
 
 	// Call AccountsFromState
