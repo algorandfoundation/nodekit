@@ -97,9 +97,9 @@ func (m ProtocolViewModel) View() string {
 	if isCompact && m.Data.NeedsUpdate {
 		rows = append(rows, blue.Render(" Upgrade Available: ")+green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
 	}
-	return topSections(max(0, size)).Render(lipgloss.JoinVertical(lipgloss.Left,
+	return WithTitle("Protocol", topSections(max(0, size)).Render(lipgloss.JoinVertical(lipgloss.Left,
 		rows...,
-	))
+	)))
 }
 
 // MakeProtocolViewModel constructs a ProtocolViewModel using a given StatusModel and predefined metrics.
