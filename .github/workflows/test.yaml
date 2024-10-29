@@ -26,10 +26,7 @@ jobs:
         run: docker compose up -d
 
       - name: Wait for the server to start
-        run: |
-          while ! curl --output /dev/null --silent --head --fail http://localhost:8080; do
-            sleep 1 && echo -n .;
-          done;
+        run: npx wait-on tcp:8080
 
       - name: Install dependencies
         run: go get .
