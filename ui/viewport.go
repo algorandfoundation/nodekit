@@ -48,15 +48,13 @@ type ViewportViewModel struct {
 	errorPage ErrorViewModel
 }
 
-type DeleteFinished string
-
 func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
 	return func() tea.Msg {
 		err := internal.DeletePartKey(context.Background(), client, key.Id)
 		if err != nil {
-			return DeleteFinished(err.Error())
+			return keys.DeleteFinished(err.Error())
 		}
-		return DeleteFinished("Key deleted")
+		return keys.DeleteFinished("Key deleted")
 	}
 }
 
@@ -96,8 +94,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = KeysPage
 	case keys.DeleteKey:
 		return m, DeleteKey(m.client, msg)
-	case DeleteFinished:
-	//	TODO
+	case keys.DeleteFinished:
+		return m, keys.EmitKeyDeleted()
 	case tea.KeyMsg:
 		switch msg.String() {
 		// Tab Backwards
@@ -128,12 +126,12 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Navigate to the transaction page
 				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
+		case "a":
+			m.page = AccountsPage
 		case "g":
 			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
 			m.page = GeneratePage
 			return m, nil
-		case "a":
-			m.page = AccountsPage
 		case "k":
 			m.page = KeysPage
 			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())

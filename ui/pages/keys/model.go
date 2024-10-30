@@ -17,6 +17,10 @@ type ViewModel struct {
 	Width   int
 	Height  int
 
+	SelectedKeyToDelete *api.ParticipationKey
+
+	DeleteLoading bool
+
 	table    table.Model
 	controls controls.Model
 }
