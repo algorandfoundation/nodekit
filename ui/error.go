@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -9,10 +8,9 @@ import (
 )
 
 type ErrorViewModel struct {
-	Height   int
-	Width    int
-	controls controls.Model
-	Message  string
+	Height  int
+	Width   int
+	Message string
 }
 
 func NewErrorViewModel(message string) ErrorViewModel {

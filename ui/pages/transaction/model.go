@@ -1,13 +1,11 @@
 package transaction
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/controls"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 )
-
-var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 
 type ViewModel struct {
 	// Width is the last known horizontal lines
@@ -19,10 +17,12 @@ type ViewModel struct {
 	Data api.ParticipationKey
 
 	// Pointer to the State
-	State *internal.StateModel
+	State    *internal.StateModel
+	IsOnline bool
 
 	// Components
-	controls controls.Model
+	controls   string
+	navigation string
 
 	// QR Code, URL and hint text
 	asciiQR string
@@ -30,10 +30,16 @@ type ViewModel struct {
 	hint    string
 }
 
+func (m ViewModel) FormatedAddress() string {
+	return fmt.Sprintf("%s...%s", m.Data.Address[0:4], m.Data.Address[len(m.Data.Address)-4:])
+}
+
 // New creates and instance of the ViewModel with a default controls.Model
 func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
-		State:    state,
-		controls: controls.New(" (a)ccounts | (k)eys | " + green.Render("(t)xn") + " | shift+tab: back "),
+		State:      state,
+		IsOnline:   false,
+		navigation: "| (a)ccounts | (k)eys | " + style.Green.Render("(t)xn") + " |",
+		controls:   "( shift+tab: back )",
 	}
 }
