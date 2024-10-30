@@ -78,6 +78,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case generate.Cancel:
+		m.page = AccountsPage
+		return m, nil
 	case error:
 		strMsg := msg.Error()
 		m.errorMsg = &strMsg
@@ -152,7 +155,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Navigate to the transaction page
 			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 		case "ctrl+c":
-			return m, tea.Quit
+			if m.page != GeneratePage {
+				return m, tea.Quit
+			}
 		}
 
 	case tea.WindowSizeMsg:

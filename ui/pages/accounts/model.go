@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -16,16 +15,18 @@ type ViewModel struct {
 	Height int
 	Data   map[string]internal.Account
 
-	table    table.Model
-	controls controls.Model
+	table      table.Model
+	navigation string
+	controls   string
 }
 
 func New(state *internal.StateModel) ViewModel {
 	m := ViewModel{
-		Width:    0,
-		Height:   0,
-		Data:     state.Accounts,
-		controls: controls.New(" (g)enerate | " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn "),
+		Width:      0,
+		Height:     0,
+		Data:       state.Accounts,
+		controls:   "( (g)enerate )",
+		navigation: "| " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn |",
 	}
 
 	m.table = table.New(

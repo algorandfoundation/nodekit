@@ -47,3 +47,29 @@ func WithTitle(title string, view string) string {
 	}
 	return view
 }
+func WithControls(nav string, view string) string {
+	if nav == "" {
+		return view
+	}
+	controlWidth := lipgloss.Width(nav)
+	if lipgloss.Width(view) >= controlWidth+4 {
+		b, _, _, _, _ := Border.GetBorder()
+		find := b.BottomLeft + strings.Repeat(b.Bottom, controlWidth+4)
+		// TODO: allow other border colors, possibly just grab the last escape char
+		return strings.Replace(view, find, b.BottomLeft+strings.Repeat(b.Bottom, 4)+"\u001B[0m"+nav+"\u001B[90m", 1)
+	}
+	return view
+}
+func WithNavigation(controls string, view string) string {
+	if controls == "" {
+		return view
+	}
+	controlWidth := lipgloss.Width(controls)
+	if lipgloss.Width(view) >= controlWidth+4 {
+		b, _, _, _, _ := Border.GetBorder()
+		find := strings.Repeat(b.Bottom, controlWidth+4) + b.BottomRight
+		// TODO: allow other border colors, possibly just grab the last escape char
+		return strings.Replace(view, find, "\u001B[0m"+controls+"\u001B[90m"+strings.Repeat(b.Bottom, 4)+b.BottomRight, 1)
+	}
+	return view
+}

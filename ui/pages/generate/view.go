@@ -22,5 +22,12 @@ func (m ViewModel) View() string {
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 
-	return style.WithTitle("Generate", style.ApplyBorder(m.Width-3, m.Height-1, "8").Render(b.String()))
+	render := style.ApplyBorder(m.Width, m.Height, "8").Render(b.String())
+	return style.WithControls(
+		m.controls,
+		style.WithTitle(
+			"Generate",
+			render,
+		),
+	)
 }

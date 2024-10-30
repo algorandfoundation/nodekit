@@ -37,21 +37,20 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.Width = msg.Width
-		m.Height = msg.Height + 1
-
 		borderRender := style.Border.Render("")
-		tableWidth := max(0, msg.Width-lipgloss.Width(borderRender)-20)
-		m.table.SetWidth(tableWidth)
-		m.table.SetHeight(m.Height - lipgloss.Height(borderRender) - lipgloss.Height(m.controls.View()))
-		m.table.SetColumns(m.makeColumns(tableWidth))
+		borderWidth := lipgloss.Width(borderRender)
+		borderHeight := lipgloss.Height(borderRender)
+
+		m.Width = max(0, msg.Width-borderWidth)
+		m.Height = max(0, msg.Height-borderHeight)
+		m.table.SetWidth(m.Width)
+		m.table.SetHeight(m.Height)
+		m.table.SetColumns(m.makeColumns(m.Width))
 	}
 
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	m.controls, cmd = m.controls.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }

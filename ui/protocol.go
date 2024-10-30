@@ -40,14 +40,6 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		// The H key should hide the render
-		case "h":
-			m.IsVisible = !m.IsVisible
-		case "ctrl+c":
-			return m, tea.Quit
-		}
 	}
 	// Return the updated model to the Bubble Tea runtime for processing.
 	return m, nil

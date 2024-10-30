@@ -5,8 +5,10 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"strconv"
 )
@@ -25,10 +27,12 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.Width = msg.Width
-		m.Height = msg.Height
+		m.Width = msg.Width - lipgloss.Width(style.Border.Render(""))
+		m.Height = msg.Height - lipgloss.Height(style.Border.Render(""))
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "ctrl+c", "esc":
+			return m, EmitCancel(Cancel{})
 		case "tab", "shift+tab", "up", "down":
 			s := msg.String()
 

@@ -17,10 +17,9 @@ type ErrorViewModel struct {
 
 func NewErrorViewModel(message string) ErrorViewModel {
 	return ErrorViewModel{
-		Height:   0,
-		Width:    0,
-		Message:  message,
-		controls: controls.New(" Error "),
+		Height:  0,
+		Width:   0,
+		Message: message,
 	}
 }
 
@@ -37,18 +36,34 @@ func (m ErrorViewModel) HandleMessage(msg tea.Msg) (ErrorViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.WindowSizeMsg:
-		m.Width = msg.Width
-		m.Height = msg.Height
+		borderRender := style.Border.Render("")
+		m.Width = max(0, msg.Width-lipgloss.Width(borderRender))
+		m.Height = max(0, msg.Height-lipgloss.Height(borderRender))
 	}
-	m.controls, cmd = m.controls.HandleMessage(msg)
+
 	return m, cmd
 }
 
 func (m ErrorViewModel) View() string {
-	ctls := m.controls.View()
-	controlHeight := lipgloss.Height(ctls)
+	msgHeight := lipgloss.Height(m.Message)
+	msgWidth := lipgloss.Width(m.Message)
+
+	if msgWidth > m.Width/2 {
+		m.Message = m.Message[0:m.Width/2] + "..."
+		msgWidth = m.Width/2 + 3
+	}
+
 	msg := style.Red.Render(m.Message)
-	msgHeight := lipgloss.Height(msg)
-	pad := strings.Repeat("\n", max(0, (m.Height/2)-controlHeight-msgHeight))
-	return lipgloss.JoinVertical(lipgloss.Center, pad, msg, pad, ctls)
+	padT := strings.Repeat("\n", max(0, (m.Height/2)-msgHeight))
+	padL := strings.Repeat(" ", max(0, (m.Width-msgWidth)/2))
+
+	text := lipgloss.JoinHorizontal(lipgloss.Left, padL, msg)
+	render := style.ApplyBorder(m.Width, m.Height, "8").Render(lipgloss.JoinVertical(lipgloss.Center, padT, text))
+	return style.WithNavigation(
+		"( Waiting for recovery... )",
+		style.WithTitle(
+			"System Error",
+			render,
+		),
+	)
 }

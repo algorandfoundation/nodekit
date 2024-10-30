@@ -39,15 +39,6 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
-	// Is it a key press?
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-		// always hide on H press
-		case "h":
-			m.IsVisible = !m.IsVisible
-		}
 	}
 	// Return the updated model to the Bubble Tea runtime for processing.
 	return m, nil

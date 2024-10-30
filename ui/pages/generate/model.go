@@ -7,10 +7,13 @@ import (
 )
 
 type ViewModel struct {
-	Width      int
-	Height     int
-	Address    string
-	Inputs     []textinput.Model
+	Width   int
+	Height  int
+	Address string
+	Inputs  []textinput.Model
+
+	controls string
+
 	client     *api.ClientWithResponses
 	focusIndex int
 	cursorMode cursor.Mode
@@ -18,9 +21,10 @@ type ViewModel struct {
 
 func New(address string, client *api.ClientWithResponses) ViewModel {
 	m := ViewModel{
-		Address: address,
-		Inputs:  make([]textinput.Model, 3),
-		client:  client,
+		Address:  address,
+		Inputs:   make([]textinput.Model, 3),
+		controls: "( ctrl+c to cancel )",
+		client:   client,
 	}
 
 	var t textinput.Model
