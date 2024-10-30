@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,10 +17,10 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get the node status",
-	Long:  ui.Purple(BANNER) + "\n" + ui.LightBlue("View the node status"),
+	Long:  style.Purple(BANNER) + "\n" + style.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if viper.GetString("server") == "" {
-			return errors.New(ui.Magenta("server is required"))
+			return errors.New(style.Magenta("server is required"))
 		}
 
 		// Get Algod from configuration

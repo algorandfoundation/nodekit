@@ -1,10 +1,19 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/pages"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 )
 
 func (m ViewModel) View() string {
-	return lipgloss.JoinVertical(lipgloss.Center, pages.Padding1(m.table.View()), m.controls.View())
+	table := style.ApplyBorder(m.Width, m.Height, "8").Render(m.table.View())
+	return style.WithNavigation(
+		m.navigation,
+		style.WithControls(
+			m.controls,
+			style.WithTitle(
+				"Keys",
+				table,
+			),
+		),
+	)
 }

@@ -96,7 +96,7 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.Clien
 	}
 }
 func (s *StateModel) UpdateAccounts(client *api.ClientWithResponses) {
-	s.Accounts = AccountsFromState(s, client)
+	s.Accounts = AccountsFromState(s, new(Clock), client)
 }
 
 func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithResponses) {

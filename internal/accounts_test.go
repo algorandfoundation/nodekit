@@ -1,13 +1,16 @@
 package internal
 
 import (
-	"testing"
-	"time"
-
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
+
+type TestClock struct{}
+
+func (TestClock) Now() time.Time { return time.Time{} }
 
 func Test_AccountsFromState(t *testing.T) {
 
@@ -24,67 +27,68 @@ func Test_AccountsFromState(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Test getAccountOnlineStatus
-
-	var mapAddressOnlineStatus = make(map[string]string)
-
+	var mapAccounts = make(map[string]api.Account)
+	var onlineAccounts = make([]api.Account, 0)
 	for _, address := range addresses {
-		status, err := getAccountOnlineStatus(client, address)
+		acct, err := GetAccount(client, address)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.True(t, status == "Online" || status == "Offline")
-		mapAddressOnlineStatus[address] = status
+		assert.True(t, acct.Status == "Online" || acct.Status == "Offline")
+		mapAccounts[address] = acct
+		if acct.Status == "Online" {
+			onlineAccounts = append(onlineAccounts, acct)
+		}
 	}
 
-	status, err := getAccountOnlineStatus(client, rewardsPool)
+	acct, err := GetAccount(client, rewardsPool)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if status != "Not Participating" {
-		t.Fatalf("Expected RewardsPool to be 'Not Participating', got %s", status)
+	if acct.Status != "Not Participating" {
+		t.Fatalf("Expected RewardsPool to be 'Not Participating', got %s", acct.Status)
 	}
 
-	status, err = getAccountOnlineStatus(client, feeSink)
+	acct, err = GetAccount(client, feeSink)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if status != "Not Participating" {
-		t.Fatalf("Expected FeeSink to be 'Not Participating', got %s", status)
+	if acct.Status != "Not Participating" {
+		t.Fatalf("Expected FeeSink to be 'Not Participating', got %s", acct.Status)
 	}
 
-	_, err = getAccountOnlineStatus(client, "invalid_address")
+	_, err = GetAccount(client, "invalid_address")
 	if err == nil {
 		t.Fatal("Expected error for invalid address")
 	}
 
-	// Test AccountFromState
+	// Test Account from State
 
-	// Prepare expected results
-	// Only include addresses with "Online" status
-	onlineAddresses := make(map[string]string)
-	for address, status := range mapAddressOnlineStatus {
-		if status == "Online" {
-			onlineAddresses[address] = status
-		}
-	}
+	effectiveFirstValid := 0
+	effectiveLastValid := 10000
 
-	// Create expectedAccounts dynamically from Online accounts, and mocked participation keys
-	mockedPartKeys := make([]api.ParticipationKey, 0)
-	expectedAccounts := make(map[string]Account)
-	for address, status := range onlineAddresses {
-		expectedAccounts[address] = Account{
-			Address:      address,
-			Status:       status,
-			Balance:      0,
-			Expires:      time.Unix(0, 0),
-			Keys:         1,
-			LastModified: 0,
-		}
-
-		mockedPartKeys = append(mockedPartKeys, api.ParticipationKey{
-			Address:             address,
+	// Create mockedPart Keys
+	var mockedPartKeys = []api.ParticipationKey{
+		{
+			Address:             onlineAccounts[0].Address,
+			EffectiveFirstValid: &effectiveFirstValid,
+			EffectiveLastValid:  &effectiveLastValid,
+			Id:                  "",
+			Key: api.AccountParticipation{
+				SelectionParticipationKey: nil,
+				StateProofKey:             nil,
+				VoteParticipationKey:      nil,
+				VoteFirstValid:            0,
+				VoteLastValid:             9999999,
+				VoteKeyDilution:           0,
+			},
+			LastBlockProposal: nil,
+			LastStateProof:    nil,
+			LastVote:          nil,
+		},
+		{
+			Address:             onlineAccounts[0].Address,
 			EffectiveFirstValid: nil,
 			EffectiveLastValid:  nil,
 			Id:                  "",
@@ -99,16 +103,74 @@ func Test_AccountsFromState(t *testing.T) {
 			LastBlockProposal: nil,
 			LastStateProof:    nil,
 			LastVote:          nil,
-		})
+		},
+		{
+			Address:             onlineAccounts[1].Address,
+			EffectiveFirstValid: &effectiveFirstValid,
+			EffectiveLastValid:  &effectiveLastValid,
+			Id:                  "",
+			Key: api.AccountParticipation{
+				SelectionParticipationKey: nil,
+				StateProofKey:             nil,
+				VoteParticipationKey:      nil,
+				VoteFirstValid:            0,
+				VoteLastValid:             9999999,
+				VoteKeyDilution:           0,
+			},
+			LastBlockProposal: nil,
+			LastStateProof:    nil,
+			LastVote:          nil,
+		},
 	}
 
 	// Mock StateModel
 	state := &StateModel{
+		Metrics: MetricsModel{
+			Enabled:   true,
+			Window:    100,
+			RoundTime: time.Duration(2) * time.Second,
+			TPS:       20,
+			RX:        1024,
+			TX:        2048,
+		},
+		Status: StatusModel{
+			State:       "WATCHING",
+			Version:     "v0.0.0-test",
+			Network:     "tuinet",
+			Voting:      false,
+			NeedsUpdate: false,
+			LastRound:   1337,
+		},
 		ParticipationKeys: &mockedPartKeys,
 	}
 
+	// Calculate expiration
+	clock := new(TestClock)
+	now := clock.Now()
+	roundDiff := max(0, effectiveLastValid-int(state.Status.LastRound))
+	distance := int(state.Metrics.RoundTime) * roundDiff
+	expires := now.Add(time.Duration(distance))
+
+	// Construct expected accounts
+	expectedAccounts := map[string]Account{
+		onlineAccounts[0].Address: {
+			Address: onlineAccounts[0].Address,
+			Status:  onlineAccounts[0].Status,
+			Balance: onlineAccounts[0].Amount / 1_000_000,
+			Keys:    2,
+			Expires: expires,
+		},
+		onlineAccounts[1].Address: {
+			Address: onlineAccounts[1].Address,
+			Status:  onlineAccounts[1].Status,
+			Balance: onlineAccounts[1].Amount / 1_000_000,
+			Keys:    1,
+			Expires: expires,
+		},
+	}
+
 	// Call AccountsFromState
-	accounts := AccountsFromState(state, client)
+	accounts := AccountsFromState(state, clock, client)
 
 	// Assert results
 	assert.Equal(t, expectedAccounts, accounts)

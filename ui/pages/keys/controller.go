@@ -2,7 +2,7 @@ package keys
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/pages"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -37,16 +37,20 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.table.SetWidth(msg.Width - lipgloss.Width(pages.Padding1("")) - 4)
-		m.table.SetHeight(msg.Height - lipgloss.Height(pages.Padding1("")) - lipgloss.Height(m.controls.View()))
-		m.table.SetColumns(m.makeColumns(msg.Width - lipgloss.Width(pages.Padding1("")) - 14))
+		borderRender := style.Border.Render("")
+		borderWidth := lipgloss.Width(borderRender)
+		borderHeight := lipgloss.Height(borderRender)
+
+		m.Width = max(0, msg.Width-borderWidth)
+		m.Height = max(0, msg.Height-borderHeight)
+		m.table.SetWidth(m.Width)
+		m.table.SetHeight(m.Height)
+		m.table.SetColumns(m.makeColumns(m.Width))
 	}
 
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	m.controls, cmd = m.controls.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }

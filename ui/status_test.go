@@ -2,15 +2,16 @@ package ui
 
 import (
 	"bytes"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"testing"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
 )
 
 func Test_StatusViewRender(t *testing.T) {
+
 	state := internal.StateModel{
 		Status: internal.StatusModel{
 			LastRound:   1337,
@@ -46,17 +47,8 @@ func Test_StatusViewRender(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-	// Send hide key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("h"),
-	})
-
-	// Send quit key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("ctrl+c"),
-	})
+	// Send quit msg
+	tm.Send(tea.QuitMsg{})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

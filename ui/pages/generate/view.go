@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	"strings"
 )
 
@@ -21,9 +22,12 @@ func (m ViewModel) View() string {
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 
-	b.WriteString(helpStyle.Render("cursor mode is "))
-	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
-	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
-
-	return b.String()
+	render := style.ApplyBorder(m.Width, m.Height, "8").Render(b.String())
+	return style.WithControls(
+		m.controls,
+		style.WithTitle(
+			"Generate",
+			render,
+		),
+	)
 }
