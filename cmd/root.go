@@ -6,6 +6,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
@@ -32,7 +33,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "algorun",
 		Short: "Manage Algorand nodes",
-		Long:  ui.Purple(BANNER) + "\n",
+		Long:  style.Purple(BANNER) + "\n",
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -61,7 +62,7 @@ var (
 				},
 				ParticipationKeys: partkeys,
 			}
-			state.Accounts = internal.AccountsFromState(&state, client)
+			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
 
 			// Fetch current state
 			err = state.Status.Fetch(context.Background(), client)
@@ -73,6 +74,7 @@ var (
 			p := tea.NewProgram(
 				m,
 				tea.WithAltScreen(),
+				tea.WithFPS(120),
 			)
 			go func() {
 				state.Watch(func(status *internal.StateModel, err error) {
@@ -112,19 +114,19 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVar(&server, "server", "", ui.LightBlue("server address"))
-	rootCmd.PersistentFlags().StringVar(&token, "token", "", ui.LightBlue("server token"))
+	rootCmd.PersistentFlags().StringVar(&server, "server", "", style.LightBlue("server address"))
+	rootCmd.PersistentFlags().StringVar(&token, "token", "", style.LightBlue("server token"))
 	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 
 	// Update Long Text
 	rootCmd.Long +=
-		ui.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-			ui.LightBlue("Server: ") + viper.GetString("server")
+		style.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
+			style.LightBlue("Server: ") + viper.GetString("server")
 
 	if viper.GetString("data") != "" {
 		rootCmd.Long +=
-			ui.Magenta("\nAlgorand Data: ") + viper.GetString("data")
+			style.Magenta("\nAlgorand Data: ") + viper.GetString("data")
 	}
 
 	// Add Commands

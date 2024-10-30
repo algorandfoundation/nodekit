@@ -25,8 +25,6 @@ type Account struct {
 	Keys int
 	// Expires is the date the participation key will expire
 	Expires time.Time
-	// The LastModified round, this only pertains to keys that can be updated
-	LastModified int
 }
 
 // Gets the list of addresses created at genesis from the genesis file
@@ -92,17 +90,8 @@ func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string,
 	return addresses, rewardsPool, feeSink, nil
 }
 
-func isValidStatus(status string) bool {
-	validStatuses := map[string]bool{
-		"Online":            true,
-		"Offline":           true,
-		"Not Participating": true,
-	}
-	return validStatuses[status]
-}
-
 // Get Online Status of Account
-func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (string, error) {
+func GetAccount(client *api.ClientWithResponses, address string) (api.Account, error) {
 	var format api.AccountInformationParamsFormat = "json"
 	r, err := client.AccountInformationWithResponse(
 		context.Background(),
@@ -111,23 +100,20 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 			Format: &format,
 		})
 
+	var accountInfo api.Account
 	if err != nil {
-		return "N/A", err
+		return accountInfo, err
 	}
 
 	if r.StatusCode() != 200 {
-		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
+		return accountInfo, errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
 	}
 
-	if r.JSON200 == nil {
-		return "N/A", errors.New("Failed to get account information. JSON200 is nil")
-	}
-
-	return r.JSON200.Status, nil
+	return *r.JSON200, nil
 }
 
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[string]Account {
+func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponses) map[string]Account {
 	values := make(map[string]Account)
 	if state == nil || state.ParticipationKeys == nil {
 		return values
@@ -136,18 +122,27 @@ func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[s
 		val, ok := values[key.Address]
 		if !ok {
 
-			statusOnline, err := getAccountOnlineStatus(client, key.Address)
+			account, err := GetAccount(client, key.Address)
 
+			// TODO: handle error
 			if err != nil {
 				// TODO: Logging
 				panic(err)
 			}
 
+			var expires = t.Now()
+			if key.EffectiveLastValid != nil {
+				now := t.Now()
+				roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
+				distance := int(state.Metrics.RoundTime) * roundDiff
+				expires = now.Add(time.Duration(distance))
+			}
+
 			values[key.Address] = Account{
 				Address: key.Address,
-				Status:  statusOnline,
-				Balance: 0,
-				Expires: time.Unix(0, 0),
+				Status:  account.Status,
+				Balance: account.Amount / 1000000,
+				Expires: expires,
 				Keys:    1,
 			}
 		} else {

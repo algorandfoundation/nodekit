@@ -54,7 +54,7 @@ func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
 		if err != nil {
 			return keys.DeleteFinished(err.Error())
 		}
-		return keys.DeleteFinished("Key deleted")
+		return keys.DeleteFinished(key.Id)
 	}
 }
 
@@ -76,6 +76,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case generate.Cancel:
+		m.page = AccountsPage
+		return m, nil
 	case error:
 		strMsg := msg.Error()
 		m.errorMsg = &strMsg
@@ -94,8 +97,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = KeysPage
 	case keys.DeleteKey:
 		return m, DeleteKey(m.client, msg)
-	case keys.DeleteFinished:
-		return m, keys.EmitKeyDeleted()
 	case tea.KeyMsg:
 		switch msg.String() {
 		// Tab Backwards
@@ -150,7 +151,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Navigate to the transaction page
 			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 		case "ctrl+c":
-			return m, tea.Quit
+			if m.page != GeneratePage {
+				return m, tea.Quit
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -166,20 +169,18 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Handle the page resize event
-		//switch m.page {
-		//case AccountsPage:
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case KeysPage:
+
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case GeneratePage:
+
 		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case TransactionPage:
+
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//}
+
 		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
@@ -196,6 +197,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
 	case TransactionPage:
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	case ErrorPage:
+		m.errorPage, cmd = m.errorPage.HandleMessage(msg)
 	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)

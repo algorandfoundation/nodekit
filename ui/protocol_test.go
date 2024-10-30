@@ -42,17 +42,8 @@ func Test_ProtocolViewRender(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-	// Send hide key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("h"),
-	})
-
-	// Send quit key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("ctrl+c"),
-	})
+	// Send quit msg
+	tm.Send(tea.QuitMsg{})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

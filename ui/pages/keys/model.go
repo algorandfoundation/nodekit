@@ -3,9 +3,9 @@ package keys
 import (
 	"sort"
 
+	"github.com/algorandfoundation/hack-tui/ui/style"
+
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/ui/controls"
-	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
@@ -18,11 +18,11 @@ type ViewModel struct {
 	Height  int
 
 	SelectedKeyToDelete *api.ParticipationKey
+	KeysInDeletion      []api.ParticipationKey
 
-	DeleteLoading bool
-
-	table    table.Model
-	controls controls.Model
+	table      table.Model
+	controls   string
+	navigation string
 }
 
 func New(address string, keys *[]api.ParticipationKey) ViewModel {
@@ -32,7 +32,8 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		Width:   80,
 		Height:  24,
 
-		controls: controls.New(" (g)enerate | (a)ccounts | " + green.Render("(k)eys") + " | (t)xn | (d)elete "),
+		controls:   "( (g)enerate | (d)elete )",
+		navigation: "| (a)ccounts | " + style.Green.Render("(k)eys") + " | (t)xn |",
 
 		table: table.New(),
 	}
@@ -40,7 +41,7 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		table.WithColumns(m.makeColumns(80)),
 		table.WithRows(m.makeRows(keys)),
 		table.WithFocused(true),
-		table.WithHeight(m.Height-lipgloss.Height(m.controls.View())-1),
+		table.WithHeight(m.Height),
 		table.WithWidth(m.Width),
 	)
 
@@ -74,21 +75,23 @@ func (m ViewModel) SelectedKey() *api.ParticipationKey {
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	avgWidth := (width - lipgloss.Width(pages.Padding1("")) - 14) / 13
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 7
+
+	//avgWidth := 1
 	return []table.Column{
 		{Title: "ID", Width: avgWidth},
 		{Title: "Address", Width: avgWidth},
-		{Title: "SelectionParticipationKey", Width: avgWidth},
-		{Title: "VoteParticipationKey", Width: avgWidth},
-		{Title: "StateProofKey", Width: avgWidth},
+		{Title: "SelectionParticipationKey", Width: 0},
+		{Title: "VoteParticipationKey", Width: 0},
+		{Title: "StateProofKey", Width: 0},
 		{Title: "VoteFirstValid", Width: avgWidth},
 		{Title: "VoteLastValid", Width: avgWidth},
 		{Title: "VoteKeyDilution", Width: avgWidth},
-		{Title: "EffectiveLastValid", Width: avgWidth},
-		{Title: "EffectiveFirstValid", Width: avgWidth},
+		{Title: "EffectiveLastValid", Width: 0},
+		{Title: "EffectiveFirstValid", Width: 0},
 		{Title: "LastVote", Width: avgWidth},
 		{Title: "LastBlockProposal", Width: avgWidth},
-		{Title: "LastStateProof", Width: avgWidth},
+		{Title: "LastStateProof", Width: 0},
 	}
 }
 
@@ -99,6 +102,11 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
+
+			if isPartKeyInList(key, m.KeysInDeletion) {
+				continue
+			}
+
 			rows = append(rows, table.Row{
 				key.Id,
 				key.Address,
