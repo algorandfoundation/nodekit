@@ -10,10 +10,9 @@ import (
 
 func (m ViewModel) View() string {
 	if m.SelectedKeyToDelete != nil {
-		return lipgloss.JoinVertical(
-			lipgloss.Center,
-			renderDeleteConfirmationModal(m.SelectedKeyToDelete),
-		)
+		modal := renderDeleteConfirmationModal(m.SelectedKeyToDelete)
+		overlay := lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, modal)
+		return overlay
 	}
 	table := style.ApplyBorder(m.Width, m.Height, "8").Render(m.table.View())
 	return style.WithNavigation(
@@ -38,5 +37,5 @@ func renderDeleteConfirmationModal(partKey *api.ParticipationKey) string {
 
 	modalContent := fmt.Sprintf("Participation Key: %v\nAccount Address: %v\nPress either y (yes) or n (no).", partKey.Id, partKey.Address)
 
-	return modalStyle.Render("Are you sure you want to delete this key from your node?\n", modalContent)
+	return modalStyle.Render("Are you sure you want to delete this key from your node?\n" + modalContent)
 }
