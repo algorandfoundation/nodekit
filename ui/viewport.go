@@ -58,6 +58,19 @@ func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
 	}
 }
 
+// Check if there are any participation keys available for the account
+// Prevents navigation to the transaction page if there are no keys
+func tGuard(m ViewportViewModel) bool {
+	if m.Data == nil || len(*m.Data.ParticipationKeys) == 0 {
+		panic("No participation keys available for this account. Please add a key first.")
+		errorMsg := "No participation keys available for this account. Please add a key first."
+		m.errorMsg = &errorMsg
+		return true
+	}
+
+	return false
+}
+
 // Init is a no-op
 func (m ViewportViewModel) Init() tea.Cmd {
 	return nil
@@ -139,13 +152,14 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "t":
 			m.page = TransactionPage
 			// If there isn't a key already, select the first record for that account
-			if m.keysPage.SelectedKey() == nil && m.Data != nil {
+			if m.keysPage.SelectedKey() == nil {
 				data := *m.Data.ParticipationKeys
 				acct := m.accountsPage.SelectedAccount()
 				for i, key := range data {
 					if key.Address == acct.Address {
 						return m, keys.EmitKeySelected(&data[i])
 					}
+					return m, nil
 				}
 			}
 			// Navigate to the transaction page

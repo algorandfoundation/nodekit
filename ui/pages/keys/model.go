@@ -18,7 +18,6 @@ type ViewModel struct {
 	Height  int
 
 	SelectedKeyToDelete *api.ParticipationKey
-	KeysInDeletion      []api.ParticipationKey
 
 	table      table.Model
 	controls   string
@@ -102,11 +101,6 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
-
-			if isPartKeyInList(key, m.KeysInDeletion) {
-				continue
-			}
-
 			rows = append(rows, table.Row{
 				key.Id,
 				key.Address,

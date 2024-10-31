@@ -17,26 +17,13 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // Removes a participation key from the list of keys
-func removePartKeyByID(slice []api.ParticipationKey, id string) []api.ParticipationKey {
-	for i, item := range slice {
+func removePartKeyByID(slice *[]api.ParticipationKey, id string) {
+	for i, item := range *slice {
 		if item.Id == id {
-			return append(slice[:i], slice[i+1:]...)
+			*slice = append((*slice)[:i], (*slice)[i+1:]...)
+			return
 		}
 	}
-	return slice
-}
-
-func isPartKeyInList(partKey api.ParticipationKey, keys []api.ParticipationKey) bool {
-	if len(keys) == 0 {
-		return false
-	}
-
-	for _, key := range keys {
-		if key.Id == partKey.Id {
-			return true
-		}
-	}
-	return false
 }
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
@@ -48,7 +35,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.Address = msg.Address
 		m.table.SetRows(m.makeRows(m.Data))
 	case DeleteFinished:
+		if m.SelectedKeyToDelete == nil {
+			panic("SelectedKeyToDelete is unexpectedly nil")
+		}
+		removePartKeyByID(m.Data, m.SelectedKeyToDelete.Id)
+		m.SelectedKeyToDelete = nil
 		m.table.SetRows(m.makeRows(m.Data))
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
@@ -64,10 +57,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			return m, nil
 		case "y": // "Yes do delete" option in the delete confirmation modal
 			if m.SelectedKeyToDelete != nil {
-				m.KeysInDeletion = append(m.KeysInDeletion, *m.SelectedKeyToDelete)
-				keyToDelete := m.SelectedKeyToDelete
-				m.SelectedKeyToDelete = nil
-				return m, EmitDeleteKey(keyToDelete)
+				return m, EmitDeleteKey(m.SelectedKeyToDelete)
 			}
 			return m, nil
 		case "n": // "do NOT delete" option in the delete confirmation modal
