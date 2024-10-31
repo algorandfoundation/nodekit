@@ -131,15 +131,13 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 			}
 			if m.page == KeysPage {
-				m.page = TransactionPage
-				// If there isn't a key already, select the first record
-				if m.keysPage.SelectedKey() == nil && m.Data != nil {
-					data := *m.Data.ParticipationKeys
-					return m, keys.EmitKeySelected(&data[0])
+				selKey := m.keysPage.SelectedKey()
+				if selKey != nil {
+					m.page = TransactionPage
+					return m, keys.EmitKeySelected(selKey)
 				}
-				// Navigate to the transaction page
-				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
+			return m, nil
 		case "a":
 			m.page = AccountsPage
 		case "g":
@@ -150,20 +148,24 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.page = KeysPage
 			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 		case "t":
-			m.page = TransactionPage
-			// If there isn't a key already, select the first record for that account
-			if m.keysPage.SelectedKey() == nil {
-				data := *m.Data.ParticipationKeys
+			if m.page == AccountsPage {
 				acct := m.accountsPage.SelectedAccount()
+				data := *m.Data.ParticipationKeys
 				for i, key := range data {
 					if key.Address == acct.Address {
+						m.page = TransactionPage
 						return m, keys.EmitKeySelected(&data[i])
 					}
-					return m, nil
 				}
 			}
-			// Navigate to the transaction page
-			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
+			if m.page == KeysPage {
+				selKey := m.keysPage.SelectedKey()
+				if selKey != nil {
+					m.page = TransactionPage
+					return m, keys.EmitKeySelected(selKey)
+				}
+			}
+			return m, nil
 		case "ctrl+c":
 			if m.page != GeneratePage {
 				return m, tea.Quit

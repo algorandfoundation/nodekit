@@ -45,7 +45,11 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m, EmitKeySelected(m.SelectedKey())
+			selKey := m.SelectedKey()
+			if selKey != nil {
+				return m, EmitKeySelected(selKey)
+			}
+			return m, nil
 		case "g":
 			// TODO: navigation
 		case "d":
