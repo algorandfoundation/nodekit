@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,16 +15,6 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 
-// Removes a participation key from the list of keys
-func removePartKeyByID(slice *[]api.ParticipationKey, id string) {
-	for i, item := range *slice {
-		if item.Id == id {
-			*slice = append((*slice)[:i], (*slice)[i+1:]...)
-			return
-		}
-	}
-}
-
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case internal.StateModel:
@@ -38,7 +27,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		if m.SelectedKeyToDelete == nil {
 			panic("SelectedKeyToDelete is unexpectedly nil")
 		}
-		removePartKeyByID(m.Data, m.SelectedKeyToDelete.Id)
+		internal.RemovePartKeyByID(m.Data, m.SelectedKeyToDelete.Id)
 		m.SelectedKeyToDelete = nil
 		m.table.SetRows(m.makeRows(m.Data))
 

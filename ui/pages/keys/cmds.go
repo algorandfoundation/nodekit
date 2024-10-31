@@ -15,12 +15,6 @@ func EmitDeleteKey(key *api.ParticipationKey) tea.Cmd {
 	}
 }
 
-func EmitKeyDeleted() tea.Cmd {
-	return func() tea.Msg {
-		return DeleteFinished("Key deleted")
-	}
-}
-
 // EmitKeySelected waits for and retrieves a new set of table rows from a given channel.
 func EmitKeySelected(key *api.ParticipationKey) tea.Cmd {
 	return func() tea.Msg {
