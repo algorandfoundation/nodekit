@@ -146,3 +146,58 @@ func Test_DeleteParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+func Test_RemovePartKeyByID(t *testing.T) {
+	// Test case: Remove an existing key
+	t.Run("Remove existing key", func(t *testing.T) {
+		keys := []api.ParticipationKey{
+			{Id: "key1"},
+			{Id: "key2"},
+			{Id: "key3"},
+		}
+		expectedKeys := []api.ParticipationKey{
+			{Id: "key1"},
+			{Id: "key3"},
+		}
+		RemovePartKeyByID(&keys, "key2")
+		if len(keys) != len(expectedKeys) {
+			t.Fatalf("expected %d keys, got %d", len(expectedKeys), len(keys))
+		}
+		for i, key := range keys {
+			if key.Id != expectedKeys[i].Id {
+				t.Fatalf("expected key ID %s, got %s", expectedKeys[i].Id, key.Id)
+			}
+		}
+	})
+
+	// Test case: Remove a non-existing key
+	t.Run("Remove non-existing key", func(t *testing.T) {
+		keys := []api.ParticipationKey{
+			{Id: "key1"},
+			{Id: "key2"},
+			{Id: "key3"},
+		}
+		expectedKeys := []api.ParticipationKey{
+			{Id: "key1"},
+			{Id: "key2"},
+			{Id: "key3"},
+		}
+		RemovePartKeyByID(&keys, "key4")
+		if len(keys) != len(expectedKeys) {
+			t.Fatalf("expected %d keys, got %d", len(expectedKeys), len(keys))
+		}
+		for i, key := range keys {
+			if key.Id != expectedKeys[i].Id {
+				t.Fatalf("expected key ID %s, got %s", expectedKeys[i].Id, key.Id)
+			}
+		}
+	})
+
+	// Test case: Remove a key from an empty list
+	t.Run("Remove key from empty list", func(t *testing.T) {
+		keys := []api.ParticipationKey{}
+		RemovePartKeyByID(&keys, "key1")
+		if len(keys) != 0 {
+			t.Fatalf("expected 0 keys, got %d", len(keys))
+		}
+	})
+}
