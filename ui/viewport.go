@@ -114,8 +114,12 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Tab Forwards
 		case "tab":
 			if m.page == AccountsPage {
-				m.page = KeysPage
-				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+				selAcc := m.accountsPage.SelectedAccount()
+				if selAcc != (internal.Account{}) {
+					m.page = KeysPage
+					return m, accounts.EmitAccountSelected(selAcc)
+				}
+				return m, nil
 			}
 			if m.page == KeysPage {
 				selKey := m.keysPage.SelectedKey()
@@ -132,8 +136,12 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.page = GeneratePage
 			return m, nil
 		case "k":
-			m.page = KeysPage
-			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+			selAcc := m.accountsPage.SelectedAccount()
+			if selAcc != (internal.Account{}) {
+				m.page = KeysPage
+				return m, accounts.EmitAccountSelected(selAcc)
+			}
+			return m, nil
 		case "t":
 			if m.page == AccountsPage {
 				acct := m.accountsPage.SelectedAccount()

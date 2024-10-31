@@ -26,7 +26,11 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m, EmitAccountSelected(m.SelectedAccount())
+			selAcc := m.SelectedAccount()
+			if selAcc != (internal.Account{}) {
+				return m, EmitAccountSelected(selAcc)
+			}
+			return m, nil
 		case "ctrl+c":
 			return m, tea.Quit
 		}
