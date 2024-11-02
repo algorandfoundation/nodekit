@@ -1,8 +1,9 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
 	"sort"
+
+	"github.com/algorandfoundation/hack-tui/ui/style"
 
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
@@ -15,6 +16,8 @@ type ViewModel struct {
 	Data    *[]api.ParticipationKey
 	Width   int
 	Height  int
+
+	SelectedKeyToDelete *api.ParticipationKey
 
 	table      table.Model
 	controls   string

@@ -7,6 +7,8 @@ import (
 
 type DeleteKey *api.ParticipationKey
 
+type DeleteFinished string
+
 func EmitDeleteKey(key *api.ParticipationKey) tea.Cmd {
 	return func() tea.Msg {
 		return DeleteKey(key)

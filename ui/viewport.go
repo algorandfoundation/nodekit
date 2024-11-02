@@ -48,15 +48,13 @@ type ViewportViewModel struct {
 	errorPage ErrorViewModel
 }
 
-type DeleteFinished string
-
 func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
 	return func() tea.Msg {
 		err := internal.DeletePartKey(context.Background(), client, key.Id)
 		if err != nil {
-			return DeleteFinished(err.Error())
+			return keys.DeleteFinished(err.Error())
 		}
-		return DeleteFinished("Key deleted")
+		return keys.DeleteFinished(key.Id)
 	}
 }
 
@@ -99,8 +97,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = KeysPage
 	case keys.DeleteKey:
 		return m, DeleteKey(m.client, msg)
-	case DeleteFinished:
-	//	TODO
 	case tea.KeyMsg:
 		switch msg.String() {
 		// Tab Backwards
@@ -118,42 +114,53 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Tab Forwards
 		case "tab":
 			if m.page == AccountsPage {
-				m.page = KeysPage
-				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+				selAcc := m.accountsPage.SelectedAccount()
+				if selAcc != (internal.Account{}) {
+					m.page = KeysPage
+					return m, accounts.EmitAccountSelected(selAcc)
+				}
+				return m, nil
 			}
 			if m.page == KeysPage {
-				m.page = TransactionPage
-				// If there isn't a key already, select the first record
-				if m.keysPage.SelectedKey() == nil && m.Data != nil {
-					data := *m.Data.ParticipationKeys
-					return m, keys.EmitKeySelected(&data[0])
+				selKey := m.keysPage.SelectedKey()
+				if selKey != nil {
+					m.page = TransactionPage
+					return m, keys.EmitKeySelected(selKey)
 				}
-				// Navigate to the transaction page
-				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
+			return m, nil
+		case "a":
+			m.page = AccountsPage
 		case "g":
 			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
 			m.page = GeneratePage
 			return m, nil
-		case "a":
-			m.page = AccountsPage
 		case "k":
-			m.page = KeysPage
-			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+			selAcc := m.accountsPage.SelectedAccount()
+			if selAcc != (internal.Account{}) {
+				m.page = KeysPage
+				return m, accounts.EmitAccountSelected(selAcc)
+			}
+			return m, nil
 		case "t":
-			m.page = TransactionPage
-			// If there isn't a key already, select the first record for that account
-			if m.keysPage.SelectedKey() == nil && m.Data != nil {
-				data := *m.Data.ParticipationKeys
+			if m.page == AccountsPage {
 				acct := m.accountsPage.SelectedAccount()
+				data := *m.Data.ParticipationKeys
 				for i, key := range data {
 					if key.Address == acct.Address {
+						m.page = TransactionPage
 						return m, keys.EmitKeySelected(&data[i])
 					}
 				}
 			}
-			// Navigate to the transaction page
-			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
+			if m.page == KeysPage {
+				selKey := m.keysPage.SelectedKey()
+				if selKey != nil {
+					m.page = TransactionPage
+					return m, keys.EmitKeySelected(selKey)
+				}
+			}
+			return m, nil
 		case "ctrl+c":
 			if m.page != GeneratePage {
 				return m, tea.Quit

@@ -23,15 +23,41 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case internal.Account:
 		m.Address = msg.Address
 		m.table.SetRows(m.makeRows(m.Data))
+	case DeleteFinished:
+		if m.SelectedKeyToDelete == nil {
+			panic("SelectedKeyToDelete is unexpectedly nil")
+		}
+		internal.RemovePartKeyByID(m.Data, m.SelectedKeyToDelete.Id)
+		m.SelectedKeyToDelete = nil
+		m.table.SetRows(m.makeRows(m.Data))
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m, EmitKeySelected(m.SelectedKey())
+			selKey := m.SelectedKey()
+			if selKey != nil {
+				return m, EmitKeySelected(selKey)
+			}
+			return m, nil
 		case "g":
 			// TODO: navigation
-
 		case "d":
-			return m, EmitDeleteKey(m.SelectedKey())
+			if m.SelectedKeyToDelete == nil {
+				m.SelectedKeyToDelete = m.SelectedKey()
+			} else {
+				m.SelectedKeyToDelete = nil
+			}
+			return m, nil
+		case "y": // "Yes do delete" option in the delete confirmation modal
+			if m.SelectedKeyToDelete != nil {
+				return m, EmitDeleteKey(m.SelectedKeyToDelete)
+			}
+			return m, nil
+		case "n": // "do NOT delete" option in the delete confirmation modal
+			if m.SelectedKeyToDelete != nil {
+				m.SelectedKeyToDelete = nil
+			}
+			return m, nil
 		case "ctrl+c":
 			return m, tea.Quit
 		}
