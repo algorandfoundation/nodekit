@@ -21,12 +21,28 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 func Test_InitConfig(t *testing.T) {
 	cwd, _ := os.Getwd()
-	t.Setenv("ALGORAND_DATA", cwd+"/testdata")
+	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
 
 	initConfig()
 	server := viper.Get("server")
 	if server == "" {
 		t.Fatal("Invalid Server")
 	}
+	if server != "http://127.0.0.1:8080" {
+		t.Fatal("Invalid Server")
+	}
+}
 
+func Test_InitConfigWithoutEndpoint(t *testing.T) {
+	cwd, _ := os.Getwd()
+	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
+
+	initConfig()
+	server := viper.Get("server")
+	if server == "" {
+		t.Fatal("Invalid Server")
+	}
+	if server != "http://127.0.0.1:8080" {
+		t.Fatal("Invalid Server")
+	}
 }
