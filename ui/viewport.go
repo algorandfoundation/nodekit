@@ -123,7 +123,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == KeysPage {
 				selKey := m.keysPage.SelectedKey()
-				if selKey != nil {
+				if selKey != nil && m.Data.Status.State != "SYNCING" {
 					m.page = TransactionPage
 					return m, keys.EmitKeySelected(selKey)
 				}
@@ -143,21 +143,24 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "t":
-			if m.page == AccountsPage {
-				acct := m.accountsPage.SelectedAccount()
-				data := *m.Data.ParticipationKeys
-				for i, key := range data {
-					if key.Address == acct.Address {
-						m.page = TransactionPage
-						return m, keys.EmitKeySelected(&data[i])
+			if m.Data.Status.State != "SYNCING" {
+
+				if m.page == AccountsPage {
+					acct := m.accountsPage.SelectedAccount()
+					data := *m.Data.ParticipationKeys
+					for i, key := range data {
+						if key.Address == acct.Address {
+							m.page = TransactionPage
+							return m, keys.EmitKeySelected(&data[i])
+						}
 					}
 				}
-			}
-			if m.page == KeysPage {
-				selKey := m.keysPage.SelectedKey()
-				if selKey != nil {
-					m.page = TransactionPage
-					return m, keys.EmitKeySelected(selKey)
+				if m.page == KeysPage {
+					selKey := m.keysPage.SelectedKey()
+					if selKey != nil {
+						m.page = TransactionPage
+						return m, keys.EmitKeySelected(selKey)
+					}
 				}
 			}
 			return m, nil
