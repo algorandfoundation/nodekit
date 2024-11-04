@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
@@ -40,11 +41,23 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.SetOutput(cmd.OutOrStdout())
 			initConfig()
+
+			if viper.GetString("server") == "" {
+				return fmt.Errorf(style.Red.Render("server is required"))
+			}
+			if viper.GetString("token") == "" {
+				return fmt.Errorf(style.Red.Render("token is required"))
+			}
+
 			client, err := getClient()
 			cobra.CheckErr(err)
 
 			partkeys, err := internal.GetPartKeys(context.Background(), client)
-			cobra.CheckErr(err)
+			if err != nil {
+				return fmt.Errorf(
+					style.Red.Render("failed to get participation keys: %s"),
+					err)
+			}
 
 			state := internal.StateModel{
 				Status: internal.StatusModel{
