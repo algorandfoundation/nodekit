@@ -21,6 +21,8 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 func Test_InitConfig(t *testing.T) {
 	cwd, _ := os.Getwd()
+	viper.Set("token", "")
+	viper.Set("server", "")
 	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
 
 	initConfig()
