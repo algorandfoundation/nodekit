@@ -26,7 +26,7 @@ func New(state *internal.StateModel) ViewModel {
 		Height:     0,
 		Data:       state.Accounts,
 		controls:   "( (g)enerate )",
-		navigation: "| " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn |",
+		navigation: "| " + style.Green.Render("accounts") + " | keys | txn |",
 	}
 
 	m.table = table.New(

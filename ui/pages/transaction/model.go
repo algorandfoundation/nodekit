@@ -39,7 +39,7 @@ func New(state *internal.StateModel) ViewModel {
 	return ViewModel{
 		State:      state,
 		IsOnline:   false,
-		navigation: "| (a)ccounts | (k)eys | " + style.Green.Render("(t)xn") + " |",
-		controls:   "( shift+tab: back )",
+		navigation: "| accounts | keys | " + style.Green.Render("txn") + " |",
+		controls:   "( <- back )",
 	}
 }

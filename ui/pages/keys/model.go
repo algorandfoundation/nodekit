@@ -31,8 +31,8 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		Width:   80,
 		Height:  24,
 
-		controls:   "( (g)enerate | (d)elete )",
-		navigation: "| (a)ccounts | " + style.Green.Render("(k)eys") + " | (t)xn |",
+		controls:   "( (g)enerate )",
+		navigation: "| accounts | " + style.Green.Render("keys") + " | txn |",
 
 		table: table.New(),
 	}

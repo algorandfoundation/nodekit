@@ -100,7 +100,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		// Tab Backwards
-		case "shift+tab":
+		case "left":
 			if m.page == AccountsPage {
 				return m, nil
 			}
@@ -112,7 +112,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		// Tab Forwards
-		case "tab":
+		case "right":
 			if m.page == AccountsPage {
 				selAcc := m.accountsPage.SelectedAccount()
 				if selAcc != (internal.Account{}) {
@@ -120,38 +120,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, accounts.EmitAccountSelected(selAcc)
 				}
 				return m, nil
-			}
-			if m.page == KeysPage {
-				selKey := m.keysPage.SelectedKey()
-				if selKey != nil {
-					m.page = TransactionPage
-					return m, keys.EmitKeySelected(selKey)
-				}
-			}
-			return m, nil
-		case "a":
-			m.page = AccountsPage
-		case "g":
-			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
-			m.page = GeneratePage
-			return m, nil
-		case "k":
-			selAcc := m.accountsPage.SelectedAccount()
-			if selAcc != (internal.Account{}) {
-				m.page = KeysPage
-				return m, accounts.EmitAccountSelected(selAcc)
-			}
-			return m, nil
-		case "t":
-			if m.page == AccountsPage {
-				acct := m.accountsPage.SelectedAccount()
-				data := *m.Data.ParticipationKeys
-				for i, key := range data {
-					if key.Address == acct.Address {
-						m.page = TransactionPage
-						return m, keys.EmitKeySelected(&data[i])
-					}
-				}
 			}
 			if m.page == KeysPage {
 				selKey := m.keysPage.SelectedKey()
