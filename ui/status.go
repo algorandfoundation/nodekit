@@ -54,7 +54,7 @@ func getBitRate(bytes int) string {
 		txString = fmt.Sprintf("%d MB/s ", bytes/(1<<20))
 	}
 	if bytes >= int(math.Pow(1024, 3)) {
-		txString = fmt.Sprintf("%d GB/s ", bytes/(1<<20))
+		txString = fmt.Sprintf("%d GB/s ", bytes/(1<<30))
 	}
 
 	return txString
