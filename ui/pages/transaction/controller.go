@@ -3,12 +3,13 @@ package transaction
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/hack-tui/api"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -34,10 +35,10 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 	case "Not Participating": // This status means the account can never participate in consensus
 		m.urlTxn = ""
 		m.asciiQR = ""
-		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.Data.Address)
+		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.FormatedAddress())
 		return nil
 	}
-
+	m.IsOnline = isOnline
 	fee := uint64(1000)
 
 	kr := &encoder.AUrlTxn{}
@@ -69,7 +70,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 			},
 		}
 
-		m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", m.Data.Address)
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", m.FormatedAddress())
 
 	} else {
 
@@ -81,7 +82,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 				Fee:    &fee,
 			}}
 
-		m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", m.Data.Address)
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", m.FormatedAddress())
 	}
 
 	qrCode, err := kr.ProduceQRCode()
@@ -100,7 +101,6 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	// When the participation key updates, set the models data
-
 	case *api.ParticipationKey:
 		m.Data = *msg
 
@@ -111,13 +111,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 
 	// Handle View Size changes
 	case tea.WindowSizeMsg:
-		if msg.Width != 0 && msg.Height != 0 {
-			m.Width = msg.Width
-			m.Height = max(0, msg.Height-lipgloss.Height(m.controls.View())-3)
-		}
+		borderRender := style.Border.Render("")
+		m.Width = max(0, msg.Width-lipgloss.Width(borderRender))
+		m.Height = max(0, msg.Height-lipgloss.Height(borderRender))
 	}
-
-	// Pass messages to controls
-	m.controls, cmd = m.controls.HandleMessage(msg)
 	return m, cmd
 }
