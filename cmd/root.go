@@ -214,7 +214,7 @@ func initConfig() {
 		// Check for endpoint address
 		if hasWildcardEndpointUrl(algodConfig.EndpointAddress) {
 			algodConfig.EndpointAddress = replaceEndpointUrl(algodConfig.EndpointAddress)
-		} else {
+		} else if algodConfig.EndpointAddress == "" {
 			// Assume it is not set, try to discover the port from the network file
 			networkPath := algorandData + "/algod.net"
 			networkFile, err := os.Open(networkPath)
@@ -245,7 +245,7 @@ func initConfig() {
 		}
 
 		// Set the server configuration
-		viper.Set("server", "http://"+algodConfig.EndpointAddress)
+		viper.Set("server", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
 		viper.Set("data", dataConfigPath)
 	}
 

@@ -48,3 +48,17 @@ func Test_InitConfigWithoutEndpoint(t *testing.T) {
 		t.Fatal("Invalid Server")
 	}
 }
+
+func Test_InitConfigWithAddress(t *testing.T) {
+	cwd, _ := os.Getwd()
+	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
+
+	initConfig()
+	server := viper.Get("server")
+	if server == "" {
+		t.Fatal("Invalid Server")
+	}
+	if server != "http://255.255.255.255:8080" {
+		t.Fatal("Invalid Server")
+	}
+}
