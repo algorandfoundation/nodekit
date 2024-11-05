@@ -19,6 +19,7 @@ var statusCmd = &cobra.Command{
 	Short: "Get the node status",
 	Long:  style.Purple(BANNER) + "\n" + style.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		initConfig()
 		if viper.GetString("server") == "" {
 			return errors.New(style.Magenta("server is required"))
 		}
