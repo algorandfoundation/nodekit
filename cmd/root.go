@@ -230,7 +230,9 @@ func initConfig() {
 			}
 
 		}
-
+		if strings.Contains(algodConfig.EndpointAddress, ":0") {
+			algodConfig.EndpointAddress = strings.Replace(algodConfig.EndpointAddress, ":0", ":8080", 1)
+		}
 		if loadedToken == "" {
 			// Handle Token Path
 			tokenPath := algorandData + "/algod.admin.token"
