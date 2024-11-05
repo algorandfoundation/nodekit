@@ -6,6 +6,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +45,21 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	return m, nil
 }
 
+func getBitRate(bytes int) string {
+	txString := fmt.Sprintf("%d B/s ", bytes)
+	if bytes >= 1024 {
+		txString = fmt.Sprintf("%d KB/s ", bytes/(1<<10))
+	}
+	if bytes >= int(math.Pow(1024, 2)) {
+		txString = fmt.Sprintf("%d MB/s ", bytes/(1<<20))
+	}
+	if bytes >= int(math.Pow(1024, 3)) {
+		txString = fmt.Sprintf("%d GB/s ", bytes/(1<<30))
+	}
+
+	return txString
+}
+
 // View handles the render cycle
 func (m StatusViewModel) View() string {
 	if !m.IsVisible {
@@ -74,7 +90,7 @@ func (m StatusViewModel) View() string {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
-	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.TX/1024) + style.Green.Render("TX ")
+	end = getBitRate(m.Data.Metrics.TX) + style.Green.Render("TX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
@@ -84,7 +100,7 @@ func (m StatusViewModel) View() string {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps
-	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.RX/1024) + style.Green.Render("RX ")
+	end = getBitRate(m.Data.Metrics.RX) + style.Green.Render("RX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
