@@ -37,6 +37,8 @@ func Test_InitConfig(t *testing.T) {
 
 func Test_InitConfigWithoutEndpoint(t *testing.T) {
 	cwd, _ := os.Getwd()
+	viper.Set("token", "")
+	viper.Set("server", "")
 	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
 
 	initConfig()
@@ -51,6 +53,8 @@ func Test_InitConfigWithoutEndpoint(t *testing.T) {
 
 func Test_InitConfigWithAddress(t *testing.T) {
 	cwd, _ := os.Getwd()
+	viper.Set("token", "")
+	viper.Set("server", "")
 	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
 
 	initConfig()
@@ -65,6 +69,8 @@ func Test_InitConfigWithAddress(t *testing.T) {
 
 func Test_InitConfigWithAddressAndDefaultPort(t *testing.T) {
 	cwd, _ := os.Getwd()
+	viper.Set("token", "")
+	viper.Set("server", "")
 	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddressAndDefaultPort")
 
 	initConfig()
