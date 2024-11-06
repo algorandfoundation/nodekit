@@ -16,6 +16,9 @@ type StateModel struct {
 	// TODO: handle contexts instead of adding it to state
 	Admin    bool
 	Watching bool
+
+	Client  *api.ClientWithResponses
+	Context context.Context
 }
 
 func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err error)) {
@@ -60,7 +63,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.UpgradeNodeVote)
 
 		// Fetch Keys
-		s.UpdateKeys(ctx, client)
+		s.UpdateKeys()
 
 		if s.Status.State == "SYNCING" {
 			lastRound = s.Status.LastRound
@@ -107,18 +110,18 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.Clien
 		s.Metrics.LastRX = res["algod_network_received_bytes_total"]
 	}
 }
-func (s *StateModel) UpdateAccounts(client *api.ClientWithResponses) {
-	s.Accounts = AccountsFromState(s, new(Clock), client)
+func (s *StateModel) UpdateAccounts() {
+	s.Accounts = AccountsFromState(s, new(Clock), s.Client)
 }
 
-func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) UpdateKeys() {
 	var err error
-	s.ParticipationKeys, err = GetPartKeys(ctx, client)
+	s.ParticipationKeys, err = GetPartKeys(s.Context, s.Client)
 	if err != nil {
 		s.Admin = false
 	}
 	if err == nil {
 		s.Admin = true
-		s.UpdateAccounts(client)
+		s.UpdateAccounts()
 	}
 }

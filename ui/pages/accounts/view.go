@@ -5,7 +5,7 @@ import (
 )
 
 func (m ViewModel) View() string {
-	table := style.ApplyBorder(m.Width, m.Height, "8").Render(m.table.View())
+	table := style.ApplyBorder(m.Width, m.Height, "6").Render(m.table.View())
 	return style.WithNavigation(
 		m.navigation,
 		style.WithControls(

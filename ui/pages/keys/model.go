@@ -31,8 +31,8 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		Width:   80,
 		Height:  24,
 
-		controls:   "( (g)enerate )",
-		navigation: "| accounts | " + style.Green.Render("keys") + " | txn |",
+		controls:   "( (g)enerate | enter )",
+		navigation: "| accounts | " + style.Green.Render("keys") + " |",
 
 		table: table.New(),
 	}
@@ -74,23 +74,14 @@ func (m ViewModel) SelectedKey() *api.ParticipationKey {
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 7
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 4
 
 	//avgWidth := 1
 	return []table.Column{
 		{Title: "ID", Width: avgWidth},
 		{Title: "Address", Width: avgWidth},
-		{Title: "SelectionParticipationKey", Width: 0},
-		{Title: "VoteParticipationKey", Width: 0},
-		{Title: "StateProofKey", Width: 0},
-		{Title: "VoteFirstValid", Width: avgWidth},
-		{Title: "VoteLastValid", Width: avgWidth},
-		{Title: "VoteKeyDilution", Width: avgWidth},
-		{Title: "EffectiveLastValid", Width: 0},
-		{Title: "EffectiveFirstValid", Width: 0},
-		{Title: "LastVote", Width: avgWidth},
-		{Title: "LastBlockProposal", Width: avgWidth},
-		{Title: "LastStateProof", Width: 0},
+		{Title: "Last Vote", Width: avgWidth},
+		{Title: "Last Block Proposal", Width: avgWidth},
 	}
 }
 
@@ -104,19 +95,8 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 			rows = append(rows, table.Row{
 				key.Id,
 				key.Address,
-				*utils.UrlEncodeBytesPtrOrNil(key.Key.SelectionParticipationKey[:]),
-				*utils.UrlEncodeBytesPtrOrNil(key.Key.VoteParticipationKey[:]),
-				*utils.UrlEncodeBytesPtrOrNil(*key.Key.StateProofKey),
-				utils.IntToStr(key.Key.VoteFirstValid),
-				utils.IntToStr(key.Key.VoteLastValid),
-				utils.IntToStr(key.Key.VoteKeyDilution),
-				//utils.StrOrNA(key.Key.VoteKeyDilution),
-				//utils.StrOrNA(key.Key.StateProofKey),
-				utils.StrOrNA(key.EffectiveLastValid),
-				utils.StrOrNA(key.EffectiveFirstValid),
 				utils.StrOrNA(key.LastVote),
 				utils.StrOrNA(key.LastBlockProposal),
-				utils.StrOrNA(key.LastStateProof),
 			})
 		}
 	}
