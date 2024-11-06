@@ -121,18 +121,23 @@ func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponse
 	for _, key := range *state.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
-
-			account, err := GetAccount(client, key.Address)
-
-			// TODO: handle error
-			if err != nil {
-				// TODO: Logging
-				panic(err)
+			var account = api.Account{
+				Address: key.Address,
+				Status:  "Unknown",
+				Amount:  0,
 			}
-
-			var expires = t.Now()
+			if state.Status.State != "SYNCING" {
+				var err error
+				account, err = GetAccount(client, key.Address)
+				// TODO: handle error
+				if err != nil {
+					// TODO: Logging
+					panic(err)
+				}
+			}
+			now := t.Now()
+			var expires = now.Add(-(time.Hour * 24 * 365 * 100))
 			if key.EffectiveLastValid != nil {
-				now := t.Now()
 				roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
 				distance := int(state.Metrics.RoundTime) * roundDiff
 				expires = now.Add(time.Duration(distance))

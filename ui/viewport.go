@@ -123,9 +123,44 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == KeysPage {
 				selKey := m.keysPage.SelectedKey()
-				if selKey != nil {
+				if selKey != nil && m.Data.Status.State != "SYNCING" {
 					m.page = TransactionPage
 					return m, keys.EmitKeySelected(selKey)
+				}
+			}
+			return m, nil
+		case "a":
+			m.page = AccountsPage
+		case "g":
+			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
+			m.page = GeneratePage
+			return m, nil
+		case "k":
+			selAcc := m.accountsPage.SelectedAccount()
+			if selAcc != (internal.Account{}) {
+				m.page = KeysPage
+				return m, accounts.EmitAccountSelected(selAcc)
+			}
+			return m, nil
+		case "t":
+			if m.Data.Status.State != "SYNCING" {
+
+				if m.page == AccountsPage {
+					acct := m.accountsPage.SelectedAccount()
+					data := *m.Data.ParticipationKeys
+					for i, key := range data {
+						if key.Address == acct.Address {
+							m.page = TransactionPage
+							return m, keys.EmitKeySelected(&data[i])
+						}
+					}
+				}
+				if m.page == KeysPage {
+					selKey := m.keysPage.SelectedKey()
+					if selKey != nil {
+						m.page = TransactionPage
+						return m, keys.EmitKeySelected(selKey)
+					}
 				}
 			}
 			return m, nil

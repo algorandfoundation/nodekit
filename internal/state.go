@@ -62,6 +62,11 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		// Fetch Keys
 		s.UpdateKeys(ctx, client)
 
+		if s.Status.State == "SYNCING" {
+			lastRound = s.Status.LastRound
+			cb(s, nil)
+			continue
+		}
 		// Run Round Averages and RX/TX every 5 rounds
 		if s.Status.LastRound%5 == 0 {
 			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
@@ -91,8 +96,15 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.Clien
 	}
 	if err == nil {
 		s.Metrics.Enabled = true
-		s.Metrics.TX = res["algod_network_sent_bytes_total"]
-		s.Metrics.RX = res["algod_network_received_bytes_total"]
+		now := time.Now()
+		diff := now.Sub(s.Metrics.LastTS)
+
+		s.Metrics.TX = max(0, int(float64(res["algod_network_sent_bytes_total"]-s.Metrics.LastTX)/diff.Seconds()))
+		s.Metrics.RX = max(0, int(float64(res["algod_network_received_bytes_total"]-s.Metrics.LastRX)/diff.Seconds()))
+
+		s.Metrics.LastTS = now
+		s.Metrics.LastTX = res["algod_network_sent_bytes_total"]
+		s.Metrics.LastRX = res["algod_network_received_bytes_total"]
 	}
 }
 func (s *StateModel) UpdateAccounts(client *api.ClientWithResponses) {

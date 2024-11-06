@@ -17,6 +17,9 @@ type MetricsModel struct {
 	TPS       float64
 	RX        int
 	TX        int
+	LastTS    time.Time
+	LastRX    int
+	LastTX    int
 }
 
 type MetricsResponse map[string]int
