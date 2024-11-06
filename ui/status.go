@@ -85,13 +85,21 @@ func (m StatusViewModel) View() string {
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	beginning = style.Blue.Render(" Round time: ") + fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
+	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
+	if m.Data.Status.State == "SYNCING" {
+		roundTime = "--"
+	}
+	beginning = style.Blue.Render(" Round time: ") + roundTime
 	end = getBitRate(m.Data.Metrics.TX) + style.Green.Render("TX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	beginning = style.Blue.Render(" TPS: ") + fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
+	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
+	if m.Data.Status.State == "SYNCING" {
+		tps = "--"
+	}
+	beginning = style.Blue.Render(" TPS: ") + tps
 	end = getBitRate(m.Data.Metrics.RX) + style.Green.Render("RX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 

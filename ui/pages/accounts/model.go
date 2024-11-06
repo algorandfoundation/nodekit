@@ -4,6 +4,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/charmbracelet/bubbles/table"
@@ -13,7 +14,7 @@ import (
 type ViewModel struct {
 	Width  int
 	Height int
-	Data   map[string]internal.Account
+	Data   *internal.StateModel
 
 	table      table.Model
 	navigation string
@@ -24,7 +25,7 @@ func New(state *internal.StateModel) ViewModel {
 	m := ViewModel{
 		Width:      0,
 		Height:     0,
-		Data:       state.Accounts,
+		Data:       state,
 		controls:   "( (g)enerate )",
 		navigation: "| " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn |",
 	}
@@ -52,7 +53,7 @@ func (m ViewModel) SelectedAccount() internal.Account {
 	var account internal.Account
 	var selectedRow = m.table.SelectedRow()
 	if selectedRow != nil {
-		account = m.Data[selectedRow[0]]
+		account = m.Data.Accounts[selectedRow[0]]
 	}
 	return account
 }
@@ -70,13 +71,20 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 func (m ViewModel) makeRows() *[]table.Row {
 	rows := make([]table.Row, 0)
 
-	for key := range m.Data {
+	for key := range m.Data.Accounts {
+		expires := m.Data.Accounts[key].Expires.String()
+		if m.Data.Status.State == "SYNCING" {
+			expires = "SYNCING"
+		}
+		if !m.Data.Accounts[key].Expires.After(time.Now().Add(-(time.Hour * 24 * 365 * 50))) {
+			expires = "NA"
+		}
 		rows = append(rows, table.Row{
-			m.Data[key].Address,
-			strconv.Itoa(m.Data[key].Keys),
-			m.Data[key].Status,
-			m.Data[key].Expires.String(),
-			strconv.Itoa(m.Data[key].Balance),
+			m.Data.Accounts[key].Address,
+			strconv.Itoa(m.Data.Accounts[key].Keys),
+			m.Data.Accounts[key].Status,
+			expires,
+			strconv.Itoa(m.Data.Accounts[key].Balance),
 		})
 	}
 	sort.SliceStable(rows, func(i, j int) bool {
