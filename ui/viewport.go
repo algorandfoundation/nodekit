@@ -3,13 +3,13 @@ package ui
 import (
 	"context"
 	"fmt"
+	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
+	"github.com/algorandfoundation/hack-tui/ui/modals/transaction"
 
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
-	"github.com/algorandfoundation/hack-tui/ui/pages/generate"
 	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
-	"github.com/algorandfoundation/hack-tui/ui/pages/transaction"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
