@@ -2,11 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/ui/modals"
-	"github.com/algorandfoundation/hack-tui/ui/overlay"
-
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/modal"
+	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
+	"github.com/algorandfoundation/hack-tui/ui/modals/exception"
 	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
 	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
@@ -14,16 +14,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// ViewportPage represents different pages that can be displayed in the application's viewport.
 type ViewportPage string
 
 const (
-	AccountsPage    ViewportPage = "accounts"
-	KeysPage        ViewportPage = "keys"
-	GeneratePage    ViewportPage = "generate"
-	TransactionPage ViewportPage = "transaction"
-	ErrorPage       ViewportPage = "error"
+	AccountsPage ViewportPage = "accounts"
+	KeysPage     ViewportPage = "keys"
+	ErrorPage    ViewportPage = "error"
 )
 
+// ViewportViewModel represents the state and view model for a viewport in the application.
 type ViewportViewModel struct {
 	PageWidth, PageHeight         int
 	TerminalWidth, TerminalHeight int
@@ -37,15 +37,14 @@ type ViewportViewModel struct {
 	// Pages
 	accountsPage accounts.ViewModel
 	keysPage     keys.ViewModel
-	generatePage generate.ViewModel
 
-	modal  overlay.ViewModel
+	modal  *modal.ViewModel
 	page   ViewportPage
 	client *api.ClientWithResponses
 
 	// Error Handler
 	errorMsg  *string
-	errorPage ErrorViewModel
+	errorPage *exception.ViewModel
 }
 
 // Init is a no-op
@@ -66,12 +65,12 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
-	case overlay.ShowModal:
+	case modal.ShowModal:
 		m.modal.Open = true
-		m.modal.SetKey(msg)
-	case modal.DeleteFinished:
+		m.modal.SetKey(msg.Key)
+		m.modal.SetAddress(msg.Address)
+	case confirm.DeleteFinished:
 		m.modal.Open = false
-		m.page = AccountsPage
 		m.modal, cmd = m.modal.HandleMessage(msg)
 		cmds = append(cmds, cmd)
 		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
@@ -80,9 +79,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = AccountsPage
 		return m, nil
 	case error:
-		m.modal.Open = false
-		strMsg := msg.Error()
-		m.errorMsg = &strMsg
+		m.modal.Open = true
+		m.modal.Page = modal.ExceptionModal
 	// When the state updates
 	case internal.StateModel:
 		if m.errorMsg != nil {
@@ -92,13 +90,23 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Data = &msg
 	// Navigate to the keys page when an account is selected
 	case internal.Account:
+		if msg.Address != "" {
+			m.keysPage.Address = msg.Address
+			if m.modal.Open {
+				m.modal.Open = false
+			}
+		}
 		m.page = KeysPage
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "g":
-			if m.page != GeneratePage && !m.modal.Open {
-				m.page = GeneratePage
+			if !m.modal.Open {
+				m.modal.Open = true
+				m.modal.SetAddress(m.accountsPage.SelectedAccount().Address)
+				m.modal.Page = modal.GenerateModal
+				return m, cmd
 			}
+
 		case "left":
 			// Disable when overlay is active
 			if m.modal.Open {
@@ -106,9 +114,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == AccountsPage {
 				return m, nil
-			}
-			if m.page == TransactionPage {
-				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
 			}
 			if m.page == KeysPage {
 				m.page = AccountsPage
@@ -129,9 +134,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "ctrl+c":
-			if m.page != GeneratePage {
-				return m, tea.Quit
-			}
+			return m, tea.Quit
 		}
 
 	case tea.WindowSizeMsg:
@@ -161,29 +164,25 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 
-		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
-		cmds = append(cmds, cmd)
-
 		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
 		return m, tea.Batch(cmds...)
 
 	}
-	// Get Page Updates
-	switch m.page {
-	case AccountsPage:
-		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
-	case KeysPage:
-		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
-	case GeneratePage:
-		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
-	case ErrorPage:
-		m.errorPage, cmd = m.errorPage.HandleMessage(msg)
-	}
 	// Ignore commands while open
 	if m.modal.Open {
 		m.modal, cmd = m.modal.HandleMessage(msg)
+	} else {
+		// Get Page Updates
+		switch m.page {
+		case AccountsPage:
+			m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+		case KeysPage:
+			m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+		case ErrorPage:
+			m.errorPage, cmd = m.errorPage.HandleMessage(msg)
+		}
 	}
 	cmds = append(cmds, cmd)
 
@@ -204,8 +203,6 @@ func (m ViewportViewModel) View() string {
 	switch m.page {
 	case AccountsPage:
 		page = m.accountsPage
-	case GeneratePage:
-		page = m.generatePage
 	case KeysPage:
 		page = m.keysPage
 	case ErrorPage:
@@ -248,17 +245,16 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		// Pages
 		accountsPage: accounts.New(state),
 		keysPage:     keys.New("", state.ParticipationKeys),
-		generatePage: generate.New("", client),
 
 		// Modal
-		modal: overlay.New("", false, modal.New(state)),
+		modal: modal.New("", false, state),
 
 		// Current Page
 		page: AccountsPage,
 		// RPC client
 		client: client,
 
-		errorPage: NewErrorViewModel(""),
+		errorPage: exception.New(""),
 	}
 
 	return &m, nil

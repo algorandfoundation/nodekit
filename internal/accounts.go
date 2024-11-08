@@ -112,6 +112,17 @@ func GetAccount(client *api.ClientWithResponses, address string) (api.Account, e
 	return *r.JSON200, nil
 }
 
+func getExpiresTime(t Time, key api.ParticipationKey, state *StateModel) time.Time {
+	now := t.Now()
+	var expires = now.Add(-(time.Hour * 24 * 365 * 100))
+	if key.LastBlockProposal != nil && state.Status.LastRound != 0 && state.Metrics.RoundTime != 0 {
+		roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
+		distance := int(state.Metrics.RoundTime) * roundDiff
+		expires = now.Add(time.Duration(distance))
+	}
+	return expires
+}
+
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
 func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponses) map[string]Account {
 	values := make(map[string]Account)
@@ -135,23 +146,23 @@ func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponse
 					panic(err)
 				}
 			}
-			now := t.Now()
-			var expires = now.Add(-(time.Hour * 24 * 365 * 100))
-			if key.EffectiveLastValid != nil {
-				roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
-				distance := int(state.Metrics.RoundTime) * roundDiff
-				expires = now.Add(time.Duration(distance))
-			}
 
 			values[key.Address] = Account{
 				Address: key.Address,
 				Status:  account.Status,
 				Balance: account.Amount / 1000000,
-				Expires: expires,
+				Expires: getExpiresTime(t, key, state),
 				Keys:    1,
 			}
 		} else {
 			val.Keys++
+			if val.Expires.Before(t.Now()) {
+				now := t.Now()
+				var expires = getExpiresTime(t, key, state)
+				if !expires.Before(now) {
+					val.Expires = expires
+				}
+			}
 			values[key.Address] = val
 		}
 	}

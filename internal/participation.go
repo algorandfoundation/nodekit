@@ -39,7 +39,12 @@ func waitForNewKey(
 	client *api.ClientWithResponses,
 	keys *[]api.ParticipationKey,
 	interval time.Duration,
+	timeout time.Duration,
 ) (*[]api.ParticipationKey, error) {
+	if timeout <= 0*time.Second {
+		return nil, errors.New("timeout occurred waiting for new key")
+	}
+	timeout = timeout - interval
 	// Fetch the latest keys
 	currentKeys, err := GetPartKeys(ctx, client)
 	if err != nil {
@@ -49,7 +54,7 @@ func waitForNewKey(
 	if len(*currentKeys) == len(*keys) {
 		// Sleep then try again
 		time.Sleep(interval)
-		return waitForNewKey(ctx, client, keys, interval)
+		return waitForNewKey(ctx, client, keys, interval, timeout)
 	}
 	return currentKeys, nil
 }
@@ -97,7 +102,7 @@ func GenerateKeyPair(
 	}
 
 	// Wait for the api to have a new key
-	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second)
+	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second, 20*time.Second)
 	if err != nil {
 		return nil, err
 	}

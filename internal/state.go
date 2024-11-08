@@ -9,14 +9,20 @@ import (
 )
 
 type StateModel struct {
+	// Models
 	Status            StatusModel
 	Metrics           MetricsModel
 	Accounts          map[string]Account
 	ParticipationKeys *[]api.ParticipationKey
+
+	// Application State
+	Admin  bool
+	Offset int
+
 	// TODO: handle contexts instead of adding it to state
-	Admin    bool
 	Watching bool
 
+	// RPC
 	Client  *api.ClientWithResponses
 	Context context.Context
 }

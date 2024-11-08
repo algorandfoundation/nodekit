@@ -1,6 +1,7 @@
 package confirm
 
 import (
+	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
@@ -11,12 +12,22 @@ import (
 
 type Msg *api.ParticipationKey
 
-func EmitMsg(key *api.ParticipationKey) tea.Cmd {
+func EmitCmd(key *api.ParticipationKey) tea.Cmd {
 	return func() tea.Msg {
 		return Msg(key)
 	}
 }
+func DeleteKeyCmd(ctx context.Context, client *api.ClientWithResponses, id string) tea.Cmd {
+	return func() tea.Msg {
+		err := internal.DeletePartKey(ctx, client, id)
+		if err != nil {
+			return DeleteFinished(err.Error())
+		}
+		return DeleteFinished(id)
+	}
+}
 
+type DeleteFinished string
 type ViewModel struct {
 	Width       int
 	Height      int
@@ -50,9 +61,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "y":
-			return &m, EmitMsg(m.ActiveKey)
+			var (
+				cmds []tea.Cmd
+			)
+			cmds = append(cmds, EmitCmd(m.ActiveKey))
+			cmds = append(cmds, DeleteKeyCmd(m.Data.Context, m.Data.Client, m.ActiveKey.Id))
+			return &m, tea.Batch(cmds...)
 		case "n":
-			return &m, EmitMsg(nil)
+			return &m, EmitCmd(nil)
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width

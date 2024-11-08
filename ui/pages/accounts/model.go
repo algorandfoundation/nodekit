@@ -12,22 +12,27 @@ import (
 )
 
 type ViewModel struct {
-	Width  int
-	Height int
-	Data   *internal.StateModel
+	Data *internal.StateModel
 
-	table      table.Model
-	navigation string
-	controls   string
+	Title       string
+	Navigation  string
+	Controls    string
+	BorderColor string
+	Width       int
+	Height      int
+
+	table table.Model
 }
 
 func New(state *internal.StateModel) ViewModel {
 	m := ViewModel{
-		Width:      0,
-		Height:     0,
-		Data:       state,
-		controls:   "( (g)enerate )",
-		navigation: "| " + style.Green.Render("accounts") + " | keys |",
+		Title:       "Accounts",
+		Width:       0,
+		Height:      0,
+		BorderColor: "6",
+		Data:        state,
+		Controls:    "( (g)enerate )",
+		Navigation:  "| " + style.Green.Render("accounts") + " | keys |",
 	}
 
 	m.table = table.New(
@@ -43,7 +48,7 @@ func New(state *internal.StateModel) ViewModel {
 		Bold(false)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Background(lipgloss.Color(m.BorderColor)).
 		Bold(false)
 	m.table.SetStyles(s)
 	return m

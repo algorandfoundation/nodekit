@@ -1,33 +1,15 @@
 package generate
 
 import (
-	"fmt"
-	"github.com/algorandfoundation/hack-tui/ui/style"
-	"strings"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m ViewModel) View() string {
-	var b strings.Builder
+	m.Input.Focused()
+	render := m.Input.View()
 
-	for i := range m.Inputs {
-		b.WriteString(m.Inputs[i].View())
-		if i < len(m.Inputs)-1 {
-			b.WriteRune('\n')
-		}
+	if lipgloss.Width(render) < 70 {
+		return lipgloss.NewStyle().Width(70).Render(render)
 	}
-
-	button := &blurredButton
-	if m.focusIndex == len(m.Inputs) {
-		button = &focusedButton
-	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
-
-	render := style.ApplyBorder(m.Width, m.Height, "8").Render(b.String())
-	return style.WithControls(
-		m.controls,
-		style.WithTitle(
-			"Generate",
-			render,
-		),
-	)
+	return render
 }

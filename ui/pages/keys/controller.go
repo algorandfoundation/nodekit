@@ -2,8 +2,8 @@ package keys
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/modals"
-	"github.com/algorandfoundation/hack-tui/ui/overlay"
+	"github.com/algorandfoundation/hack-tui/ui/modal"
+	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -18,26 +18,40 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
 	switch msg := msg.(type) {
+	// When the State changes
 	case internal.StateModel:
 		m.Data = msg.ParticipationKeys
 		m.table.SetRows(m.makeRows(m.Data))
+	// When the Account is Selected
 	case internal.Account:
 		m.Address = msg.Address
 		m.table.SetRows(m.makeRows(m.Data))
-	case modal.DeleteFinished:
+	// When a confirmation Modal is finished deleting
+	case confirm.DeleteFinished:
 		internal.RemovePartKeyByID(m.Data, string(msg))
 		m.table.SetRows(m.makeRows(m.Data))
+	// When the user interacts with the render
 	case tea.KeyMsg:
 		switch msg.String() {
+		// Show the Info Modal
 		case "enter":
 			selKey := m.SelectedKey()
 			if selKey != nil {
-				return m, overlay.EmitShowModal(selKey)
+				return m, modal.EmitShowModal(modal.Event{
+					Key:     selKey,
+					Address: selKey.Address,
+					Type:    "info",
+				})
 			}
 			return m, nil
 		}
 
+	// Handle Resize Events
 	case tea.WindowSizeMsg:
 		borderRender := style.Border.Render("")
 		borderWidth := lipgloss.Width(borderRender)
@@ -50,9 +64,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetColumns(m.makeColumns(m.Width))
 	}
 
-	var cmds []tea.Cmd
-	var cmd tea.Cmd
+	// Handle Table Update
 	m.table, cmd = m.table.Update(msg)
+	if cmd != nil {
+		cmds = append(cmds, cmd)
+	}
 	cmds = append(cmds, cmd)
+
+	// Batch all commands
 	return m, tea.Batch(cmds...)
 }

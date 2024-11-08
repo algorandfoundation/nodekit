@@ -1,80 +1,12 @@
 package modal
 
 import (
-	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
-	"github.com/algorandfoundation/hack-tui/ui/modals/info"
-	"github.com/algorandfoundation/hack-tui/ui/modals/transaction"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-func DeleteKeyCmd(ctx context.Context, client *api.ClientWithResponses, id string) tea.Cmd {
-	return func() tea.Msg {
-		err := internal.DeletePartKey(ctx, client, id)
-		if err != nil {
-			return DeleteFinished(err.Error())
-		}
-		return DeleteFinished(id)
-	}
-}
-
-type DeleteFinished string
-
-type DeleteKey *api.ParticipationKey
-
-type Page string
-
-const (
-	InfoModal        Page = "accounts"
-	ConfirmModal     Page = "confirm"
-	TransactionModal Page = "transaction"
-)
-
-type ViewModel struct {
-	// Width and Height
-	Width  int
-	Height int
-
-	// State for Context/Client
-	State *internal.StateModel
-
-	// Views
-	infoModal        *info.ViewModel
-	transactionModal *transaction.ViewModel
-	confirmModal     *confirm.ViewModel
-
-	// Current Component Data
-	title       string
-	controls    string
-	borderColor string
-	Page        Page
-}
-
-func New(state *internal.StateModel) *ViewModel {
-	return &ViewModel{
-		Width:  0,
-		Height: 0,
-
-		State: state,
-
-		infoModal:        info.New(state),
-		transactionModal: transaction.New(state),
-		confirmModal:     confirm.New(state),
-
-		Page:        InfoModal,
-		controls:    "",
-		borderColor: "3",
-	}
-}
-func (m ViewModel) SetKey(key *api.ParticipationKey) {
-	m.infoModal.ActiveKey = key
-	m.confirmModal.ActiveKey = key
-	m.transactionModal.ActiveKey = key
-}
 func (m ViewModel) Init() tea.Cmd {
 	return nil
 }
@@ -83,20 +15,41 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
-
 	switch msg := msg.(type) {
-	case DeleteFinished:
-		m.Page = InfoModal
+	case error:
+		m.Open = true
+		m.Page = ExceptionModal
+		m.exceptionModal.Message = msg.Error()
+	// Handle Confirmation Dialog Cancel
 	case confirm.Msg:
-		if msg != nil {
-			return &m, DeleteKeyCmd(m.State.Context, m.State.Client, msg.Id)
-		} else {
+		if msg == nil {
 			m.Page = InfoModal
 		}
+	// Handle Confirmation Dialog Delete Finished
+	case confirm.DeleteFinished:
+		m.Open = false
+		m.Page = InfoModal
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			m.Page = InfoModal
+			switch m.Page {
+			case InfoModal:
+				m.Open = false
+			case GenerateModal:
+				m.Open = false
+				m.Page = InfoModal
+			case TransactionModal:
+				m.Page = InfoModal
+			case ExceptionModal:
+				m.Open = false
+			case ConfirmModal:
+				m.Page = InfoModal
+			}
+		case "g":
+			if m.Page != GenerateModal {
+				m.Page = GenerateModal
+			}
 		case "d":
 			if m.Page == InfoModal {
 				m.Page = ConfirmModal
@@ -133,11 +86,18 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.confirmModal, cmd = m.confirmModal.HandleMessage(modalMsg)
 		cmds = append(cmds, cmd)
+		m.generateModal, cmd = m.generateModal.HandleMessage(modalMsg)
+		cmds = append(cmds, cmd)
 		return &m, tea.Batch(cmds...)
 	}
 
 	// Only trigger modal commands when they are active
 	switch m.Page {
+	case ExceptionModal:
+		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
+		m.title = m.exceptionModal.Title
+		m.controls = m.exceptionModal.Controls
+		m.borderColor = m.exceptionModal.BorderColor
 	case InfoModal:
 		m.infoModal, cmd = m.infoModal.HandleMessage(msg)
 		m.title = m.infoModal.Title
@@ -153,25 +113,15 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.title = m.confirmModal.Title
 		m.controls = m.confirmModal.Controls
 		m.borderColor = m.confirmModal.BorderColor
+	case GenerateModal:
+		m.generateModal, cmd = m.generateModal.HandleMessage(msg)
+		m.title = m.generateModal.Title
+		m.controls = m.generateModal.Controls
+		m.borderColor = m.generateModal.BorderColor
 	}
 	cmds = append(cmds, cmd)
 	return &m, tea.Batch(cmds...)
 }
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
-}
-
-func (m ViewModel) View() string {
-	var render = ""
-	switch m.Page {
-	case InfoModal:
-		render = m.infoModal.View()
-	case TransactionModal:
-		render = m.transactionModal.View()
-	case ConfirmModal:
-		render = m.confirmModal.View()
-	}
-	width := lipgloss.Width(render) + 2
-	height := lipgloss.Height(render)
-	return style.WithNavigation(m.controls, style.WithTitle(m.title, style.ApplyBorder(width, height, m.borderColor).PaddingRight(1).PaddingLeft(1).Render(render)))
 }

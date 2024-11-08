@@ -1,53 +1,46 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
 type ViewModel struct {
-	Width   int
-	Height  int
+	Width  int
+	Height int
+
 	Address string
-	Inputs  []textinput.Model
+	Input   *textinput.Model
 
-	controls string
+	Title       string
+	Controls    string
+	BorderColor string
 
-	client     *api.ClientWithResponses
-	focusIndex int
+	State      *internal.StateModel
 	cursorMode cursor.Mode
 }
 
-func New(address string, client *api.ClientWithResponses) ViewModel {
+func (m ViewModel) SetAddress(address string) {
+	m.Address = address
+	m.Input.SetValue(address)
+}
+
+func New(address string, state *internal.StateModel) *ViewModel {
+	input := textinput.New()
 	m := ViewModel{
-		Address:  address,
-		Inputs:   make([]textinput.Model, 3),
-		controls: "( ctrl+c to cancel )",
-		client:   client,
+		Address:     address,
+		State:       state,
+		Input:       &input,
+		Title:       "Generate Participation Key",
+		Controls:    "( esc to cancel )",
+		BorderColor: "2",
 	}
-
-	var t textinput.Model
-	for i := range m.Inputs {
-		t = textinput.New()
-		t.Cursor.Style = cursorStyle
-		t.CharLimit = 68
-
-		switch i {
-		case 0:
-			t.Placeholder = "Wallet Address or NFD"
-			t.Focus()
-			t.PromptStyle = focusedStyle
-			t.TextStyle = focusedStyle
-			t.CharLimit = 68
-		case 1:
-			t.Placeholder = "First Valid Round"
-		case 2:
-			t.Placeholder = "Last"
-		}
-
-		m.Inputs[i] = t
-	}
-
-	return m
+	input.Cursor.Style = cursorStyle
+	input.CharLimit = 68
+	input.Placeholder = "Wallet Address"
+	input.Focus()
+	input.PromptStyle = focusedStyle
+	input.TextStyle = focusedStyle
+	return &m
 }

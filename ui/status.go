@@ -45,6 +45,7 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	return m, nil
 }
 
+// getBitRate converts a given byte rate to a human-readable string format. The output may vary from B/s to GB/s.
 func getBitRate(bytes int) string {
 	txString := fmt.Sprintf("%d B/s ", bytes)
 	if bytes >= 1024 {

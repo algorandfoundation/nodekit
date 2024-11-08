@@ -5,13 +5,13 @@ import (
 )
 
 func (m ViewModel) View() string {
-	table := style.ApplyBorder(m.Width, m.Height, "4").Render(m.table.View())
+	table := style.ApplyBorder(m.Width, m.Height, m.BorderColor).Render(m.table.View())
 	return style.WithNavigation(
-		m.navigation,
+		m.Navigation,
 		style.WithControls(
-			m.controls,
+			m.Controls,
 			style.WithTitle(
-				"Keys",
+				m.Title,
 				table,
 			),
 		),

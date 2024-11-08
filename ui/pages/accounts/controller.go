@@ -48,6 +48,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	}
 
 	m.table, cmd = m.table.Update(msg)
+	if cmd != nil {
+		cmds = append(cmds, cmd)
+	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }

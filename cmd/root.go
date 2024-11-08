@@ -61,6 +61,7 @@ var (
 			}
 
 			state := internal.StateModel{
+				Offset: viper.GetInt("offset"),
 				Status: internal.StatusModel{
 					State:       "INITIALIZING",
 					Version:     "NA",
