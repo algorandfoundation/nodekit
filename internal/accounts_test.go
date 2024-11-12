@@ -67,7 +67,7 @@ func Test_AccountsFromState(t *testing.T) {
 
 	effectiveFirstValid := 0
 	effectiveLastValid := 10000
-
+	lastProposedRound := 1336
 	// Create mockedPart Keys
 	var mockedPartKeys = []api.ParticipationKey{
 		{
@@ -83,7 +83,7 @@ func Test_AccountsFromState(t *testing.T) {
 				VoteLastValid:             9999999,
 				VoteKeyDilution:           0,
 			},
-			LastBlockProposal: nil,
+			LastBlockProposal: &lastProposedRound,
 			LastStateProof:    nil,
 			LastVote:          nil,
 		},
@@ -117,7 +117,7 @@ func Test_AccountsFromState(t *testing.T) {
 				VoteLastValid:             9999999,
 				VoteKeyDilution:           0,
 			},
-			LastBlockProposal: nil,
+			LastBlockProposal: &lastProposedRound,
 			LastStateProof:    nil,
 			LastVote:          nil,
 		},
