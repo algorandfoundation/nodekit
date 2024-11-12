@@ -58,6 +58,33 @@ func (m ViewModel) SetKey(key *api.ParticipationKey) {
 	m.confirmModal.ActiveKey = key
 	m.transactionModal.ActiveKey = key
 }
+
+func (m *ViewModel) SetPage(page Page) {
+	m.Page = page
+	switch page {
+	case InfoModal:
+		m.title = m.infoModal.Title
+		m.controls = m.infoModal.Controls
+		m.borderColor = m.infoModal.BorderColor
+	case ConfirmModal:
+		m.title = m.confirmModal.Title
+		m.controls = m.confirmModal.Controls
+		m.borderColor = m.confirmModal.BorderColor
+	case GenerateModal:
+		m.title = m.generateModal.Title
+		m.controls = m.generateModal.Controls
+		m.borderColor = m.generateModal.BorderColor
+	case TransactionModal:
+		m.title = m.transactionModal.Title
+		m.controls = m.transactionModal.Controls
+		m.borderColor = m.transactionModal.BorderColor
+	case ExceptionModal:
+		m.title = m.exceptionModal.Title
+		m.controls = m.exceptionModal.Controls
+		m.borderColor = m.exceptionModal.BorderColor
+	}
+}
+
 func New(parent string, open bool, state *internal.StateModel) *ViewModel {
 	return &ViewModel{
 		Parent: parent,

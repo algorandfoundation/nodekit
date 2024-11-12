@@ -90,36 +90,22 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		return &m, tea.Batch(cmds...)
 	}
-
+	m.SetPage(m.Page)
 	// Only trigger modal commands when they are active
 	switch m.Page {
 	case ExceptionModal:
 		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
-		m.title = m.exceptionModal.Title
-		m.controls = m.exceptionModal.Controls
-		m.borderColor = m.exceptionModal.BorderColor
 	case InfoModal:
 		m.infoModal, cmd = m.infoModal.HandleMessage(msg)
-		m.title = m.infoModal.Title
-		m.controls = m.infoModal.Controls
-		m.borderColor = m.infoModal.BorderColor
 	case TransactionModal:
 		m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
-		m.title = m.transactionModal.Title
-		m.controls = m.transactionModal.Controls
-		m.borderColor = m.transactionModal.BorderColor
 	case ConfirmModal:
 		m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
-		m.title = m.confirmModal.Title
-		m.controls = m.confirmModal.Controls
-		m.borderColor = m.confirmModal.BorderColor
 	case GenerateModal:
 		m.generateModal, cmd = m.generateModal.HandleMessage(msg)
-		m.title = m.generateModal.Title
-		m.controls = m.generateModal.Controls
-		m.borderColor = m.generateModal.BorderColor
 	}
 	cmds = append(cmds, cmd)
+
 	return &m, tea.Batch(cmds...)
 }
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

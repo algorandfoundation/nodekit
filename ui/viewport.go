@@ -103,7 +103,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.modal.Open {
 				m.modal.Open = true
 				m.modal.SetAddress(m.accountsPage.SelectedAccount().Address)
-				m.modal.Page = modal.GenerateModal
+				m.modal.SetPage(modal.GenerateModal)
 				return m, cmd
 			}
 
