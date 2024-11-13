@@ -34,25 +34,25 @@ Run the build or ~~download the latest cli(WIP)~~.
 
 ## Building
 
-Clone the repository
+1. Clone the repository
 
 ```bash
 git clone https://github.com/algorandfoundation/hack-tui.git
 ```
 
-Change to the project directory
+2. Change to the project directory
 
 ```bash
 cd hack-tui
 ```
 
-Run the build command
+3. Run the build command
 
 ```bash
 make build
 ```
 
-Start a participation node
+4. Start a participation node
 
 ```bash
 docker compose up
@@ -62,7 +62,7 @@ docker compose up
 > The docker image is used for development and testing purposes. TUI will also work with native algod.
 > If you have a node installed already, you can skip this step.
 
-Connect to the node
+5. Connect to the node
 
 ```bash
 ./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
