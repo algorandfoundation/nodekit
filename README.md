@@ -25,12 +25,12 @@ Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](htt
 > [!CAUTION]
 > This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes.
 
-> [!NOTE]
-> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
-
 # 🚀 Get Started
 
 Run the build or ~~download the latest cli(WIP)~~.
+
+> [!NOTE]
+> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
 
 ## Building
 
