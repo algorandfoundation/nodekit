@@ -71,6 +71,9 @@ Connect to the node
 > [!NOTE]
 > If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node.
 
+> [!CAUTION]
+> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
+
 # ℹ️ Usage
 
 ## ⚙️ Configuration
