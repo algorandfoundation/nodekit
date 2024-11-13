@@ -20,7 +20,13 @@
 ---
 
 Terminal UI for managing Algorand nodes.
-Built with [bubbles](https://github.com/charmbracelet/bubbles)/[bubbletea](https://github.com/charmbracelet/bubbletea)
+Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](https://github.com/charmbracelet/bubbletea)
+
+> [!CAUTION]
+> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes.
+
+> [!NOTE]
+> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
 
 # 🚀 Get Started
 
@@ -31,7 +37,7 @@ Run the build or ~~download the latest cli(WIP)~~.
 Clone the repository
 
 ```bash
-git clone git@github.com:algorandfoundation/hack-tui.git
+git clone https://github.com/algorandfoundation/hack-tui.git
 ```
 
 Change to the project directory
@@ -48,6 +54,10 @@ make build
 
 Start a participation node
 
+> [!NOTE]
+> The docker image is used for development and testing purposes. TUI will also work with native algod.
+> If you have a node installed already, you can skip this step.
+
 ```bash
 docker compose up
 ```
@@ -57,6 +67,9 @@ Connect to the node
 ```bash
 ./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
+
+> [!NOTE]
+> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node.
 
 # ℹ️ Usage
 
