@@ -54,13 +54,13 @@ make build
 
 Start a participation node
 
-> [!NOTE]
-> The docker image is used for development and testing purposes. TUI will also work with native algod.
-> If you have a node installed already, you can skip this step.
-
 ```bash
 docker compose up
 ```
+
+> [!NOTE]
+> The docker image is used for development and testing purposes. TUI will also work with native algod.
+> If you have a node installed already, you can skip this step.
 
 Connect to the node
 
@@ -68,11 +68,11 @@ Connect to the node
 ./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
-> [!NOTE]
-> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node.
-
 > [!CAUTION]
 > This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
+
+> [!NOTE]
+> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node. Note that algorun requires the admin algod token.
 
 # ℹ️ Usage
 
