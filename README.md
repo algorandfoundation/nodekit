@@ -23,7 +23,7 @@ Terminal UI for managing Algorand nodes.
 Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](https://github.com/charmbracelet/bubbletea)
 
 > [!CAUTION]
-> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes.
+> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
 
 # 🚀 Get Started
 
