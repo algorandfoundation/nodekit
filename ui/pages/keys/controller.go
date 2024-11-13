@@ -2,8 +2,7 @@ package keys
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/modal"
-	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -28,24 +27,30 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.Data = msg.ParticipationKeys
 		m.table.SetRows(m.makeRows(m.Data))
 	// When the Account is Selected
-	case internal.Account:
+	case app.AccountSelected:
 		m.Address = msg.Address
 		m.table.SetRows(m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
-	case confirm.DeleteFinished:
-		internal.RemovePartKeyByID(m.Data, string(msg))
+	case app.DeleteFinished:
+		if msg.Err != nil {
+			panic(msg.Err)
+		}
+		internal.RemovePartKeyByID(m.Data, msg.Id)
 		m.table.SetRows(m.makeRows(m.Data))
 	// When the user interacts with the render
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc":
+			return m, app.EmitShowPage(app.AccountsPage)
 		// Show the Info Modal
 		case "enter":
 			selKey := m.SelectedKey()
 			if selKey != nil {
-				return m, modal.EmitShowModal(modal.Event{
+				// Show the Info Modal with the selected Key
+				return m, app.EmitModalEvent(app.ModalEvent{
 					Key:     selKey,
 					Address: selKey.Address,
-					Type:    "info",
+					Type:    app.InfoModal,
 				})
 			}
 			return m, nil

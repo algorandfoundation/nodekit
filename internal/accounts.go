@@ -137,7 +137,7 @@ func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponse
 				Status:  "Unknown",
 				Amount:  0,
 			}
-			if state.Status.State != "SYNCING" {
+			if state.Status.State != SyncingState {
 				var err error
 				account, err = GetAccount(client, key.Address)
 				// TODO: handle error

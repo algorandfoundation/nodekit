@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -23,10 +24,12 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Height = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "esc":
-			return &m, EmitCancel(Cancel{})
+		case "esc":
+			return &m, app.EmitModalEvent(app.ModalEvent{
+				Type: app.CancelModal,
+			})
 		case "enter":
-			return m.GenerateCmd()
+			return &m, app.GenerateCmd(m.Input.Value(), m.State)
 		}
 
 	}

@@ -1,33 +1,15 @@
 package confirm
 
 import (
-	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Msg *api.ParticipationKey
-
-func EmitCmd(key *api.ParticipationKey) tea.Cmd {
-	return func() tea.Msg {
-		return Msg(key)
-	}
-}
-func DeleteKeyCmd(ctx context.Context, client *api.ClientWithResponses, id string) tea.Cmd {
-	return func() tea.Msg {
-		err := internal.DeletePartKey(ctx, client, id)
-		if err != nil {
-			return DeleteFinished(err.Error())
-		}
-		return DeleteFinished(id)
-	}
-}
-
-type DeleteFinished string
 type ViewModel struct {
 	Width       int
 	Height      int
@@ -60,15 +42,16 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc", "n":
+			return &m, app.EmitModalEvent(app.ModalEvent{
+				Type: app.CancelModal,
+			})
 		case "y":
 			var (
 				cmds []tea.Cmd
 			)
-			cmds = append(cmds, EmitCmd(m.ActiveKey))
-			cmds = append(cmds, DeleteKeyCmd(m.Data.Context, m.Data.Client, m.ActiveKey.Id))
+			cmds = append(cmds, app.EmitDeleteKey(m.Data.Context, m.Data.Client, m.ActiveKey.Id))
 			return &m, tea.Batch(cmds...)
-		case "n":
-			return &m, EmitCmd(nil)
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width

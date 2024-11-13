@@ -14,7 +14,7 @@ func Test_ProtocolViewRender(t *testing.T) {
 		Status: internal.StatusModel{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       "SYNCING",
+			State:       internal.SyncingState,
 		},
 		Metrics: internal.MetricsModel{
 			RoundTime: 0,

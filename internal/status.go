@@ -7,9 +7,16 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 )
 
+type State string
+
+const (
+	SyncingState State = "SYNCING"
+	StableState  State = "RUNNING"
+)
+
 // StatusModel represents a status response from algod.Status
 type StatusModel struct {
-	State       string
+	State       State
 	Version     string
 	Network     string
 	Voting      bool
@@ -24,9 +31,9 @@ func (m *StatusModel) String() string {
 func (m *StatusModel) Update(lastRound int, catchupTime int, upgradeNodeVote *bool) {
 	m.LastRound = uint64(lastRound)
 	if catchupTime > 0 {
-		m.State = "SYNCING"
+		m.State = SyncingState
 	} else {
-		m.State = "WATCHING"
+		m.State = StableState
 	}
 	if upgradeNodeVote != nil {
 		m.Voting = *upgradeNodeVote

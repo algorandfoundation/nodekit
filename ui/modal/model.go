@@ -3,21 +3,12 @@ package modal
 import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
 	"github.com/algorandfoundation/hack-tui/ui/modals/exception"
 	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
 	"github.com/algorandfoundation/hack-tui/ui/modals/info"
 	"github.com/algorandfoundation/hack-tui/ui/modals/transaction"
-)
-
-type Page string
-
-const (
-	InfoModal        Page = "accounts"
-	ConfirmModal     Page = "confirm"
-	TransactionModal Page = "transaction"
-	GenerateModal    Page = "generate"
-	ExceptionModal   Page = "exception"
 )
 
 type ViewModel struct {
@@ -46,7 +37,7 @@ type ViewModel struct {
 	title       string
 	controls    string
 	borderColor string
-	Page        Page
+	Type        app.ModalType
 }
 
 func (m ViewModel) SetAddress(address string) {
@@ -59,26 +50,26 @@ func (m ViewModel) SetKey(key *api.ParticipationKey) {
 	m.transactionModal.ActiveKey = key
 }
 
-func (m *ViewModel) SetPage(page Page) {
-	m.Page = page
-	switch page {
-	case InfoModal:
+func (m *ViewModel) SetType(modal app.ModalType) {
+	m.Type = modal
+	switch modal {
+	case app.InfoModal:
 		m.title = m.infoModal.Title
 		m.controls = m.infoModal.Controls
 		m.borderColor = m.infoModal.BorderColor
-	case ConfirmModal:
+	case app.ConfirmModal:
 		m.title = m.confirmModal.Title
 		m.controls = m.confirmModal.Controls
 		m.borderColor = m.confirmModal.BorderColor
-	case GenerateModal:
+	case app.GenerateModal:
 		m.title = m.generateModal.Title
 		m.controls = m.generateModal.Controls
 		m.borderColor = m.generateModal.BorderColor
-	case TransactionModal:
+	case app.TransactionModal:
 		m.title = m.transactionModal.Title
 		m.controls = m.transactionModal.Controls
 		m.borderColor = m.transactionModal.BorderColor
-	case ExceptionModal:
+	case app.ExceptionModal:
 		m.title = m.exceptionModal.Title
 		m.controls = m.exceptionModal.Controls
 		m.borderColor = m.exceptionModal.BorderColor
@@ -102,7 +93,7 @@ func New(parent string, open bool, state *internal.StateModel) *ViewModel {
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
 
-		Page:        InfoModal,
+		Type:        app.InfoModal,
 		controls:    "",
 		borderColor: "3",
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -26,6 +27,13 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			return &m, app.EmitModalEvent(app.ModalEvent{
+				Type: app.CancelModal,
+			})
+		}
 	// Handle View Size changes
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width

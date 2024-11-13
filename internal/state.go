@@ -71,7 +71,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		// Fetch Keys
 		s.UpdateKeys()
 
-		if s.Status.State == "SYNCING" {
+		if s.Status.State == SyncingState {
 			lastRound = s.Status.LastRound
 			cb(s, nil)
 			continue

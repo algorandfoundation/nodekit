@@ -59,7 +59,6 @@ var (
 					style.Red.Render("failed to get participation keys: %s"),
 					err)
 			}
-
 			state := internal.StateModel{
 				Offset: viper.GetInt("offset"),
 				Status: internal.StatusModel{
@@ -87,7 +86,7 @@ var (
 			err = state.Status.Fetch(ctx, client)
 			cobra.CheckErr(err)
 
-			m, err := ui.MakeViewportViewModel(&state, client)
+			m, err := ui.NewViewportViewModel(&state, client)
 			cobra.CheckErr(err)
 
 			p := tea.NewProgram(

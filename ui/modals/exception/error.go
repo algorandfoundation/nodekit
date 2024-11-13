@@ -1,6 +1,7 @@
 package exception
 
 import (
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -43,6 +44,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case error:
 		m.Message = msg.Error()
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			return &m, app.EmitModalEvent(app.ModalEvent{
+				Type: app.CancelModal,
+			})
+
+		}
 	case tea.WindowSizeMsg:
 		borderRender := style.Border.Render("")
 		m.Width = max(0, msg.Width-lipgloss.Width(borderRender))

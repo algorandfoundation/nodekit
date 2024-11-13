@@ -3,6 +3,7 @@ package info
 import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
 	tea "github.com/charmbracelet/bubbletea"
@@ -41,6 +42,17 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			return &m, app.EmitModalEvent(app.ModalEvent{
+				Type: app.CancelModal,
+			})
+		case "d":
+			return &m, app.EmitShowModal(app.ConfirmModal)
+		case "o":
+			return &m, app.EmitShowModal(app.TransactionModal)
+		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
@@ -64,7 +76,7 @@ func (m ViewModel) View() string {
 	if m.ActiveKey == nil {
 		return "No key selected"
 	}
-
+	account := style.Cyan.Render("Account: ") + m.ActiveKey.Address
 	id := style.Cyan.Render("Participation ID: ") + m.ActiveKey.Id
 	selection := style.Yellow.Render("Selection Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.ActiveKey.Key.SelectionParticipationKey[:])
 	vote := style.Yellow.Render("Vote Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.ActiveKey.Key.VoteParticipationKey[:])
@@ -74,6 +86,7 @@ func (m ViewModel) View() string {
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.ActiveKey.Key.VoteKeyDilution)
 
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
+		account,
 		id,
 		selection,
 		vote,

@@ -1,6 +1,7 @@
 package modal
 
 import (
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -10,16 +11,16 @@ func (m ViewModel) View() string {
 		return m.Parent
 	}
 	var render = ""
-	switch m.Page {
-	case InfoModal:
+	switch m.Type {
+	case app.InfoModal:
 		render = m.infoModal.View()
-	case TransactionModal:
+	case app.TransactionModal:
 		render = m.transactionModal.View()
-	case ConfirmModal:
+	case app.ConfirmModal:
 		render = m.confirmModal.View()
-	case GenerateModal:
+	case app.GenerateModal:
 		render = m.generateModal.View()
-	case ExceptionModal:
+	case app.ExceptionModal:
 		render = m.exceptionModal.View()
 	}
 	width := lipgloss.Width(render) + 2

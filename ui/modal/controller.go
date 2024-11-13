@@ -1,7 +1,7 @@
 package modal
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -18,55 +18,46 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case error:
 		m.Open = true
-		m.Page = ExceptionModal
+		m.Type = app.ExceptionModal
 		m.exceptionModal.Message = msg.Error()
-	// Handle Confirmation Dialog Cancel
-	case confirm.Msg:
-		if msg == nil {
-			m.Page = InfoModal
+	case app.ModalEvent:
+		// On closing events
+		if msg.Type == app.CloseModal {
+			m.Open = false
+		} else {
+			m.Open = true
 		}
-	// Handle Confirmation Dialog Delete Finished
-	case confirm.DeleteFinished:
-		m.Open = false
-		m.Page = InfoModal
+		// When something has triggered a cancel
+		if msg.Type == app.CancelModal {
+			switch m.Type {
+			case app.InfoModal:
+				m.Open = false
+			case app.GenerateModal:
+				m.Open = false
+				m.SetType(app.InfoModal)
+			case app.TransactionModal:
+				m.SetType(app.InfoModal)
+			case app.ExceptionModal:
+				m.Open = false
+			case app.ConfirmModal:
+				m.SetType(app.InfoModal)
+			}
+		}
 
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
-			switch m.Page {
-			case InfoModal:
-				m.Open = false
-			case GenerateModal:
-				m.Open = false
-				m.Page = InfoModal
-			case TransactionModal:
-				m.Page = InfoModal
-			case ExceptionModal:
-				m.Open = false
-			case ConfirmModal:
-				m.Page = InfoModal
-			}
-		case "g":
-			if m.Page != GenerateModal {
-				m.Page = GenerateModal
-			}
-		case "d":
-			if m.Page == InfoModal {
-				m.Page = ConfirmModal
-			}
-		case "o":
-			if m.Page == InfoModal {
-				m.Page = TransactionModal
-				m.transactionModal.UpdateState()
-			}
-		case "enter":
-			if m.Page == InfoModal {
-				m.Page = TransactionModal
-			}
-			if m.Page == TransactionModal {
-				m.Page = InfoModal
-			}
+		if msg.Type != app.CloseModal && msg.Type != app.CancelModal {
+			m.SetType(msg.Type)
+			m.SetKey(msg.Key)
+			m.SetAddress(msg.Address)
 		}
+
+	// Handle Modal Type
+	case app.ModalType:
+		m.SetType(msg)
+
+	// Handle Confirmation Dialog Delete Finished
+	case app.DeleteFinished:
+		m.Open = false
+		m.Type = app.InfoModal
 	// Handle View Size changes
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
@@ -88,20 +79,23 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.generateModal, cmd = m.generateModal.HandleMessage(modalMsg)
 		cmds = append(cmds, cmd)
+		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(modalMsg)
+		cmds = append(cmds, cmd)
 		return &m, tea.Batch(cmds...)
 	}
-	m.SetPage(m.Page)
+
 	// Only trigger modal commands when they are active
-	switch m.Page {
-	case ExceptionModal:
+	switch m.Type {
+	case app.ExceptionModal:
 		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
-	case InfoModal:
+	case app.InfoModal:
 		m.infoModal, cmd = m.infoModal.HandleMessage(msg)
-	case TransactionModal:
+	case app.TransactionModal:
 		m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
-	case ConfirmModal:
+
+	case app.ConfirmModal:
 		m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
-	case GenerateModal:
+	case app.GenerateModal:
 		m.generateModal, cmd = m.generateModal.HandleMessage(msg)
 	}
 	cmds = append(cmds, cmd)

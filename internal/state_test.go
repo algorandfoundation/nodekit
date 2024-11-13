@@ -21,7 +21,7 @@ func Test_StateModel(t *testing.T) {
 		Status: StatusModel{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       "SYNCING",
+			State:       SyncingState,
 		},
 		Metrics: MetricsModel{
 			RoundTime: 0,

@@ -78,7 +78,7 @@ func (m ViewModel) makeRows() *[]table.Row {
 
 	for key := range m.Data.Accounts {
 		expires := m.Data.Accounts[key].Expires.String()
-		if m.Data.Status.State == "SYNCING" {
+		if m.Data.Status.State == internal.SyncingState {
 			expires = "SYNCING"
 		}
 		if !m.Data.Accounts[key].Expires.After(time.Now().Add(-(time.Hour * 24 * 365 * 50))) {

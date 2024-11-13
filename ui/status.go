@@ -80,14 +80,15 @@ func (m StatusViewModel) View() string {
 		size = m.TerminalWidth / 2
 	}
 	beginning := style.Blue.Render(" Latest Round: ") + strconv.Itoa(int(m.Data.Status.LastRound))
-	end := style.Yellow.Render(strings.ToUpper(m.Data.Status.State)) + " "
+
+	end := style.Yellow.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
 	middle := strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
-	if m.Data.Status.State == "SYNCING" {
+	if m.Data.Status.State == internal.SyncingState {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
@@ -97,7 +98,7 @@ func (m StatusViewModel) View() string {
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
-	if m.Data.Status.State == "SYNCING" {
+	if m.Data.Status.State == internal.SyncingState {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps
