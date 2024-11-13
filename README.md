@@ -115,6 +115,9 @@ The application supports the `server` and `token` flags for configuration.
 algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
+> [!IMPORTANT]
+> TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
+
 ## 🧑‍💻 Commands
 
 The default command will launch the full TUI application
