@@ -50,7 +50,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				Type: app.CancelModal,
 			})
 		case "d":
-			return &m, app.EmitShowModal(app.ConfirmModal)
+			if !m.Active {
+				return &m, app.EmitShowModal(app.ConfirmModal)
+			}
 		case "o":
 			return &m, app.EmitShowModal(app.TransactionModal)
 		}
