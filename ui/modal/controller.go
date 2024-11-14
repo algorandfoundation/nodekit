@@ -18,8 +18,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case error:
 		m.Open = true
-		m.Type = app.ExceptionModal
 		m.exceptionModal.Message = msg.Error()
+		m.SetType(app.ExceptionModal)
 	case app.ModalEvent:
 		// On closing events
 		if msg.Type == app.CloseModal {
@@ -45,9 +45,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 		if msg.Type != app.CloseModal && msg.Type != app.CancelModal {
-			m.SetType(msg.Type)
 			m.SetKey(msg.Key)
 			m.SetAddress(msg.Address)
+			m.SetActive(msg.Active)
+			m.SetType(msg.Type)
 		}
 
 	// Handle Modal Type

@@ -17,7 +17,8 @@ type ViewModel struct {
 	Title string
 
 	// Active Participation Key
-	ActiveKey *api.ParticipationKey
+	Participation *api.ParticipationKey
+	Active        bool
 
 	// Pointer to the State
 	State    *internal.StateModel
@@ -33,7 +34,7 @@ type ViewModel struct {
 }
 
 func (m ViewModel) FormatedAddress() string {
-	return fmt.Sprintf("%s...%s", m.ActiveKey.Address[0:4], m.ActiveKey.Address[len(m.ActiveKey.Address)-4:])
+	return fmt.Sprintf("%s...%s", m.Participation.Address[0:4], m.Participation.Address[len(m.Participation.Address)-4:])
 }
 
 // New creates and instance of the ViewModel with a default controls.Model

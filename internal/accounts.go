@@ -13,6 +13,7 @@ import (
 
 // Account represents a user's account, including address, status, balance, and number of keys.
 type Account struct {
+	Participation *api.AccountParticipation
 	// Account Address is the algorand encoded address
 	Address string
 	// Status is the Online/Offline/"NotParticipating" status of the account
@@ -148,11 +149,12 @@ func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponse
 			}
 
 			values[key.Address] = Account{
-				Address: key.Address,
-				Status:  account.Status,
-				Balance: account.Amount / 1000000,
-				Expires: getExpiresTime(t, key, state),
-				Keys:    1,
+				Participation: account.Participation,
+				Address:       key.Address,
+				Status:        account.Status,
+				Balance:       account.Amount / 1000000,
+				Expires:       getExpiresTime(t, key, state),
+				Keys:          1,
 			}
 		} else {
 			val.Keys++

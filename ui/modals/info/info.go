@@ -12,13 +12,14 @@ import (
 )
 
 type ViewModel struct {
-	Width       int
-	Height      int
-	Title       string
-	Controls    string
-	BorderColor string
-	ActiveKey   *api.ParticipationKey
-	Data        *internal.StateModel
+	Width         int
+	Height        int
+	Title         string
+	Controls      string
+	BorderColor   string
+	Active        bool
+	Participation *api.ParticipationKey
+	State         *internal.StateModel
 }
 
 func New(state *internal.StateModel) *ViewModel {
@@ -28,7 +29,7 @@ func New(state *internal.StateModel) *ViewModel {
 		Title:       "Key Information",
 		BorderColor: "3",
 		Controls:    "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(o)nline") + " )",
-		Data:        state,
+		State:       state,
 	}
 }
 
@@ -61,29 +62,33 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	return &m, nil
 }
 func (m *ViewModel) UpdateState() {
-	if m.ActiveKey == nil {
+	if m.Participation == nil {
 		return
 	}
-	accountStatus := m.Data.Accounts[m.ActiveKey.Address].Status
+	accountStatus := m.State.Accounts[m.Participation.Address].Status
 
-	if accountStatus == "Online" {
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Yellow.Render("(o)ffline") + " )"
-	} else {
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(o)nline") + " )"
+	if accountStatus == "Online" && m.Active {
+		m.BorderColor = "1"
+		m.Controls = "( take " + style.Red.Render(style.Red.Render("(o)ffline")) + " )"
+	}
+
+	if !m.Active {
+		m.BorderColor = "3"
+		m.Controls = "( " + style.Red.Render("(d)elete") + " | take " + style.Green.Render("(o)nline") + " )"
 	}
 }
 func (m ViewModel) View() string {
-	if m.ActiveKey == nil {
+	if m.Participation == nil {
 		return "No key selected"
 	}
-	account := style.Cyan.Render("Account: ") + m.ActiveKey.Address
-	id := style.Cyan.Render("Participation ID: ") + m.ActiveKey.Id
-	selection := style.Yellow.Render("Selection Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.ActiveKey.Key.SelectionParticipationKey[:])
-	vote := style.Yellow.Render("Vote Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.ActiveKey.Key.VoteParticipationKey[:])
-	stateProof := style.Yellow.Render("State Proof Key: ") + *utils.UrlEncodeBytesPtrOrNil(*m.ActiveKey.Key.StateProofKey)
-	voteFirstValid := style.Purple("Vote First Valid: ") + utils.IntToStr(m.ActiveKey.Key.VoteFirstValid)
-	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.ActiveKey.Key.VoteLastValid)
-	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.ActiveKey.Key.VoteKeyDilution)
+	account := style.Cyan.Render("Account: ") + m.Participation.Address
+	id := style.Cyan.Render("Participation ID: ") + m.Participation.Id
+	selection := style.Yellow.Render("Selection Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.SelectionParticipationKey[:])
+	vote := style.Yellow.Render("Vote Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.VoteParticipationKey[:])
+	stateProof := style.Yellow.Render("State Proof Key: ") + *utils.UrlEncodeBytesPtrOrNil(*m.Participation.Key.StateProofKey)
+	voteFirstValid := style.Purple("Vote First Valid: ") + utils.IntToStr(m.Participation.Key.VoteFirstValid)
+	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.Participation.Key.VoteLastValid)
+	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
 
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
 		account,

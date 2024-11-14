@@ -40,14 +40,20 @@ type ViewModel struct {
 	Type        app.ModalType
 }
 
-func (m ViewModel) SetAddress(address string) {
+func (m *ViewModel) SetAddress(address string) {
 	m.Address = address
 	m.generateModal.SetAddress(address)
 }
-func (m ViewModel) SetKey(key *api.ParticipationKey) {
-	m.infoModal.ActiveKey = key
+func (m *ViewModel) SetKey(key *api.ParticipationKey) {
+	m.infoModal.Participation = key
 	m.confirmModal.ActiveKey = key
-	m.transactionModal.ActiveKey = key
+	m.transactionModal.Participation = key
+}
+func (m *ViewModel) SetActive(active bool) {
+	m.infoModal.Active = active
+	m.infoModal.UpdateState()
+	m.transactionModal.Active = active
+	m.transactionModal.UpdateState()
 }
 
 func (m *ViewModel) SetType(modal app.ModalType) {

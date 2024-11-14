@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"github.com/algorandfoundation/hack-tui/internal"
 	"sort"
 
 	"github.com/algorandfoundation/hack-tui/ui/style"
@@ -15,6 +16,9 @@ import (
 type ViewModel struct {
 	// Address for or the filter condition in ViewModel.
 	Address string
+	// Participation represents the consensus protocol parameters used by this account.
+	Participation *api.AccountParticipation
+
 	// Data holds a pointer to a slice of ParticipationKey, representing the set of participation keys managed by the ViewModel.
 	Data *[]api.ParticipationKey
 
@@ -79,29 +83,32 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 }
 
 // SelectedKey returns the currently selected participation key from the ViewModel's data set, or nil if no key is selected.
-func (m ViewModel) SelectedKey() *api.ParticipationKey {
+func (m ViewModel) SelectedKey() (*api.ParticipationKey, bool) {
 	if m.Data == nil {
-		return nil
+		return nil, false
 	}
 	var partkey *api.ParticipationKey
+	var active bool
 	selected := m.table.SelectedRow()
 	for _, key := range *m.Data {
 		if len(selected) > 0 && key.Id == selected[0] {
 			partkey = &key
+			active = selected[2] == "YES"
 		}
 	}
-	return partkey
+	return partkey, active
 }
 
 // makeColumns generates a set of table columns suitable for displaying participation key data, based on the given `width`.
 func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 4
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 9) / 5
 
 	//avgWidth := 1
 	return []table.Column{
 		{Title: "ID", Width: avgWidth},
 		{Title: "Address", Width: avgWidth},
+		{Title: "Active", Width: avgWidth},
 		{Title: "Last Vote", Width: avgWidth},
 		{Title: "Last Block Proposal", Width: avgWidth},
 	}
@@ -114,11 +121,21 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 	if keys == nil || m.Address == "" {
 		return rows
 	}
+
+	var activeId *string
+	if m.Participation != nil {
+		activeId = internal.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
+	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
+			isActive := "NA"
+			if activeId != nil && *activeId == key.Id {
+				isActive = "YES"
+			}
 			rows = append(rows, table.Row{
 				key.Id,
 				key.Address,
+				isActive,
 				utils.StrOrNA(key.LastVote),
 				utils.StrOrNA(key.LastBlockProposal),
 			})

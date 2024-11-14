@@ -63,7 +63,7 @@ func (m ViewModel) SelectedAccount() internal.Account {
 	return account
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
-	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 5
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 9) / 5
 	return []table.Column{
 		{Title: "Account", Width: avgWidth},
 		{Title: "Keys", Width: avgWidth},

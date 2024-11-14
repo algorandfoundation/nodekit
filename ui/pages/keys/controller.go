@@ -29,6 +29,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	// When the Account is Selected
 	case app.AccountSelected:
 		m.Address = msg.Address
+		m.Participation = msg.Participation
 		m.table.SetRows(m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
 	case app.DeleteFinished:
@@ -44,11 +45,12 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			return m, app.EmitShowPage(app.AccountsPage)
 		// Show the Info Modal
 		case "enter":
-			selKey := m.SelectedKey()
+			selKey, active := m.SelectedKey()
 			if selKey != nil {
 				// Show the Info Modal with the selected Key
 				return m, app.EmitModalEvent(app.ModalEvent{
 					Key:     selKey,
+					Active:  active,
 					Address: selKey.Address,
 					Type:    app.InfoModal,
 				})

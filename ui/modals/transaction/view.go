@@ -7,7 +7,7 @@ import (
 )
 
 func (m ViewModel) View() string {
-	if m.ActiveKey == nil {
+	if m.Participation == nil {
 		return "No key selected"
 	}
 	if m.ATxn == nil {

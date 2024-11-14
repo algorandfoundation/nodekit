@@ -62,10 +62,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = msg
 	// When the state updates
 	case internal.StateModel:
-		if m.errorMsg != nil {
-			m.errorMsg = nil
-			m.page = app.AccountsPage
-		}
 		m.Data = &msg
 	case tea.KeyMsg:
 		switch msg.String() {

@@ -15,8 +15,6 @@ var (
 	ApplyBorder = func(width int, height int, color string) lipgloss.Style {
 		return Border.
 			Width(width).
-			Padding(0).
-			Margin(0).
 			Height(height).
 			BorderForeground(lipgloss.Color(color))
 	}

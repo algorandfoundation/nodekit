@@ -154,18 +154,20 @@ func Test_AccountsFromState(t *testing.T) {
 	// Construct expected accounts
 	expectedAccounts := map[string]Account{
 		onlineAccounts[0].Address: {
-			Address: onlineAccounts[0].Address,
-			Status:  onlineAccounts[0].Status,
-			Balance: onlineAccounts[0].Amount / 1_000_000,
-			Keys:    2,
-			Expires: expires,
+			Participation: onlineAccounts[0].Participation,
+			Address:       onlineAccounts[0].Address,
+			Status:        onlineAccounts[0].Status,
+			Balance:       onlineAccounts[0].Amount / 1_000_000,
+			Keys:          2,
+			Expires:       expires,
 		},
 		onlineAccounts[1].Address: {
-			Address: onlineAccounts[1].Address,
-			Status:  onlineAccounts[1].Status,
-			Balance: onlineAccounts[1].Amount / 1_000_000,
-			Keys:    1,
-			Expires: expires,
+			Participation: onlineAccounts[1].Participation,
+			Address:       onlineAccounts[1].Address,
+			Status:        onlineAccounts[1].Status,
+			Balance:       onlineAccounts[1].Amount / 1_000_000,
+			Keys:          1,
+			Expires:       expires,
 		},
 	}
 

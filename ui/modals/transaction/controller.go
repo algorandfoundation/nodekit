@@ -44,28 +44,27 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 }
 
 func (m *ViewModel) UpdateState() {
-	if m.ActiveKey == nil {
+	if m.Participation == nil {
 		return
 	}
-	accountStatus := m.State.Accounts[m.ActiveKey.Address].Status
 
 	if m.ATxn == nil {
 		m.ATxn = &encoder.AUrlTxn{}
 	}
 	fee := uint64(1000)
-	m.ATxn.AUrlTxnKeyCommon.Sender = m.ActiveKey.Address
+	m.ATxn.AUrlTxnKeyCommon.Sender = m.Participation.Address
 	m.ATxn.AUrlTxnKeyCommon.Type = string(types.KeyRegistrationTx)
 	m.ATxn.AUrlTxnKeyCommon.Fee = &fee
 
-	if accountStatus != "Online" {
+	if !m.Active {
 		m.Title = string(OnlineTitle)
 		m.BorderColor = "2"
-		votePartKey := base64.RawURLEncoding.EncodeToString(m.ActiveKey.Key.VoteParticipationKey)
-		selPartKey := base64.RawURLEncoding.EncodeToString(m.ActiveKey.Key.SelectionParticipationKey)
-		spKey := base64.RawURLEncoding.EncodeToString(*m.ActiveKey.Key.StateProofKey)
-		firstValid := uint64(m.ActiveKey.Key.VoteFirstValid)
-		lastValid := uint64(m.ActiveKey.Key.VoteLastValid)
-		vkDilution := uint64(m.ActiveKey.Key.VoteKeyDilution)
+		votePartKey := base64.RawURLEncoding.EncodeToString(m.Participation.Key.VoteParticipationKey)
+		selPartKey := base64.RawURLEncoding.EncodeToString(m.Participation.Key.SelectionParticipationKey)
+		spKey := base64.RawURLEncoding.EncodeToString(*m.Participation.Key.StateProofKey)
+		firstValid := uint64(m.Participation.Key.VoteFirstValid)
+		lastValid := uint64(m.Participation.Key.VoteLastValid)
+		vkDilution := uint64(m.Participation.Key.VoteKeyDilution)
 
 		m.ATxn.AUrlTxnKeyreg.VotePK = &votePartKey
 		m.ATxn.AUrlTxnKeyreg.SelectionPK = &selPartKey

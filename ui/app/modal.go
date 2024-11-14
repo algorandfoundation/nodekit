@@ -25,6 +25,7 @@ func EmitShowModal(modal ModalType) tea.Cmd {
 
 type ModalEvent struct {
 	Key     *api.ParticipationKey
+	Active  bool
 	Address string
 	Err     *error
 	Type    ModalType

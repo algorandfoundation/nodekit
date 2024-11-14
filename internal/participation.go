@@ -132,3 +132,12 @@ func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
 		}
 	}
 }
+
+func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte) *string {
+	for _, item := range *slice {
+		if string(item.Key.VoteParticipationKey) == string(votekey) {
+			return &item.Id
+		}
+	}
+	return nil
+}
