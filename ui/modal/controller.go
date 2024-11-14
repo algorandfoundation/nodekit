@@ -2,13 +2,20 @@ package modal
 
 import (
 	"github.com/algorandfoundation/hack-tui/ui/app"
+	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m ViewModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.infoModal.Init(),
+		m.exceptionModal.Init(),
+		m.transactionModal.Init(),
+		m.confirmModal.Init(),
+		m.generateModal.Init(),
+	)
 }
 func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	var (
@@ -21,6 +28,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
 	case app.ModalEvent:
+		if msg.Type == app.InfoModal {
+			m.generateModal.SetStep(generate.AddressStep)
+		}
 		// On closing events
 		if msg.Type == app.CloseModal {
 			m.Open = false
@@ -35,6 +45,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			case app.GenerateModal:
 				m.Open = false
 				m.SetType(app.InfoModal)
+				m.generateModal.SetStep(generate.AddressStep)
 			case app.TransactionModal:
 				m.SetType(app.InfoModal)
 			case app.ExceptionModal:
@@ -59,6 +70,11 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	case app.DeleteFinished:
 		m.Open = false
 		m.Type = app.InfoModal
+		if msg.Err != nil {
+			m.Open = true
+			m.Type = app.ExceptionModal
+			m.exceptionModal.Message = "Delete failed"
+		}
 	// Handle View Size changes
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width

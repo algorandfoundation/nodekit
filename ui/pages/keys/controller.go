@@ -33,9 +33,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetRows(m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
 	case app.DeleteFinished:
-		if msg.Err != nil {
-			panic(msg.Err)
-		}
+		//if msg.Err != nil {
+		//	panic(msg.Err)
+		//}
 		internal.RemovePartKeyByID(m.Data, msg.Id)
 		m.table.SetRows(m.makeRows(m.Data))
 	// When the user interacts with the render

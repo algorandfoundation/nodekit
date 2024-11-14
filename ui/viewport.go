@@ -39,7 +39,7 @@ type ViewportViewModel struct {
 
 // Init is a no-op
 func (m ViewportViewModel) Init() tea.Cmd {
-	return nil
+	return m.modal.Init()
 }
 
 // Update Handle the viewport lifecycle
@@ -63,11 +63,16 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// When the state updates
 	case internal.StateModel:
 		m.Data = &msg
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+		return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "g":
 			// Only open modal when it is closed and not syncing
-			if !m.modal.Open && m.Data.Status.State != internal.SyncingState {
+			if !m.modal.Open && m.Data.Status.State != internal.SyncingState && m.Data.Metrics.RoundTime > 0 {
 				return m, app.EmitModalEvent(app.ModalEvent{
 					Key:     nil,
 					Address: m.accountsPage.SelectedAccount().Address,

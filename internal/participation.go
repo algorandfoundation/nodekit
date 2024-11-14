@@ -102,7 +102,7 @@ func GenerateKeyPair(
 	}
 
 	// Wait for the api to have a new key
-	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second, 20*time.Second)
+	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second, 20*time.Minute)
 	if err != nil {
 		return nil, err
 	}

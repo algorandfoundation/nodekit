@@ -5,6 +5,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
+	"time"
 )
 
 type DeleteFinished struct {
@@ -30,27 +31,32 @@ func EmitDeleteKey(ctx context.Context, client *api.ClientWithResponses, id stri
 	}
 }
 
-func GenerateCmd(account string, state *internal.StateModel) tea.Cmd {
-	params := api.GenerateParticipationKeysParams{
-		Dilution: nil,
-		First:    int(state.Status.LastRound),
-		Last:     int(state.Status.LastRound) + state.Offset,
+func GenerateCmd(account string, duration time.Duration, state *internal.StateModel) tea.Cmd {
+	return func() tea.Msg {
+		params := api.GenerateParticipationKeysParams{
+			Dilution: nil,
+			First:    int(state.Status.LastRound),
+			Last:     int(state.Status.LastRound) + int((duration / state.Metrics.RoundTime)),
+		}
+
+		key, err := internal.GenerateKeyPair(state.Context, state.Client, account, &params)
+		if err != nil {
+			return ModalEvent{
+				Key:     nil,
+				Address: "",
+				Active:  false,
+				Err:     &err,
+				Type:    ExceptionModal,
+			}
+		}
+
+		return ModalEvent{
+			Key:     key,
+			Address: key.Address,
+			Active:  false,
+			Err:     nil,
+			Type:    InfoModal,
+		}
 	}
 
-	key, err := internal.GenerateKeyPair(state.Context, state.Client, account, &params)
-	if err != nil {
-		return EmitModalEvent(ModalEvent{
-			Key:     nil,
-			Address: "",
-			Err:     &err,
-			Type:    ExceptionModal,
-		})
-	}
-
-	return EmitModalEvent(ModalEvent{
-		Key:     key,
-		Address: key.Address,
-		Err:     nil,
-		Type:    InfoModal,
-	})
 }
