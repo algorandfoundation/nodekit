@@ -7,23 +7,6 @@ import (
 	"time"
 )
 
-func GetBlock(ctx context.Context, client *api.ClientWithResponses, round uint64) (map[string]interface{}, error) {
-
-	var format api.GetBlockParamsFormat = "json"
-	block, err := client.GetBlockWithResponse(ctx, int(round), &api.GetBlockParams{
-		Format: &format,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if block.StatusCode() != 200 {
-		return nil, errors.New("invalid status code")
-	}
-
-	return block.JSON200.Block, nil
-}
-
 type BlockMetrics struct {
 	AvgTime time.Duration
 	TPS     float64
@@ -44,15 +27,28 @@ func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round
 	if err != nil {
 		return nil, err
 	}
+	if a.StatusCode() != 200 {
+		return nil, errors.New(a.Status())
+	}
 	b, err := client.GetBlockWithResponse(ctx, int(round)-window, &api.GetBlockParams{
 		Format: &format,
 	})
 	if err != nil {
 		return nil, err
 	}
+	if b.StatusCode() != 200 {
+		return nil, errors.New(b.Status())
+	}
+
 	// Push to the transactions count list
-	aTimestamp := time.Duration(a.JSON200.Block["ts"].(float64)) * time.Second
-	bTimestamp := time.Duration(b.JSON200.Block["ts"].(float64)) * time.Second
+	aTimestampRes := a.JSON200.Block["ts"]
+	bTimestampRes := b.JSON200.Block["ts"]
+	if aTimestampRes == nil || bTimestampRes == nil {
+		return &avgs, nil
+	}
+	aTimestamp := time.Duration(aTimestampRes.(float64)) * time.Second
+	bTimestamp := time.Duration(bTimestampRes.(float64)) * time.Second
+
 	// Transaction Counter
 	aTransactions := a.JSON200.Block["tc"]
 	bTransactions := b.JSON200.Block["tc"]

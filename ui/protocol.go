@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"strconv"
@@ -39,14 +40,6 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		// The H key should hide the render
-		case "h":
-			m.IsVisible = !m.IsVisible
-		case "ctrl+c":
-			return m, tea.Quit
-		}
 	}
 	// Return the updated model to the Bubble Tea runtime for processing.
 	return m, nil
@@ -60,7 +53,7 @@ func (m ProtocolViewModel) View() string {
 	if m.TerminalWidth <= 0 {
 		return "Loading...\n\n\n\n\n\n"
 	}
-	beginning := blue.Render(" Node: ") + m.Data.Version
+	beginning := style.Blue.Render(" Node: ") + m.Data.Version
 
 	isCompact := m.TerminalWidth < 90
 
@@ -70,7 +63,7 @@ func (m ProtocolViewModel) View() string {
 
 	end := ""
 	if m.Data.NeedsUpdate && !isCompact {
-		end += green.Render("[UPDATE AVAILABLE] ")
+		end += style.Green.Render("[UPDATE AVAILABLE] ")
 	}
 
 	var size int
@@ -88,18 +81,18 @@ func (m ProtocolViewModel) View() string {
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, blue.Render(" Network: ")+m.Data.Network)
+	rows = append(rows, style.Blue.Render(" Network: ")+m.Data.Network)
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
+	rows = append(rows, style.Blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
 
 	if isCompact && m.Data.NeedsUpdate {
-		rows = append(rows, blue.Render(" Upgrade Available: ")+green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
+		rows = append(rows, style.Blue.Render(" Upgrade Available: ")+style.Green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
 	}
-	return topSections(max(0, size)).Render(lipgloss.JoinVertical(lipgloss.Left,
+	return style.WithTitle("Protocol", style.ApplyBorder(max(0, size-2), 5, "5").Render(lipgloss.JoinVertical(lipgloss.Left,
 		rows...,
-	))
+	)))
 }
 
 // MakeProtocolViewModel constructs a ProtocolViewModel using a given StatusModel and predefined metrics.

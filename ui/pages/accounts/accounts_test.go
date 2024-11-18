@@ -22,6 +22,7 @@ func Test_Snapshot(t *testing.T) {
 			Admin:             false,
 			Watching:          false,
 		})
+		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})

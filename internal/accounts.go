@@ -2,8 +2,10 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
@@ -23,12 +25,73 @@ type Account struct {
 	Keys int
 	// Expires is the date the participation key will expire
 	Expires time.Time
-	// The LastModified round, this only pertains to keys that can be updated
-	LastModified int
+}
+
+// Gets the list of addresses created at genesis from the genesis file
+func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string, string, error) {
+	resp, err := client.GetGenesis(context.Background())
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return []string{}, "", "", errors.New(fmt.Sprintf("Failed to get genesis file. Received error code: %d", resp.StatusCode))
+	}
+
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	// Unmarshal the JSON response into a map
+	var jsonResponse map[string]interface{}
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return []string{}, "", "", err
+	}
+
+	// Two special addresses
+	rewardsPool := "7777777777777777777777777777777777777777777777777774MSJUVU"
+	feeSink := "A7NMWS3NT3IUDMLVO26ULGXGIIOUQ3ND2TXSER6EBGRZNOBOUIQXHIBGDE"
+	rewardsPoolIncluded := false
+	feeSinkIncluded := false
+
+	// Loop over each entry in the "alloc" list and collect the "addr" values
+	var addresses []string
+	if allocList, ok := jsonResponse["alloc"].([]interface{}); ok {
+		for _, entry := range allocList {
+			if entryMap, ok := entry.(map[string]interface{}); ok {
+				if addr, ok := entryMap["addr"].(string); ok {
+					if addr == rewardsPool {
+						rewardsPoolIncluded = true
+					} else if addr == feeSink {
+						feeSinkIncluded = true
+					} else {
+						addresses = append(addresses, addr)
+					}
+				} else {
+					return []string{}, "", "", fmt.Errorf("In genesis.json no addr string found in list element entry:  %+v", entry)
+				}
+			} else {
+				return []string{}, "", "", fmt.Errorf("In genesis.json list element of alloc-field is not a map:  %+v", entry)
+			}
+		}
+	} else {
+		return []string{}, "", "", errors.New("alloc is not a list")
+	}
+
+	if !rewardsPoolIncluded || !feeSinkIncluded {
+		return []string{}, "", "", errors.New("Expected RewardsPool and/or FeeSink addresses NOT found in genesis file")
+	}
+
+	return addresses, rewardsPool, feeSink, nil
 }
 
 // Get Online Status of Account
-func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (string, error) {
+func GetAccount(client *api.ClientWithResponses, address string) (api.Account, error) {
 	var format api.AccountInformationParamsFormat = "json"
 	r, err := client.AccountInformationWithResponse(
 		context.Background(),
@@ -37,19 +100,20 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 			Format: &format,
 		})
 
+	var accountInfo api.Account
 	if err != nil {
-		return "N/A", err
+		return accountInfo, err
 	}
 
 	if r.StatusCode() != 200 {
-		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
+		return accountInfo, errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
 	}
 
-	return r.JSON200.Status, nil
+	return *r.JSON200, nil
 }
 
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[string]Account {
+func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponses) map[string]Account {
 	values := make(map[string]Account)
 	if state == nil || state.ParticipationKeys == nil {
 		return values
@@ -57,19 +121,33 @@ func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[s
 	for _, key := range *state.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
-
-			statusOnline, err := getAccountOnlineStatus(client, key.Address)
-
-			if err != nil {
-				// TODO: Logging
-				panic(err)
+			var account = api.Account{
+				Address: key.Address,
+				Status:  "Unknown",
+				Amount:  0,
+			}
+			if state.Status.State != "SYNCING" {
+				var err error
+				account, err = GetAccount(client, key.Address)
+				// TODO: handle error
+				if err != nil {
+					// TODO: Logging
+					panic(err)
+				}
+			}
+			now := t.Now()
+			var expires = now.Add(-(time.Hour * 24 * 365 * 100))
+			if key.EffectiveLastValid != nil {
+				roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
+				distance := int(state.Metrics.RoundTime) * roundDiff
+				expires = now.Add(time.Duration(distance))
 			}
 
 			values[key.Address] = Account{
 				Address: key.Address,
-				Status:  statusOnline,
-				Balance: 0,
-				Expires: time.Unix(0, 0),
+				Status:  account.Status,
+				Balance: account.Amount / 1000000,
+				Expires: expires,
 				Keys:    1,
 			}
 		} else {

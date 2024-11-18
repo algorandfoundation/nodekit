@@ -2,10 +2,10 @@ package ui
 
 import (
 	"bytes"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"testing"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -122,6 +122,8 @@ func Test_StatusMessages(t *testing.T) {
 		Type:  tea.KeyRunes,
 		Runes: []rune("ctrl+c"),
 	})
+	// Send quit msg
+	tm.Send(tea.QuitMsg{})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

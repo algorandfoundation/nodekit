@@ -48,15 +48,13 @@ type ViewportViewModel struct {
 	errorPage ErrorViewModel
 }
 
-type DeleteFinished string
-
 func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
 	return func() tea.Msg {
 		err := internal.DeletePartKey(context.Background(), client, key.Id)
 		if err != nil {
-			return DeleteFinished(err.Error())
+			return keys.DeleteFinished(err.Error())
 		}
-		return DeleteFinished("Key deleted")
+		return keys.DeleteFinished(key.Id)
 	}
 }
 
@@ -78,11 +76,18 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case generate.Cancel:
+		m.page = AccountsPage
+		return m, nil
 	case error:
 		strMsg := msg.Error()
 		m.errorMsg = &strMsg
 	// When the state updates
 	case internal.StateModel:
+		if m.errorMsg != nil {
+			m.errorMsg = nil
+			m.page = AccountsPage
+		}
 		m.Data = &msg
 		// Navigate to the transaction page when a partkey is selected
 	case *api.ParticipationKey:
@@ -92,8 +97,6 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page = KeysPage
 	case keys.DeleteKey:
 		return m, DeleteKey(m.client, msg)
-	case DeleteFinished:
-	//	TODO
 	case tea.KeyMsg:
 		switch msg.String() {
 		// Tab Backwards
@@ -111,44 +114,60 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Tab Forwards
 		case "tab":
 			if m.page == AccountsPage {
-				m.page = KeysPage
-				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+				selAcc := m.accountsPage.SelectedAccount()
+				if selAcc != (internal.Account{}) {
+					m.page = KeysPage
+					return m, accounts.EmitAccountSelected(selAcc)
+				}
+				return m, nil
 			}
 			if m.page == KeysPage {
-				m.page = TransactionPage
-				// If there isn't a key already, select the first record
-				if m.keysPage.SelectedKey() == nil && m.Data != nil {
-					data := *m.Data.ParticipationKeys
-					return m, keys.EmitKeySelected(&data[0])
+				selKey := m.keysPage.SelectedKey()
+				if selKey != nil && m.Data.Status.State != "SYNCING" {
+					m.page = TransactionPage
+					return m, keys.EmitKeySelected(selKey)
 				}
-				// Navigate to the transaction page
-				return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
 			}
+			return m, nil
+		case "a":
+			m.page = AccountsPage
 		case "g":
 			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
 			m.page = GeneratePage
 			return m, nil
-		case "a":
-			m.page = AccountsPage
 		case "k":
-			m.page = KeysPage
-			return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
+			selAcc := m.accountsPage.SelectedAccount()
+			if selAcc != (internal.Account{}) {
+				m.page = KeysPage
+				return m, accounts.EmitAccountSelected(selAcc)
+			}
+			return m, nil
 		case "t":
-			m.page = TransactionPage
-			// If there isn't a key already, select the first record for that account
-			if m.keysPage.SelectedKey() == nil && m.Data != nil {
-				data := *m.Data.ParticipationKeys
-				acct := m.accountsPage.SelectedAccount()
-				for i, key := range data {
-					if key.Address == acct.Address {
-						return m, keys.EmitKeySelected(&data[i])
+			if m.Data.Status.State != "SYNCING" {
+
+				if m.page == AccountsPage {
+					acct := m.accountsPage.SelectedAccount()
+					data := *m.Data.ParticipationKeys
+					for i, key := range data {
+						if key.Address == acct.Address {
+							m.page = TransactionPage
+							return m, keys.EmitKeySelected(&data[i])
+						}
+					}
+				}
+				if m.page == KeysPage {
+					selKey := m.keysPage.SelectedKey()
+					if selKey != nil {
+						m.page = TransactionPage
+						return m, keys.EmitKeySelected(selKey)
 					}
 				}
 			}
-			// Navigate to the transaction page
-			return m, keys.EmitKeySelected(m.keysPage.SelectedKey())
+			return m, nil
 		case "ctrl+c":
-			return m, tea.Quit
+			if m.page != GeneratePage {
+				return m, tea.Quit
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -164,20 +183,18 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Handle the page resize event
-		//switch m.page {
-		//case AccountsPage:
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case KeysPage:
+
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case GeneratePage:
+
 		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//case TransactionPage:
+
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-		//}
+
 		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
@@ -194,6 +211,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
 	case TransactionPage:
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	case ErrorPage:
+		m.errorPage, cmd = m.errorPage.HandleMessage(msg)
 	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)

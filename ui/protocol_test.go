@@ -154,5 +154,8 @@ func Test_ProtocolMessages(t *testing.T) {
 		Runes: []rune("ctrl+c"),
 	})
 
+	// Send quit msg
+	tm.Send(tea.QuitMsg{})
+
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

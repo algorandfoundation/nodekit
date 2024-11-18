@@ -3,18 +3,19 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"io"
-	"os"
-	"strings"
-
+	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
+	"os"
+	"strings"
 )
 
 const BANNER = `
@@ -33,16 +34,30 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "algorun",
 		Short: "Manage Algorand nodes",
-		Long:  ui.Purple(BANNER) + "\n",
+		Long:  style.Purple(BANNER) + "\n",
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log.SetOutput(cmd.OutOrStdout())
+			initConfig()
+
+			if viper.GetString("server") == "" {
+				return fmt.Errorf(style.Red.Render("server is required"))
+			}
+			if viper.GetString("token") == "" {
+				return fmt.Errorf(style.Red.Render("token is required"))
+			}
+
 			client, err := getClient()
 			cobra.CheckErr(err)
 
 			partkeys, err := internal.GetPartKeys(context.Background(), client)
+			if err != nil {
+				return fmt.Errorf(
+					style.Red.Render("failed to get participation keys: %s"),
+					err)
+			}
 
 			state := internal.StateModel{
 				Status: internal.StatusModel{
@@ -61,7 +76,7 @@ var (
 				},
 				ParticipationKeys: partkeys,
 			}
-			state.Accounts = internal.AccountsFromState(&state, client)
+			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
 
 			// Fetch current state
 			err = state.Status.Fetch(context.Background(), client)
@@ -73,6 +88,7 @@ var (
 			p := tea.NewProgram(
 				m,
 				tea.WithAltScreen(),
+				tea.WithFPS(120),
 			)
 			go func() {
 				state.Watch(func(status *internal.StateModel, err error) {
@@ -80,6 +96,7 @@ var (
 						p.Send(state)
 					}
 					if err != nil {
+						p.Send(state)
 						p.Send(err)
 					}
 				}, context.Background(), client)
@@ -103,7 +120,7 @@ func check(err interface{}) {
 // Handle global flags and set usage templates
 func init() {
 	log.SetReportTimestamp(false)
-	initConfig()
+
 	// Configure Version
 	if Version == "" {
 		Version = "unknown (built from source)"
@@ -111,19 +128,19 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVar(&server, "server", "", ui.LightBlue("server address"))
-	rootCmd.PersistentFlags().StringVar(&token, "token", "", ui.LightBlue("server token"))
+	rootCmd.PersistentFlags().StringVar(&server, "server", "", style.LightBlue("server address"))
+	rootCmd.PersistentFlags().StringVar(&token, "token", "", style.LightBlue("server token"))
 	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 
 	// Update Long Text
 	rootCmd.Long +=
-		ui.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-			ui.LightBlue("Server: ") + viper.GetString("server")
+		style.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
+			style.LightBlue("Server: ") + viper.GetString("server")
 
 	if viper.GetString("data") != "" {
 		rootCmd.Long +=
-			ui.Magenta("\nAlgorand Data: ") + viper.GetString("data")
+			style.Magenta("\nAlgorand Data: ") + viper.GetString("data")
 	}
 
 	// Add Commands
@@ -139,6 +156,15 @@ type AlgodConfig struct {
 	EndpointAddress string `json:"EndpointAddress"`
 }
 
+func replaceEndpointUrl(s string) string {
+	s = strings.Replace(s, "\n", "", 1)
+	s = strings.Replace(s, "0.0.0.0", "127.0.0.1", 1)
+	s = strings.Replace(s, "[::]", "127.0.0.1", 1)
+	return s
+}
+func hasWildcardEndpointUrl(s string) bool {
+	return strings.Contains(s, "0.0.0.0") || strings.Contains(s, "::")
+}
 func initConfig() {
 	// Find home directory.
 	home, err := os.UserHomeDir()
@@ -156,12 +182,17 @@ func initConfig() {
 
 	// Load Configurations
 	viper.AutomaticEnv()
-	err = viper.ReadInConfig()
+	_ = viper.ReadInConfig()
+
+	// Check for server
+	loadedServer := viper.GetString("server")
+	loadedToken := viper.GetString("token")
+
 	// Load ALGORAND_DATA/config.json
 	algorandData, exists := os.LookupEnv("ALGORAND_DATA")
 
 	// Load the Algorand Data Configuration
-	if exists && algorandData != "" {
+	if exists && algorandData != "" && loadedServer == "" {
 		// Placeholder for Struct
 		var algodConfig AlgodConfig
 
@@ -180,23 +211,43 @@ func initConfig() {
 		err = configFile.Close()
 		check(err)
 
-		// Replace catchall address with localhost
-		if strings.Contains(algodConfig.EndpointAddress, "0.0.0.0") {
-			algodConfig.EndpointAddress = strings.Replace(algodConfig.EndpointAddress, "0.0.0.0", "127.0.0.1", 1)
+		// Check for endpoint address
+		if hasWildcardEndpointUrl(algodConfig.EndpointAddress) {
+			algodConfig.EndpointAddress = replaceEndpointUrl(algodConfig.EndpointAddress)
+		} else if algodConfig.EndpointAddress == "" {
+			// Assume it is not set, try to discover the port from the network file
+			networkPath := algorandData + "/algod.net"
+			networkFile, err := os.Open(networkPath)
+			check(err)
+
+			byteValue, err = io.ReadAll(networkFile)
+			check(err)
+
+			if hasWildcardEndpointUrl(string(byteValue)) {
+				algodConfig.EndpointAddress = replaceEndpointUrl(string(byteValue))
+			} else {
+				algodConfig.EndpointAddress = string(byteValue)
+			}
+
+		}
+		if strings.Contains(algodConfig.EndpointAddress, ":0") {
+			algodConfig.EndpointAddress = strings.Replace(algodConfig.EndpointAddress, ":0", ":8080", 1)
+		}
+		if loadedToken == "" {
+			// Handle Token Path
+			tokenPath := algorandData + "/algod.admin.token"
+
+			tokenFile, err := os.Open(tokenPath)
+			check(err)
+
+			byteValue, err = io.ReadAll(tokenFile)
+			check(err)
+
+			viper.Set("token", strings.Replace(string(byteValue), "\n", "", 1))
 		}
 
-		// Handle Token Path
-		tokenPath := algorandData + "/algod.admin.token"
-
-		tokenFile, err := os.Open(tokenPath)
-		check(err)
-
-		byteValue, err = io.ReadAll(tokenFile)
-		check(err)
-
 		// Set the server configuration
-		viper.Set("server", "http://"+algodConfig.EndpointAddress)
-		viper.Set("token", string(byteValue))
+		viper.Set("server", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
 		viper.Set("data", dataConfigPath)
 	}
 

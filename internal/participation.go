@@ -3,8 +3,9 @@ package internal
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/api"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 // GetPartKeys get the participation keys from the node
@@ -115,4 +116,14 @@ func DeletePartKey(ctx context.Context, client *api.ClientWithResponses, partici
 		return errors.New(deletion.Status())
 	}
 	return nil
+}
+
+// Removes a participation key from the list of keys
+func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
+	for i, item := range *slice {
+		if item.Id == id {
+			*slice = append((*slice)[:i], (*slice)[i+1:]...)
+			return
+		}
+	}
 }
