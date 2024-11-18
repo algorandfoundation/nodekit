@@ -20,43 +20,59 @@
 ---
 
 Terminal UI for managing Algorand nodes.
-Built with [bubbles](https://github.com/charmbracelet/bubbles)/[bubbletea](https://github.com/charmbracelet/bubbletea)
+Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](https://github.com/charmbracelet/bubbletea)
+
+> [!CAUTION]
+> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
 
 # 🚀 Get Started
 
 Run the build or ~~download the latest cli(WIP)~~.
 
+> [!NOTE]
+> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
+
 ## Building
 
-Clone the repository
+1. Clone the repository
 
 ```bash
-git clone git@github.com:algorandfoundation/hack-tui.git
+git clone https://github.com/algorandfoundation/hack-tui.git
 ```
 
-Change to the project directory
+2. Change to the project directory
 
 ```bash
 cd hack-tui
 ```
 
-Run the build command
+3. Run the build command
 
 ```bash
 make build
 ```
 
-Start a participation node
+4. Start a participation node
 
 ```bash
 docker compose up
 ```
 
-Connect to the node
+> [!NOTE]
+> The docker image is used for development and testing purposes. TUI will also work with native algod.
+> If you have a node installed already, you can skip this step.
+
+5. Connect to the node
 
 ```bash
 ./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
+
+> [!CAUTION]
+> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
+
+> [!NOTE]
+> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node. Note that algorun requires the admin algod token.
 
 # ℹ️ Usage
 
@@ -98,6 +114,9 @@ The application supports the `server` and `token` flags for configuration.
 ```bash
 algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
+
+> [!IMPORTANT]
+> TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
 
 ## 🧑‍💻 Commands
 
