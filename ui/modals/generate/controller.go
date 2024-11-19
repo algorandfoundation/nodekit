@@ -16,9 +16,7 @@ func (m ViewModel) Init() tea.Cmd {
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
-func (m ViewModel) SetInterval(dur time.Duration) {
 
-}
 func (m *ViewModel) SetStep(step Step) {
 	m.Step = step
 	switch m.Step {

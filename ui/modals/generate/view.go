@@ -7,7 +7,6 @@ import (
 
 func (m ViewModel) View() string {
 	render := ""
-	//m.Input.Focus()
 	switch m.Step {
 	case AddressStep:
 		render = lipgloss.JoinVertical(lipgloss.Left,
@@ -33,8 +32,5 @@ func (m ViewModel) View() string {
 			"Please wait. This operation can take a few minutes.")
 	}
 
-	if lipgloss.Width(render) < 70 {
-		return lipgloss.NewStyle().Width(70).Render(render)
-	}
-	return render
+	return lipgloss.NewStyle().Width(70).Render(render)
 }
