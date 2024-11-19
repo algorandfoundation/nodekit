@@ -13,6 +13,7 @@ func (m ViewModel) View() string {
 	if m.ATxn == nil {
 		return "Loading..."
 	}
+	// TODO: Refactor ATxn to Interface
 	txn, err := m.ATxn.ProduceQRCode()
 	if err != nil {
 		return "Something went wrong"
