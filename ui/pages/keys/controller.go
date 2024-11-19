@@ -17,10 +17,6 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
 	switch msg := msg.(type) {
 	// When the State changes
 	case internal.StateModel:
@@ -33,9 +29,6 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetRows(m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
 	case app.DeleteFinished:
-		//if msg.Err != nil {
-		//	panic(msg.Err)
-		//}
 		internal.RemovePartKeyByID(m.Data, msg.Id)
 		m.table.SetRows(m.makeRows(m.Data))
 	// When the user interacts with the render
@@ -72,12 +65,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	}
 
 	// Handle Table Update
-	m.table, cmd = m.table.Update(msg)
-	if cmd != nil {
-		cmds = append(cmds, cmd)
-	}
-	cmds = append(cmds, cmd)
+	m.table, _ = m.table.Update(msg)
 
-	// Batch all commands
-	return m, tea.Batch(cmds...)
+	return m, nil
 }
