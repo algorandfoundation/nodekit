@@ -113,7 +113,7 @@ func GetAccount(client *api.ClientWithResponses, address string) (api.Account, e
 	return *r.JSON200, nil
 }
 
-func getExpiresTime(t Time, key api.ParticipationKey, state *StateModel) time.Time {
+func GetExpiresTime(t Time, key api.ParticipationKey, state *StateModel) time.Time {
 	now := t.Now()
 	var expires = now.Add(-(time.Hour * 24 * 365 * 100))
 	if key.LastBlockProposal != nil && state.Status.LastRound != 0 && state.Metrics.RoundTime != 0 {
@@ -153,14 +153,14 @@ func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponse
 				Address:       key.Address,
 				Status:        account.Status,
 				Balance:       account.Amount / 1000000,
-				Expires:       getExpiresTime(t, key, state),
+				Expires:       GetExpiresTime(t, key, state),
 				Keys:          1,
 			}
 		} else {
 			val.Keys++
 			if val.Expires.Before(t.Now()) {
 				now := t.Now()
-				var expires = getExpiresTime(t, key, state)
+				var expires = GetExpiresTime(t, key, state)
 				if !expires.Before(now) {
 					val.Expires = expires
 				}

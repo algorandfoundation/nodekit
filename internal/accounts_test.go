@@ -2,15 +2,12 @@ package internal
 
 import (
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/ui/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
-
-type TestClock struct{}
-
-func (TestClock) Now() time.Time { return time.Time{} }
 
 func Test_AccountsFromState(t *testing.T) {
 
@@ -145,7 +142,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 
 	// Calculate expiration
-	clock := new(TestClock)
+	clock := new(mock.Clock)
 	now := clock.Now()
 	roundDiff := max(0, effectiveLastValid-int(state.Status.LastRound))
 	distance := int(state.Metrics.RoundTime) * roundDiff

@@ -96,9 +96,9 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.page == app.AccountsPage {
 				selAcc := m.accountsPage.SelectedAccount()
-				if selAcc != (internal.Account{}) {
+				if selAcc != nil {
 					m.page = app.KeysPage
-					return m, app.EmitAccountSelected(selAcc)
+					return m, app.EmitAccountSelected(*selAcc)
 				}
 				return m, nil
 			}

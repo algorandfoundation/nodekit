@@ -2,8 +2,8 @@ package accounts
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -12,16 +12,47 @@ import (
 	"time"
 )
 
+func Test_New(t *testing.T) {
+	m := New(&internal.StateModel{})
+	acc := m.SelectedAccount()
+
+	if acc != nil {
+		t.Errorf("Expected no accounts to exist, got %s", acc.Address)
+	}
+	m, cmd := m.HandleMessage(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("enter"),
+	})
+
+	if cmd != nil {
+		t.Errorf("Expected no comand")
+	}
+
+	m = New(test.GetState())
+	m, _ = m.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
+
+	if m.Data.Admin {
+		t.Errorf("Admin flag should be false, got true")
+	}
+
+	// Fetch state after message handling
+	acc = m.SelectedAccount()
+	if acc == nil {
+		t.Errorf("expected true, got false")
+	}
+
+	// Update syncing state
+	m.Data.Status.State = internal.SyncingState
+	m.makeRows()
+	if m.Data.Status.State != internal.SyncingState {
+
+	}
+}
+
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
-		model := New(&internal.StateModel{
-			Status:            internal.StatusModel{},
-			Metrics:           internal.MetricsModel{},
-			Accounts:          nil,
-			ParticipationKeys: nil,
-			Admin:             false,
-			Watching:          false,
-		})
+		model := New(test.GetState())
+
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
@@ -29,52 +60,8 @@ func Test_Snapshot(t *testing.T) {
 }
 
 func Test_Messages(t *testing.T) {
-	var testKeys = []api.ParticipationKey{
-		{
-			Address:             "ABC",
-			EffectiveFirstValid: nil,
-			EffectiveLastValid:  nil,
-			Id:                  "",
-			Key: api.AccountParticipation{
-				SelectionParticipationKey: nil,
-				StateProofKey:             nil,
-				VoteFirstValid:            0,
-				VoteKeyDilution:           0,
-				VoteLastValid:             0,
-				VoteParticipationKey:      nil,
-			},
-			LastBlockProposal: nil,
-			LastStateProof:    nil,
-			LastVote:          nil,
-		},
-	}
-	sm := &internal.StateModel{
-		Status:            internal.StatusModel{},
-		Metrics:           internal.MetricsModel{},
-		Accounts:          nil,
-		ParticipationKeys: &testKeys,
-		Admin:             false,
-		Watching:          false,
-	}
-	values := make(map[string]internal.Account)
-	for _, key := range *sm.ParticipationKeys {
-		val, ok := values[key.Address]
-		if !ok {
-			values[key.Address] = internal.Account{
-				Address: key.Address,
-				Status:  "Offline",
-				Balance: 0,
-				Expires: time.Unix(0, 0),
-				Keys:    1,
-			}
-		} else {
-			val.Keys++
-			values[key.Address] = val
-		}
-	}
-	sm.Accounts = values
 	// Create the Model
-	m := New(sm)
+	m := New(test.GetState())
 
 	tm := teatest.NewTestModel(
 		t, m,
@@ -91,7 +78,7 @@ func Test_Messages(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-	tm.Send(*sm)
+	tm.Send(test.GetState())
 
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,

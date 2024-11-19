@@ -3,8 +3,8 @@ package keys
 import (
 	"bytes"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
+	"github.com/algorandfoundation/hack-tui/ui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -12,44 +12,6 @@ import (
 	"testing"
 	"time"
 )
-
-var testVoteKey = []byte("TESTKEY")
-var testKeys = []api.ParticipationKey{
-	{
-		Address:             "ABC",
-		EffectiveFirstValid: nil,
-		EffectiveLastValid:  nil,
-		Id:                  "123",
-		Key: api.AccountParticipation{
-			SelectionParticipationKey: nil,
-			StateProofKey:             nil,
-			VoteFirstValid:            0,
-			VoteKeyDilution:           0,
-			VoteLastValid:             0,
-			VoteParticipationKey:      testVoteKey,
-		},
-		LastBlockProposal: nil,
-		LastStateProof:    nil,
-		LastVote:          nil,
-	},
-	{
-		Address:             "ABC",
-		EffectiveFirstValid: nil,
-		EffectiveLastValid:  nil,
-		Id:                  "1234",
-		Key: api.AccountParticipation{
-			SelectionParticipationKey: nil,
-			StateProofKey:             nil,
-			VoteFirstValid:            0,
-			VoteKeyDilution:           0,
-			VoteLastValid:             0,
-			VoteParticipationKey:      nil,
-		},
-		LastBlockProposal: nil,
-		LastStateProof:    nil,
-		LastVote:          nil,
-	},
-}
 
 func Test_New(t *testing.T) {
 	m := New("ABC", nil)
@@ -60,22 +22,21 @@ func Test_New(t *testing.T) {
 	if active {
 		t.Errorf("Expected to not find a selected key")
 	}
-	m, err := m.HandleMessage(tea.KeyMsg{
+	m, cmd := m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("enter"),
 	})
-
-	if err != nil {
-		t.Errorf("Expected no error")
+	if cmd != nil {
+		t.Errorf("Expected no commands")
 	}
-	m.Data = &testKeys
+	m.Data = &test.Keys
 	m, _ = m.HandleMessage(app.AccountSelected{Address: "ABC", Participation: &api.AccountParticipation{
 		SelectionParticipationKey: nil,
 		StateProofKey:             nil,
 		VoteFirstValid:            0,
 		VoteKeyDilution:           0,
 		VoteLastValid:             0,
-		VoteParticipationKey:      testVoteKey,
+		VoteParticipationKey:      test.VoteKey,
 	}})
 	d, active = m.SelectedKey()
 	if !active {
@@ -92,7 +53,7 @@ func Test_New(t *testing.T) {
 
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
-		model := New("ABC", &testKeys)
+		model := New("ABC", &test.Keys)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
@@ -100,33 +61,9 @@ func Test_Snapshot(t *testing.T) {
 }
 
 func Test_Messages(t *testing.T) {
-	sm := &internal.StateModel{
-		Status:            internal.StatusModel{},
-		Metrics:           internal.MetricsModel{},
-		Accounts:          nil,
-		ParticipationKeys: &testKeys,
-		Admin:             false,
-		Watching:          false,
-	}
-	values := make(map[string]internal.Account)
-	for _, key := range *sm.ParticipationKeys {
-		val, ok := values[key.Address]
-		if !ok {
-			values[key.Address] = internal.Account{
-				Address: key.Address,
-				Status:  "Offline",
-				Balance: 0,
-				Expires: time.Unix(0, 0),
-				Keys:    1,
-			}
-		} else {
-			val.Keys++
-			values[key.Address] = val
-		}
-	}
-	sm.Accounts = values
+
 	// Create the Model
-	m := New("ABC", &testKeys)
+	m := New("ABC", &test.Keys)
 	//m, _ = m.Address = "ABC"
 	tm := teatest.NewTestModel(
 		t, m,
@@ -144,7 +81,7 @@ func Test_Messages(t *testing.T) {
 	)
 
 	// Emit a state message
-	tm.Send(*sm)
+	tm.Send(*test.GetState())
 
 	// Send delete finished
 	tm.Send(app.DeleteFinished{
