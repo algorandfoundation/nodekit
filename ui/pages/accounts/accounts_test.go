@@ -78,7 +78,7 @@ func Test_Messages(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-	tm.Send(test.GetState())
+	tm.Send(*test.GetState())
 
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
