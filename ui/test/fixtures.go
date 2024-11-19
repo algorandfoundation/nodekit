@@ -8,6 +8,8 @@ import (
 )
 
 var VoteKey = []byte("TESTKEY")
+var SelectionKey = []byte("TESTKEY")
+var StateProofKey = []byte("TESTKEY")
 var Keys = []api.ParticipationKey{
 	{
 		Address:             "ABC",
@@ -15,8 +17,8 @@ var Keys = []api.ParticipationKey{
 		EffectiveLastValid:  nil,
 		Id:                  "123",
 		Key: api.AccountParticipation{
-			SelectionParticipationKey: nil,
-			StateProofKey:             nil,
+			SelectionParticipationKey: SelectionKey,
+			StateProofKey:             &StateProofKey,
 			VoteFirstValid:            0,
 			VoteKeyDilution:           100,
 			VoteLastValid:             30000,
