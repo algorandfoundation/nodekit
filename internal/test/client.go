@@ -4,29 +4,29 @@ import (
 	"context"
 	"errors"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"net/http"
 )
 
 func GetClient(throws bool) api.ClientWithResponsesInterface {
-	res, _ := NewTestClient(throws)
-	return res
+	return NewClient(throws)
 }
 
-type TestClient struct {
+type Client struct {
 	api.ClientWithResponsesInterface
 	Errors bool
 }
 
-func NewTestClient(throws bool) (api.ClientWithResponsesInterface, error) {
-	client := new(TestClient)
+func NewClient(throws bool) api.ClientWithResponsesInterface {
+	client := new(Client)
 	if throws {
 		client.Errors = true
 	}
-	return client, nil
+	return client
 }
-func (c *TestClient) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
+func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
 	httpResponse := http.Response{StatusCode: 200}
-	clone := Keys
+	clone := mock.Keys
 	res := api.GetParticipationKeysResponse{
 		Body:         nil,
 		HTTPResponse: &httpResponse,
@@ -42,7 +42,7 @@ func (c *TestClient) GetParticipationKeysWithResponse(ctx context.Context, reqEd
 	return &res, nil
 }
 
-func (c *TestClient) DeleteParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...api.RequestEditorFn) (*api.DeleteParticipationKeyByIDResponse, error) {
+func (c *Client) DeleteParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...api.RequestEditorFn) (*api.DeleteParticipationKeyByIDResponse, error) {
 	httpResponse := http.Response{StatusCode: 200}
 	res := api.DeleteParticipationKeyByIDResponse{
 		Body:         nil,
@@ -59,8 +59,8 @@ func (c *TestClient) DeleteParticipationKeyByIDWithResponse(ctx context.Context,
 	return &res, nil
 }
 
-func (c *TestClient) GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *api.GenerateParticipationKeysParams, reqEditors ...api.RequestEditorFn) (*api.GenerateParticipationKeysResponse, error) {
-	Keys = append(Keys, api.ParticipationKey{
+func (c *Client) GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *api.GenerateParticipationKeysParams, reqEditors ...api.RequestEditorFn) (*api.GenerateParticipationKeysResponse, error) {
+	mock.Keys = append(mock.Keys, api.ParticipationKey{
 		Address:             "",
 		EffectiveFirstValid: nil,
 		EffectiveLastValid:  nil,

@@ -2,8 +2,9 @@ package ui
 
 import (
 	"bytes"
-	test2 "github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/internal/test"
 	"github.com/algorandfoundation/hack-tui/ui/app"
+	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
 	"testing"
 	"time"
 
@@ -12,8 +13,8 @@ import (
 )
 
 func Test_ViewportViewRender(t *testing.T) {
-	client := test2.GetClient(false)
-	state := test2.GetState(client)
+	client := test.GetClient(false)
+	state := uitest.GetState(client)
 	// Create the Model
 	m, err := NewViewportViewModel(state, client)
 	if err != nil {

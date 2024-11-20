@@ -2,7 +2,8 @@ package app
 
 import (
 	"context"
-	test2 "github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/internal/test"
+	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
 	"net/http"
 	"testing"
 	"time"
@@ -14,8 +15,8 @@ func Intercept(ctx context.Context, req *http.Request) error {
 }
 
 func Test_GenerateCmd(t *testing.T) {
-	client := test2.GetClient(false)
-	fn := GenerateCmd("ABC", time.Second*60, test2.GetState(client))
+	client := test.GetClient(false)
+	fn := GenerateCmd("ABC", time.Second*60, uitest.GetState(client))
 	res := fn()
 	evt, ok := res.(ModalEvent)
 	if !ok {
@@ -25,8 +26,8 @@ func Test_GenerateCmd(t *testing.T) {
 		t.Error("Expected InfoModal")
 	}
 
-	client = test2.GetClient(true)
-	fn = GenerateCmd("ABC", time.Second*60, test2.GetState(client))
+	client = test.GetClient(true)
+	fn = GenerateCmd("ABC", time.Second*60, uitest.GetState(client))
 	res = fn()
 	evt, ok = res.(ModalEvent)
 	if !ok {
@@ -39,7 +40,7 @@ func Test_GenerateCmd(t *testing.T) {
 }
 
 func Test_EmitDeleteKey(t *testing.T) {
-	client := test2.GetClient(false)
+	client := test.GetClient(false)
 	fn := EmitDeleteKey(context.Background(), client, "ABC")
 	res := fn()
 	evt, ok := res.(DeleteFinished)
@@ -53,7 +54,7 @@ func Test_EmitDeleteKey(t *testing.T) {
 		t.Error("Expected no errors")
 	}
 
-	client = test2.GetClient(true)
+	client = test.GetClient(true)
 	fn = EmitDeleteKey(context.Background(), client, "ABC")
 	res = fn()
 	evt, ok = res.(DeleteFinished)

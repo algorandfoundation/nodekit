@@ -2,7 +2,8 @@ package transaction
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/hack-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -13,7 +14,7 @@ import (
 
 func Test_New(t *testing.T) {
 	model := New(test.GetState(nil))
-	model.Participation = &test.Keys[0]
+	model.Participation = &mock.Keys[0]
 	model.Participation.Address = "ALGO123456789"
 	addr := model.FormatedAddress()
 	if addr != "ALGO...6789" {
@@ -24,14 +25,14 @@ func Test_New(t *testing.T) {
 func Test_Snapshot(t *testing.T) {
 	t.Run("NotVisible", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &test.Keys[0]
+		model.Participation = &mock.Keys[0]
 		model.UpdateState()
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Offline", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &test.Keys[0]
+		model.Participation = &mock.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
 			Width:  80,
@@ -43,7 +44,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Online", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &test.Keys[0]
+		model.Participation = &mock.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
 			Width:  80,
@@ -55,7 +56,7 @@ func Test_Snapshot(t *testing.T) {
 
 	t.Run("Loading", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &test.Keys[0]
+		model.Participation = &mock.Keys[0]
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
@@ -69,7 +70,7 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 	// Create the Model
 	m := New(test.GetState(nil))
-	m.Participation = &test.Keys[0]
+	m.Participation = &mock.Keys[0]
 
 	tm := teatest.NewTestModel(
 		t, m,

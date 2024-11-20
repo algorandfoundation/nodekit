@@ -2,7 +2,8 @@ package info
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/hack-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -16,10 +17,10 @@ func Test_New(t *testing.T) {
 	if m == nil {
 		t.Fatal("New returned nil")
 	}
-	m.Participation = &test.Keys[0]
-	account := m.State.Accounts[test.Keys[0].Address]
+	m.Participation = &mock.Keys[0]
+	account := m.State.Accounts[mock.Keys[0].Address]
 	account.Status = "Online"
-	m.State.Accounts[test.Keys[0].Address] = account
+	m.State.Accounts[mock.Keys[0].Address] = account
 	m.Active = true
 	m.UpdateState()
 	if m.BorderColor != "1" {
@@ -32,7 +33,7 @@ func Test_New(t *testing.T) {
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &test.Keys[0]
+		model.Participation = &mock.Keys[0]
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
@@ -46,7 +47,7 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 	// Create the Model
 	m := New(test.GetState(nil))
-	m.Participation = &test.Keys[0]
+	m.Participation = &mock.Keys[0]
 
 	tm := teatest.NewTestModel(
 		t, m,

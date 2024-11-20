@@ -3,8 +3,9 @@ package modal
 import (
 	"bytes"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"github.com/algorandfoundation/hack-tui/ui/app"
+	"github.com/algorandfoundation/hack-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
@@ -24,7 +25,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("InfoModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&test.Keys[0])
+		model.SetKey(&mock.Keys[0])
 		model.SetType(app.InfoModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
@@ -32,7 +33,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("ConfirmModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&test.Keys[0])
+		model.SetKey(&mock.Keys[0])
 		model.SetType(app.ConfirmModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
@@ -40,7 +41,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("ExceptionModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&test.Keys[0])
+		model.SetKey(&mock.Keys[0])
 		model.SetType(app.ExceptionModal)
 		model, _ = model.HandleMessage(errors.New("test error"))
 		got := ansi.Strip(model.View())
@@ -48,7 +49,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("GenerateModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&test.Keys[0])
+		model.SetKey(&mock.Keys[0])
 		model.SetAddress("ABC")
 		model.SetType(app.GenerateModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
@@ -58,7 +59,7 @@ func Test_Snapshot(t *testing.T) {
 
 	t.Run("TransactionModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&test.Keys[0])
+		model.SetKey(&mock.Keys[0])
 		model.SetActive(true)
 		model.SetType(app.TransactionModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
@@ -69,7 +70,7 @@ func Test_Snapshot(t *testing.T) {
 
 func Test_Messages(t *testing.T) {
 	model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-	model.SetKey(&test.Keys[0])
+	model.SetKey(&mock.Keys[0])
 	model.SetAddress("ABC")
 	model.SetType(app.InfoModal)
 	tm := teatest.NewTestModel(
@@ -113,7 +114,7 @@ func Test_Messages(t *testing.T) {
 
 	tm.Send(app.DeleteFinished{
 		Err: nil,
-		Id:  test.Keys[0].Id,
+		Id:  mock.Keys[0].Id,
 	})
 
 	delError := errors.New("Something went wrong")

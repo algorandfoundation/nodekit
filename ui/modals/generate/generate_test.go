@@ -2,7 +2,7 @@ package generate
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/test"
+	"github.com/algorandfoundation/hack-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

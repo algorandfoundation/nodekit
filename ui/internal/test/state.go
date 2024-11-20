@@ -4,49 +4,9 @@ import (
 	"context"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/test/mock"
+	mock2 "github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"time"
 )
-
-var VoteKey = []byte("TESTKEY")
-var SelectionKey = []byte("TESTKEY")
-var StateProofKey = []byte("TESTKEY")
-var Keys = []api.ParticipationKey{
-	{
-		Address:             "ABC",
-		EffectiveFirstValid: nil,
-		EffectiveLastValid:  nil,
-		Id:                  "123",
-		Key: api.AccountParticipation{
-			SelectionParticipationKey: SelectionKey,
-			StateProofKey:             &StateProofKey,
-			VoteFirstValid:            0,
-			VoteKeyDilution:           100,
-			VoteLastValid:             30000,
-			VoteParticipationKey:      VoteKey,
-		},
-		LastBlockProposal: nil,
-		LastStateProof:    nil,
-		LastVote:          nil,
-	},
-	{
-		Address:             "ABC",
-		EffectiveFirstValid: nil,
-		EffectiveLastValid:  nil,
-		Id:                  "1234",
-		Key: api.AccountParticipation{
-			SelectionParticipationKey: nil,
-			StateProofKey:             nil,
-			VoteFirstValid:            0,
-			VoteKeyDilution:           100,
-			VoteLastValid:             30000,
-			VoteParticipationKey:      nil,
-		},
-		LastBlockProposal: nil,
-		LastStateProof:    nil,
-		LastVote:          nil,
-	},
-}
 
 func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 	sm := &internal.StateModel{
@@ -70,14 +30,14 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 			LastTX:    0,
 		},
 		Accounts:          nil,
-		ParticipationKeys: &Keys,
+		ParticipationKeys: &mock2.Keys,
 		Admin:             false,
 		Watching:          false,
 		Client:            client,
 		Context:           context.Background(),
 	}
 	values := make(map[string]internal.Account)
-	clock := new(mock.Clock)
+	clock := new(mock2.Clock)
 	for _, key := range *sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
