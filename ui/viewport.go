@@ -30,7 +30,7 @@ type ViewportViewModel struct {
 
 	modal  *modal.ViewModel
 	page   app.Page
-	client *api.ClientWithResponses
+	client api.ClientWithResponsesInterface
 
 	// Error Handler
 	errorMsg  *string
@@ -194,7 +194,7 @@ func (m ViewportViewModel) headerView() string {
 }
 
 // NewViewportViewModel handles the construction of the TUI viewport
-func NewViewportViewModel(state *internal.StateModel, client *api.ClientWithResponses) (*ViewportViewModel, error) {
+func NewViewportViewModel(state *internal.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 

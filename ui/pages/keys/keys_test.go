@@ -3,8 +3,8 @@ package keys
 import (
 	"bytes"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/test"
 	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -81,7 +81,7 @@ func Test_Messages(t *testing.T) {
 	)
 
 	// Emit a state message
-	tm.Send(*test.GetState())
+	tm.Send(*test.GetState(nil))
 
 	// Send delete finished
 	tm.Send(app.DeleteFinished{

@@ -29,7 +29,7 @@ type Account struct {
 }
 
 // Gets the list of addresses created at genesis from the genesis file
-func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string, string, error) {
+func getAddressesFromGenesis(client api.ClientInterface) ([]string, string, string, error) {
 	resp, err := client.GetGenesis(context.Background())
 	if err != nil {
 		return []string{}, "", "", err
@@ -92,7 +92,7 @@ func getAddressesFromGenesis(client *api.ClientWithResponses) ([]string, string,
 }
 
 // Get Online Status of Account
-func GetAccount(client *api.ClientWithResponses, address string) (api.Account, error) {
+func GetAccount(client api.ClientWithResponsesInterface, address string) (api.Account, error) {
 	var format api.AccountInformationParamsFormat = "json"
 	r, err := client.AccountInformationWithResponse(
 		context.Background(),
@@ -125,7 +125,7 @@ func GetExpiresTime(t Time, key api.ParticipationKey, state *StateModel) time.Ti
 }
 
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel, t Time, client *api.ClientWithResponses) map[string]Account {
+func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponsesInterface) map[string]Account {
 	values := make(map[string]Account)
 	if state == nil || state.ParticipationKeys == nil {
 		return values

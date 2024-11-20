@@ -3,8 +3,8 @@ package modal
 import (
 	"bytes"
 	"errors"
+	"github.com/algorandfoundation/hack-tui/test"
 	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
@@ -16,14 +16,14 @@ import (
 
 func Test_Snapshot(t *testing.T) {
 	t.Run("NoKey", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("InfoModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 		model.SetKey(&test.Keys[0])
 		model.SetType(app.InfoModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
@@ -31,7 +31,7 @@ func Test_Snapshot(t *testing.T) {
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("ConfirmModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 		model.SetKey(&test.Keys[0])
 		model.SetType(app.ConfirmModal)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
@@ -39,7 +39,7 @@ func Test_Snapshot(t *testing.T) {
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("ExceptionModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 		model.SetKey(&test.Keys[0])
 		model.SetType(app.ExceptionModal)
 		model, _ = model.HandleMessage(errors.New("test error"))
@@ -47,7 +47,7 @@ func Test_Snapshot(t *testing.T) {
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("GenerateModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 		model.SetKey(&test.Keys[0])
 		model.SetAddress("ABC")
 		model.SetType(app.GenerateModal)
@@ -57,7 +57,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 
 	t.Run("TransactionModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 		model.SetKey(&test.Keys[0])
 		model.SetActive(true)
 		model.SetType(app.TransactionModal)
@@ -68,7 +68,7 @@ func Test_Snapshot(t *testing.T) {
 }
 
 func Test_Messages(t *testing.T) {
-	model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState())
+	model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 	model.SetKey(&test.Keys[0])
 	model.SetAddress("ABC")
 	model.SetType(app.InfoModal)

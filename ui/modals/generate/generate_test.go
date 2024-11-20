@@ -2,7 +2,7 @@ package generate
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/ui/test"
+	"github.com/algorandfoundation/hack-tui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -12,7 +12,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	m := New("ABC", test.GetState())
+	m := New("ABC", test.GetState(nil))
 
 	m.SetAddress("ACB")
 
@@ -75,18 +75,18 @@ func Test_New(t *testing.T) {
 
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
-		model := New("ABC", test.GetState())
+		model := New("ABC", test.GetState(nil))
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Duration", func(t *testing.T) {
-		model := New("ABC", test.GetState())
+		model := New("ABC", test.GetState(nil))
 		model.SetStep(DurationStep)
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Waiting", func(t *testing.T) {
-		model := New("ABC", test.GetState())
+		model := New("ABC", test.GetState(nil))
 		model.SetStep(WaitingStep)
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
@@ -95,7 +95,7 @@ func Test_Snapshot(t *testing.T) {
 
 func Test_Messages(t *testing.T) {
 	// Create the Model
-	m := New("ABC", test.GetState())
+	m := New("ABC", test.GetState(nil))
 	tm := teatest.NewTestModel(
 		t, m,
 		teatest.WithInitialTermSize(80, 40),

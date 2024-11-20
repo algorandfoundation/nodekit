@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/ui/test"
+	"github.com/algorandfoundation/hack-tui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -12,7 +12,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	model := New(test.GetState())
+	model := New(test.GetState(nil))
 	model.Participation = &test.Keys[0]
 	model.Participation.Address = "ALGO123456789"
 	addr := model.FormatedAddress()
@@ -23,14 +23,14 @@ func Test_New(t *testing.T) {
 }
 func Test_Snapshot(t *testing.T) {
 	t.Run("NotVisible", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		model.Participation = &test.Keys[0]
 		model.UpdateState()
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Offline", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		model.Participation = &test.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
@@ -42,7 +42,7 @@ func Test_Snapshot(t *testing.T) {
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Online", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		model.Participation = &test.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
@@ -54,13 +54,13 @@ func Test_Snapshot(t *testing.T) {
 	})
 
 	t.Run("Loading", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		model.Participation = &test.Keys[0]
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("NoKey", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
@@ -68,7 +68,7 @@ func Test_Snapshot(t *testing.T) {
 
 func Test_Messages(t *testing.T) {
 	// Create the Model
-	m := New(test.GetState())
+	m := New(test.GetState(nil))
 	m.Participation = &test.Keys[0]
 
 	tm := teatest.NewTestModel(

@@ -15,7 +15,7 @@ type DeleteFinished struct {
 
 type DeleteKey *api.ParticipationKey
 
-func EmitDeleteKey(ctx context.Context, client *api.ClientWithResponses, id string) tea.Cmd {
+func EmitDeleteKey(ctx context.Context, client api.ClientWithResponsesInterface, id string) tea.Cmd {
 	return func() tea.Msg {
 		err := internal.DeletePartKey(ctx, client, id)
 		if err != nil {

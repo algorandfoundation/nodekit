@@ -1,9 +1,10 @@
 package test
 
 import (
+	"context"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/test/mock"
+	"github.com/algorandfoundation/hack-tui/test/mock"
 	"time"
 )
 
@@ -47,7 +48,7 @@ var Keys = []api.ParticipationKey{
 	},
 }
 
-func GetState() *internal.StateModel {
+func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 	sm := &internal.StateModel{
 		Status: internal.StatusModel{
 			State:       internal.StableState,
@@ -72,6 +73,8 @@ func GetState() *internal.StateModel {
 		ParticipationKeys: &Keys,
 		Admin:             false,
 		Watching:          false,
+		Client:            client,
+		Context:           context.Background(),
 	}
 	values := make(map[string]internal.Account)
 	clock := new(mock.Clock)

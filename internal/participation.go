@@ -9,7 +9,7 @@ import (
 )
 
 // GetPartKeys get the participation keys from the node
-func GetPartKeys(ctx context.Context, client *api.ClientWithResponses) (*[]api.ParticipationKey, error) {
+func GetPartKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]api.ParticipationKey, error) {
 	parts, err := client.GetParticipationKeysWithResponse(ctx)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func GetPartKeys(ctx context.Context, client *api.ClientWithResponses) (*[]api.P
 }
 
 // ReadPartKey get a specific participation key by id
-func ReadPartKey(ctx context.Context, client *api.ClientWithResponses, participationId string) (*api.ParticipationKey, error) {
+func ReadPartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) (*api.ParticipationKey, error) {
 	key, err := client.GetParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func ReadPartKey(ctx context.Context, client *api.ClientWithResponses, participa
 // We should try to update the API endpoint
 func waitForNewKey(
 	ctx context.Context,
-	client *api.ClientWithResponses,
+	client api.ClientWithResponsesInterface,
 	keys *[]api.ParticipationKey,
 	interval time.Duration,
 	timeout time.Duration,
@@ -83,7 +83,7 @@ func findKeyPair(
 // GenerateKeyPair creates a keypair and finds the result
 func GenerateKeyPair(
 	ctx context.Context,
-	client *api.ClientWithResponses,
+	client api.ClientWithResponsesInterface,
 	address string,
 	params *api.GenerateParticipationKeysParams,
 ) (*api.ParticipationKey, error) {
@@ -112,7 +112,7 @@ func GenerateKeyPair(
 }
 
 // DeletePartKey remove a key from the node
-func DeletePartKey(ctx context.Context, client *api.ClientWithResponses, participationId string) error {
+func DeletePartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) error {
 	deletion, err := client.DeleteParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
 		return err

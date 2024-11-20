@@ -2,7 +2,7 @@ package info
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/ui/test"
+	"github.com/algorandfoundation/hack-tui/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -12,7 +12,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	m := New(test.GetState())
+	m := New(test.GetState(nil))
 	if m == nil {
 		t.Fatal("New returned nil")
 	}
@@ -31,13 +31,13 @@ func Test_New(t *testing.T) {
 }
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		model.Participation = &test.Keys[0]
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("NoKey", func(t *testing.T) {
-		model := New(test.GetState())
+		model := New(test.GetState(nil))
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
@@ -45,7 +45,7 @@ func Test_Snapshot(t *testing.T) {
 
 func Test_Messages(t *testing.T) {
 	// Create the Model
-	m := New(test.GetState())
+	m := New(test.GetState(nil))
 	m.Participation = &test.Keys[0]
 
 	tm := teatest.NewTestModel(

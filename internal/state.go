@@ -23,7 +23,7 @@ type StateModel struct {
 	Watching bool
 
 	// RPC
-	Client  *api.ClientWithResponses
+	Client  api.ClientWithResponsesInterface
 	Context context.Context
 }
 
@@ -36,7 +36,7 @@ func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err er
 }
 
 // TODO: allow context to handle loop
-func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client api.ClientWithResponsesInterface) {
 	s.Watching = true
 	if s.Metrics.Window == 0 {
 		s.Metrics.Window = 100
@@ -97,7 +97,7 @@ func (s *StateModel) Stop() {
 	s.Watching = false
 }
 
-func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client api.ClientWithResponsesInterface) {
 	// Fetch RX/TX
 	res, err := GetMetrics(ctx, client)
 	if err != nil {

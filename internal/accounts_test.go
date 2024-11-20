@@ -2,7 +2,7 @@ package internal
 
 import (
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/ui/test/mock"
+	"github.com/algorandfoundation/hack-tui/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
 	"testing"
