@@ -82,3 +82,68 @@ func (c *Client) GenerateParticipationKeysWithResponse(ctx context.Context, addr
 
 	return &res, nil
 }
+
+func (c *Client) GetVersionWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetVersionResponse, error) {
+	httpResponse := http.Response{StatusCode: 200}
+	version := api.Version{
+		Build: api.BuildVersion{
+			Branch:      "test",
+			BuildNumber: 1,
+			Channel:     "beta",
+			CommitHash:  "abc",
+			Major:       0,
+			Minor:       0,
+		},
+		GenesisHashB64: nil,
+		GenesisId:      "tui-net",
+		Versions:       nil,
+	}
+	res := api.GetVersionResponse{
+		Body:         nil,
+		HTTPResponse: &httpResponse,
+		JSON200:      &version,
+	}
+
+	return &res, nil
+}
+func (c *Client) GetStatusWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetStatusResponse, error) {
+	httpResponse := http.Response{StatusCode: 200}
+	data := new(struct {
+		Catchpoint                    *string `json:"catchpoint,omitempty"`
+		CatchpointAcquiredBlocks      *int    `json:"catchpoint-acquired-blocks,omitempty"`
+		CatchpointProcessedAccounts   *int    `json:"catchpoint-processed-accounts,omitempty"`
+		CatchpointProcessedKvs        *int    `json:"catchpoint-processed-kvs,omitempty"`
+		CatchpointTotalAccounts       *int    `json:"catchpoint-total-accounts,omitempty"`
+		CatchpointTotalBlocks         *int    `json:"catchpoint-total-blocks,omitempty"`
+		CatchpointTotalKvs            *int    `json:"catchpoint-total-kvs,omitempty"`
+		CatchpointVerifiedAccounts    *int    `json:"catchpoint-verified-accounts,omitempty"`
+		CatchpointVerifiedKvs         *int    `json:"catchpoint-verified-kvs,omitempty"`
+		CatchupTime                   int     `json:"catchup-time"`
+		LastCatchpoint                *string `json:"last-catchpoint,omitempty"`
+		LastRound                     int     `json:"last-round"`
+		LastVersion                   string  `json:"last-version"`
+		NextVersion                   string  `json:"next-version"`
+		NextVersionRound              int     `json:"next-version-round"`
+		NextVersionSupported          bool    `json:"next-version-supported"`
+		StoppedAtUnsupportedRound     bool    `json:"stopped-at-unsupported-round"`
+		TimeSinceLastRound            int     `json:"time-since-last-round"`
+		UpgradeDelay                  *int    `json:"upgrade-delay,omitempty"`
+		UpgradeNextProtocolVoteBefore *int    `json:"upgrade-next-protocol-vote-before,omitempty"`
+		UpgradeNoVotes                *int    `json:"upgrade-no-votes,omitempty"`
+		UpgradeNodeVote               *bool   `json:"upgrade-node-vote,omitempty"`
+		UpgradeVoteRounds             *int    `json:"upgrade-vote-rounds,omitempty"`
+		UpgradeVotes                  *int    `json:"upgrade-votes,omitempty"`
+		UpgradeVotesRequired          *int    `json:"upgrade-votes-required,omitempty"`
+		UpgradeYesVotes               *int    `json:"upgrade-yes-votes,omitempty"`
+	})
+	data.LastRound = 10
+	res := api.GetStatusResponse{
+		Body:         nil,
+		HTTPResponse: &httpResponse,
+		JSON200:      data,
+		JSON401:      nil,
+		JSON500:      nil,
+	}
+
+	return &res, nil
+}
