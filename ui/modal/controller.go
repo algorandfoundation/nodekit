@@ -33,12 +33,28 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.transactionModal.State = &msg
 		m.infoModal.State = &msg
 
-		if m.Type == app.TransactionModal && !m.transactionModal.Active {
-			if msg.Accounts[m.Address].Participation.VoteFirstValid == m.transactionModal.Participation.Key.VoteFirstValid {
-				m.SetActive(true)
-				m.infoModal.Active = true
-				m.SetType(app.InfoModal)
+		// When the state changes, and we are displaying a valid QR Code/Transaction Modal
+		if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
+			acct, ok := msg.Accounts[m.Address]
+			// If the previous state is not active
+			if ok {
+				if !m.transactionModal.Active {
+					if acct.Participation != nil &&
+						acct.Participation.VoteFirstValid == m.transactionModal.Participation.Key.VoteFirstValid {
+						m.SetActive(true)
+						m.infoModal.Active = true
+						m.SetType(app.InfoModal)
+					}
+				} else {
+					if acct.Participation == nil {
+						m.SetActive(false)
+						m.infoModal.Active = false
+						m.transactionModal.Active = false
+						m.SetType(app.InfoModal)
+					}
+				}
 			}
+
 		}
 
 	case app.ModalEvent:
