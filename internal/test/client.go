@@ -9,33 +9,91 @@ import (
 )
 
 func GetClient(throws bool) api.ClientWithResponsesInterface {
-	return NewClient(throws)
+	return NewClient(throws, false)
 }
 
 type Client struct {
 	api.ClientWithResponsesInterface
-	Errors bool
+	Errors  bool
+	Invalid bool
 }
 
-func NewClient(throws bool) api.ClientWithResponsesInterface {
+func NewClient(throws bool, invalid bool) api.ClientWithResponsesInterface {
 	client := new(Client)
 	if throws {
 		client.Errors = true
 	}
+	if invalid {
+		client.Invalid = true
+	}
 	return client
 }
-func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
-	httpResponse := http.Response{StatusCode: 200}
-	clone := mock.Keys
-	res := api.GetParticipationKeysResponse{
-		Body:         nil,
-		HTTPResponse: &httpResponse,
-		JSON200:      &clone,
-		JSON400:      nil,
-		JSON401:      nil,
-		JSON404:      nil,
-		JSON500:      nil,
+
+func (c *Client) MetricsWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.MetricsResponse, error) {
+	var res api.MetricsResponse
+	body := `# HELP algod_telemetry_drops_total telemetry messages dropped due to full queues
+# TYPE algod_telemetry_drops_total counter
+algod_telemetry_drops_total 0
+# HELP algod_telemetry_errs_total telemetry messages dropped due to server error
+# TYPE algod_telemetry_errs_total counter
+algod_telemetry_errs_total 0
+# HELP algod_ram_usage number of bytes runtime.ReadMemStats().HeapInuse
+# TYPE algod_ram_usage gauge
+algod_ram_usage 0
+# HELP algod_crypto_vrf_generate_total Total number of calls to GenerateVRFSecrets
+# TYPE algod_crypto_vrf_generate_total counter
+algod_crypto_vrf_generate_total 0
+# HELP algod_crypto_vrf_prove_total Total number of calls to VRFSecrets.Prove
+# TYPE algod_crypto_vrf_prove_total counter
+algod_crypto_vrf_prove_total 0
+# HELP algod_crypto_vrf_hash_total Total number of calls to VRFProof.Hash
+# TYPE algod_crypto_vrf_hash_total counter
+algod_crypto_vrf_hash_total 0`
+	if !c.Invalid {
+		httpResponse := http.Response{StatusCode: 200}
+		res = api.MetricsResponse{
+			Body:         []byte(body),
+			HTTPResponse: &httpResponse,
+		}
+	} else {
+		httpResponse := http.Response{StatusCode: 404}
+		res = api.MetricsResponse{
+			Body:         []byte(body),
+			HTTPResponse: &httpResponse,
+		}
 	}
+	if c.Errors {
+		return &res, errors.New("test error")
+	}
+	return &res, nil
+}
+func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
+	var res api.GetParticipationKeysResponse
+	clone := mock.Keys
+	if !c.Invalid {
+		httpResponse := http.Response{StatusCode: 200}
+		res = api.GetParticipationKeysResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      &clone,
+			JSON400:      nil,
+			JSON401:      nil,
+			JSON404:      nil,
+			JSON500:      nil,
+		}
+	} else {
+		httpResponse := http.Response{StatusCode: 404}
+		res = api.GetParticipationKeysResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      &clone,
+			JSON400:      nil,
+			JSON401:      nil,
+			JSON404:      nil,
+			JSON500:      nil,
+		}
+	}
+
 	if c.Errors {
 		return nil, errors.New("test error")
 	}
@@ -43,18 +101,27 @@ func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditor
 }
 
 func (c *Client) DeleteParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...api.RequestEditorFn) (*api.DeleteParticipationKeyByIDResponse, error) {
-	httpResponse := http.Response{StatusCode: 200}
-	res := api.DeleteParticipationKeyByIDResponse{
-		Body:         nil,
-		HTTPResponse: &httpResponse,
-		JSON400:      nil,
-		JSON401:      nil,
-		JSON404:      nil,
-		JSON500:      nil,
+	var res api.DeleteParticipationKeyByIDResponse
+	if !c.Invalid {
+		httpResponse := http.Response{StatusCode: 200}
+		res = api.DeleteParticipationKeyByIDResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON400:      nil,
+			JSON401:      nil,
+			JSON404:      nil,
+			JSON500:      nil,
+		}
+	} else {
+		httpResponse := http.Response{StatusCode: 404}
+		res = api.DeleteParticipationKeyByIDResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+		}
 	}
 
 	if c.Errors {
-		return nil, errors.New("test error")
+		return &res, errors.New("test error")
 	}
 	return &res, nil
 }

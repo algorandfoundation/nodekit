@@ -2,27 +2,20 @@ package internal
 
 import (
 	"context"
+	"github.com/algorandfoundation/hack-tui/internal/test"
 	"strconv"
 	"testing"
-
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 
 func Test_GetMetrics(t *testing.T) {
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
+	client := test.GetClient(true)
 
 	metrics, err := GetMetrics(context.Background(), client)
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Error("error expected")
 	}
 
-	// TODO: ensure localnet is running before tests
+	client = test.GetClient(false)
 	metrics, err = GetMetrics(context.Background(), client)
 	if err != nil {
 		t.Fatal(err)
@@ -30,6 +23,12 @@ func Test_GetMetrics(t *testing.T) {
 
 	if metrics["algod_agreement_dropped"] != 0 {
 		t.Fatal(strconv.Itoa(metrics["algod_agreement_dropped"]) + " is not zero")
+	}
+
+	client = test.NewClient(false, true)
+	metrics, err = GetMetrics(context.Background(), client)
+	if err == nil {
+		t.Error("expected error")
 	}
 }
 
