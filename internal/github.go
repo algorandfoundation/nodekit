@@ -2,12 +2,10 @@ package internal
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
 	"strings"
 )
 
-func GetGoAlgorandRelease(channel string) (*string, error) {
+func GetGoAlgorandRelease(channel string, http HttpPkgInterface) (*string, error) {
 	resp, err := http.Get("https://api.github.com/repos/algorand/go-algorand/releases")
 	if err != nil {
 		return nil, err
@@ -16,7 +14,7 @@ func GetGoAlgorandRelease(channel string) (*string, error) {
 	defer resp.Body.Close()
 	var versions []map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
-		log.Fatal("ooopsss! an error occurred, please try again")
+		return nil, err
 	}
 	var versionResponse *string
 	for i := range versions {

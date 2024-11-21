@@ -52,7 +52,7 @@ func (m *StatusModel) Fetch(ctx context.Context, client api.ClientWithResponsesI
 		}
 		m.Network = v.JSON200.GenesisId
 		m.Version = fmt.Sprintf("v%d.%d.%d-%s", v.JSON200.Build.Major, v.JSON200.Build.Minor, v.JSON200.Build.BuildNumber, v.JSON200.Build.Channel)
-		currentRelease, err := GetGoAlgorandRelease(v.JSON200.Build.Channel)
+		currentRelease, err := GetGoAlgorandRelease(v.JSON200.Build.Channel, new(HttpPkg))
 		if err != nil {
 			return err
 		}
