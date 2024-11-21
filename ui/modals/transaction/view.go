@@ -19,11 +19,23 @@ func (m ViewModel) View() string {
 	if err != nil {
 		return "Something went wrong"
 	}
+
+	var qrCode string
+	if m.State.Status.Network == "testnet-v1.0" || m.State.Status.Network == "mainnet-v1.0" {
+		qrCode = lipgloss.JoinVertical(
+			lipgloss.Center,
+			"Scan the QR code with your wallet",
+			style.Yellow.Render("( make sure you use the "+m.State.Status.Network+" network )"),
+			"",
+			qrStyle.Render(txn),
+		)
+	} else {
+		qrCode = style.Red.Render("\n" + m.State.Status.Network + " network does not support QRCodes\n")
+	}
 	link, _ := internal.ToLoraDeepLink(m.State.Status.Network, m.Active, *m.Participation)
 	render := lipgloss.JoinVertical(
 		lipgloss.Center,
-		"Scan the QR code with your wallet",
-		qrStyle.Render(txn),
+		qrCode,
 		style.WithHyperlink("click here to open in Lora", link),
 	)
 

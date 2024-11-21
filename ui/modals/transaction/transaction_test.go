@@ -33,6 +33,7 @@ func Test_Snapshot(t *testing.T) {
 	t.Run("Offline", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Participation = &mock.Keys[0]
+		model.State.Status.Network = "testnet-v1.0"
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
 			Width:  80,
@@ -45,6 +46,7 @@ func Test_Snapshot(t *testing.T) {
 	t.Run("Online", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Participation = &mock.Keys[0]
+		model.State.Status.Network = "testnet-v1.0"
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
 			Width:  80,
@@ -53,7 +55,17 @@ func Test_Snapshot(t *testing.T) {
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
-
+	t.Run("Unsupported", func(t *testing.T) {
+		model := New(test.GetState(nil))
+		model.Participation = &mock.Keys[0]
+		model, _ = model.HandleMessage(tea.WindowSizeMsg{
+			Height: 40,
+			Width:  80,
+		})
+		model.UpdateState()
+		got := ansi.Strip(model.View())
+		golden.RequireEqual(t, []byte(got))
+	})
 	t.Run("Loading", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Participation = &mock.Keys[0]
@@ -71,7 +83,7 @@ func Test_Messages(t *testing.T) {
 	// Create the Model
 	m := New(test.GetState(nil))
 	m.Participation = &mock.Keys[0]
-
+	m.State.Status.Network = "testnet-v1.0"
 	tm := teatest.NewTestModel(
 		t, m,
 		teatest.WithInitialTermSize(80, 40),

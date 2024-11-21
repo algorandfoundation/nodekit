@@ -59,6 +59,7 @@ func Test_Snapshot(t *testing.T) {
 
 	t.Run("TransactionModal", func(t *testing.T) {
 		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
+		model.State.Status.Network = "testnet-v1.0"
 		model.SetKey(&mock.Keys[0])
 		model.SetActive(true)
 		model.SetType(app.TransactionModal)
