@@ -44,7 +44,7 @@ var statusCmd = &cobra.Command{
 			},
 			ParticipationKeys: nil,
 		}
-		err = state.Status.Fetch(context.Background(), client)
+		err = state.Status.Fetch(context.Background(), client, new(internal.HttpPkg))
 		cobra.CheckErr(err)
 		// Create the TUI
 		view := ui.MakeStatusViewModel(&state)

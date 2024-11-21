@@ -42,7 +42,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Metrics.Window = 100
 	}
 
-	err := s.Status.Fetch(ctx, client)
+	err := s.Status.Fetch(ctx, client, new(HttpPkg))
 	if err != nil {
 		cb(nil, err)
 	}

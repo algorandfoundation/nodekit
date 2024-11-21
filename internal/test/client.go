@@ -151,7 +151,7 @@ func (c *Client) GenerateParticipationKeysWithResponse(ctx context.Context, addr
 }
 
 func (c *Client) GetVersionWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetVersionResponse, error) {
-	httpResponse := http.Response{StatusCode: 200}
+	var res api.GetVersionResponse
 	version := api.Version{
 		Build: api.BuildVersion{
 			Branch:      "test",
@@ -165,12 +165,25 @@ func (c *Client) GetVersionWithResponse(ctx context.Context, reqEditors ...api.R
 		GenesisId:      "tui-net",
 		Versions:       nil,
 	}
-	res := api.GetVersionResponse{
-		Body:         nil,
-		HTTPResponse: &httpResponse,
-		JSON200:      &version,
-	}
+	if !c.Invalid {
+		httpResponse := http.Response{StatusCode: 200}
 
+		res = api.GetVersionResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      &version,
+		}
+	} else {
+		httpResponse := http.Response{StatusCode: 404}
+		res = api.GetVersionResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      nil,
+		}
+	}
+	if c.Errors {
+		return &res, errors.New("test error")
+	}
 	return &res, nil
 }
 func (c *Client) GetStatusWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetStatusResponse, error) {

@@ -34,12 +34,27 @@ func Test_StatusModel(t *testing.T) {
 }
 
 func Test_StatusFetch(t *testing.T) {
+	client := test.GetClient(true)
 	m := StatusModel{LastRound: 0}
-	err := m.Fetch(context.Background(), test.GetClient(false))
+	pkg := new(HttpPkg)
+	err := m.Fetch(context.Background(), client, pkg)
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	client = test.NewClient(false, true)
+	err = m.Fetch(context.Background(), client, pkg)
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	client = test.GetClient(false)
+	err = m.Fetch(context.Background(), client, pkg)
 	if err != nil {
 		t.Error(err)
 	}
 	if m.LastRound == 0 {
 		t.Error("expected LastRound to be non-zero")
 	}
+
 }

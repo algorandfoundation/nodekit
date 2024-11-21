@@ -83,7 +83,7 @@ var (
 			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
 
 			// Fetch current state
-			err = state.Status.Fetch(ctx, client)
+			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
 			cobra.CheckErr(err)
 
 			m, err := ui.NewViewportViewModel(&state, client)
