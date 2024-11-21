@@ -68,6 +68,11 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
+	case app.DeleteFinished:
+		if len(m.keysPage.Rows()) <= 1 {
+			cmd = app.EmitShowPage(app.AccountsPage)
+			cmds = append(cmds, cmd)
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "g":

@@ -77,7 +77,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			continue
 		}
 		// Run Round Averages and RX/TX every 5 rounds
-		if s.Status.LastRound%5 == 0 {
+		if s.Status.LastRound%5 == 0 || (s.Status.LastRound > 100 && s.Metrics.RoundTime.Seconds() == 0) {
 			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
 			s.waitAfterError(err, cb)
 			if err != nil {

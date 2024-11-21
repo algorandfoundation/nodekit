@@ -54,8 +54,11 @@ func waitForNewKey(
 	if err != nil {
 		return nil, err
 	}
+	if keys == nil && currentKeys != nil {
+		return currentKeys, nil
+	}
 	// Check the length against known keys
-	if len(*currentKeys) == len(*keys) {
+	if currentKeys == nil || len(*currentKeys) == 0 || len(*currentKeys) == len(*keys) {
 		// Sleep then try again
 		time.Sleep(interval)
 		return waitForNewKey(ctx, client, keys, interval, timeout)
@@ -81,6 +84,14 @@ func findKeyPair(
 			}
 		}
 	}
+	// If keys are empty, return the found keys
+	if originalKeys == nil || len(*originalKeys) == 0 {
+		keys := *currentKeys
+		participationKey = keys[0]
+	}
+	if participationKey.Id == "" {
+		return nil, errors.New("key not found")
+	}
 	return &participationKey, nil
 }
 
@@ -102,7 +113,7 @@ func GenerateKeyPair(
 		return nil, err
 	}
 	if key.StatusCode() != 200 {
-		return nil, errors.New(key.Status())
+		return nil, errors.New("something went wrong")
 	}
 
 	// Wait for the api to have a new key

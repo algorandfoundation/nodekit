@@ -81,6 +81,9 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 
 	return m
 }
+func (m *ViewModel) Rows() []table.Row {
+	return m.table.Rows()
+}
 
 // SelectedKey returns the currently selected participation key from the ViewModel's data set, or nil if no key is selected.
 func (m ViewModel) SelectedKey() (*api.ParticipationKey, bool) {
