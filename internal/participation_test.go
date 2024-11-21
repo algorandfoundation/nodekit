@@ -6,7 +6,6 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
-	"time"
 )
 
 func Test_ListParticipationKeys(t *testing.T) {
@@ -200,26 +199,4 @@ func Test_RemovePartKeyByID(t *testing.T) {
 			t.Fatalf("expected 0 keys, got %d", len(keys))
 		}
 	})
-}
-
-func Test_Timeout(t *testing.T) {
-	ctx := context.Background()
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	keys, err := GetPartKeys(ctx, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = waitForNewKey(ctx, client, keys, 100*time.Millisecond, 1*time.Second)
-	if err == nil {
-		t.Fatal("Did not error")
-	}
 }

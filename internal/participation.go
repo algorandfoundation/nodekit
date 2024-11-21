@@ -36,65 +36,6 @@ func ReadPartKey(ctx context.Context, client api.ClientWithResponsesInterface, p
 	return key.JSON200, err
 }
 
-// waitForNewKey await the new key based on known existing keys
-// We should try to update the API endpoint
-func waitForNewKey(
-	ctx context.Context,
-	client api.ClientWithResponsesInterface,
-	keys *[]api.ParticipationKey,
-	interval time.Duration,
-	timeout time.Duration,
-) (*[]api.ParticipationKey, error) {
-	if timeout <= 0*time.Second {
-		return nil, errors.New("timeout occurred waiting for new key")
-	}
-	timeout = timeout - interval
-	// Fetch the latest keys
-	currentKeys, err := GetPartKeys(ctx, client)
-	if err != nil {
-		return nil, err
-	}
-	if keys == nil && currentKeys != nil {
-		return currentKeys, nil
-	}
-	// Check the length against known keys
-	if currentKeys == nil || len(*currentKeys) == 0 || len(*currentKeys) == len(*keys) {
-		// Sleep then try again
-		time.Sleep(interval)
-		return waitForNewKey(ctx, client, keys, interval, timeout)
-	}
-	return currentKeys, nil
-}
-
-// findKeyPair look for a new key based on address between two key lists
-// this is not robust, and we should try to update the API endpoint to wait for
-// the key creation and return its metadata to the caller
-func findKeyPair(
-	originalKeys *[]api.ParticipationKey,
-	currentKeys *[]api.ParticipationKey,
-	address string,
-) (*api.ParticipationKey, error) {
-	var participationKey api.ParticipationKey
-	for _, key := range *currentKeys {
-		if key.Address == address {
-			for _, oKey := range *originalKeys {
-				if oKey.Id != key.Id {
-					participationKey = key
-				}
-			}
-		}
-	}
-	// If keys are empty, return the found keys
-	if originalKeys == nil || len(*originalKeys) == 0 {
-		keys := *currentKeys
-		participationKey = keys[0]
-	}
-	if participationKey.Id == "" {
-		return nil, errors.New("key not found")
-	}
-	return &participationKey, nil
-}
-
 // GenerateKeyPair creates a keypair and finds the result
 func GenerateKeyPair(
 	ctx context.Context,
@@ -102,11 +43,6 @@ func GenerateKeyPair(
 	address string,
 	params *api.GenerateParticipationKeysParams,
 ) (*api.ParticipationKey, error) {
-	// The api response is an empty body, we need to fetch known keys first
-	originalKeys, err := GetPartKeys(ctx, client)
-	if err != nil {
-		return nil, err
-	}
 	// Generate a new keypair
 	key, err := client.GenerateParticipationKeysWithResponse(ctx, address, params)
 	if err != nil {
@@ -115,15 +51,26 @@ func GenerateKeyPair(
 	if key.StatusCode() != 200 {
 		return nil, errors.New("something went wrong")
 	}
-
-	// Wait for the api to have a new key
-	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second, 20*time.Minute)
-	if err != nil {
-		return nil, err
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		case <-time.After(2 * time.Second):
+			partKeys, err := GetPartKeys(ctx, client)
+			if partKeys == nil || err != nil {
+				return nil, errors.New("failed to get participation keys")
+			}
+			for _, k := range *partKeys {
+				if k.Address == address &&
+					k.Key.VoteFirstValid == params.First &&
+					k.Key.VoteLastValid == params.Last {
+					return &k, nil
+				}
+			}
+		case <-time.After(20 * time.Minute):
+			return nil, errors.New("timeout waiting for key to be created")
+		}
 	}
-
-	// Find the new keypair in the results
-	return findKeyPair(originalKeys, keys, address)
 }
 
 // DeletePartKey remove a key from the node

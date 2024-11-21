@@ -128,14 +128,21 @@ func (c *Client) DeleteParticipationKeyByIDWithResponse(ctx context.Context, par
 
 func (c *Client) GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *api.GenerateParticipationKeysParams, reqEditors ...api.RequestEditorFn) (*api.GenerateParticipationKeysResponse, error) {
 	mock.Keys = append(mock.Keys, api.ParticipationKey{
-		Address:             "",
+		Address:             "ABC",
 		EffectiveFirstValid: nil,
 		EffectiveLastValid:  nil,
 		Id:                  "",
-		Key:                 api.AccountParticipation{},
-		LastBlockProposal:   nil,
-		LastStateProof:      nil,
-		LastVote:            nil,
+		Key: api.AccountParticipation{
+			SelectionParticipationKey: nil,
+			StateProofKey:             nil,
+			VoteFirstValid:            0,
+			VoteKeyDilution:           0,
+			VoteLastValid:             30,
+			VoteParticipationKey:      nil,
+		},
+		LastBlockProposal: nil,
+		LastStateProof:    nil,
+		LastVote:          nil,
 	})
 	httpResponse := http.Response{StatusCode: 200}
 	res := api.GenerateParticipationKeysResponse{
