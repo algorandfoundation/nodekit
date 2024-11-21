@@ -21,6 +21,8 @@ ADD .docker/start_fast_catchup.sh /node/run/start_fast_catchup.sh
 
 COPY --from=BUILDER /app/bin/algorun /bin/algorun
 
+RUN apt-get update && apt-get install jq -y
+
 ENTRYPOINT /node/run/start_dev.sh
 CMD []
 
