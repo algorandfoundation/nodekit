@@ -73,9 +73,14 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "g":
 			// Only open modal when it is closed and not syncing
 			if !m.modal.Open && m.Data.Status.State != internal.SyncingState && m.Data.Metrics.RoundTime > 0 {
+				address := ""
+				selected := m.accountsPage.SelectedAccount()
+				if selected != nil {
+					address = selected.Address
+				}
 				return m, app.EmitModalEvent(app.ModalEvent{
 					Key:     nil,
-					Address: m.accountsPage.SelectedAccount().Address,
+					Address: address,
 					Type:    app.GenerateModal,
 				})
 			}
