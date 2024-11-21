@@ -1,6 +1,7 @@
 package style
 
 import (
+	"fmt"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 	"regexp"
@@ -37,6 +38,9 @@ var (
 			Render
 )
 
+func WithHyperlink(text string, url string) string {
+	return fmt.Sprintf("\033]8;;%s\a%s\033]8;;\a", url, text)
+}
 func WithTitle(title string, view string) string {
 	r := []rune(view)
 	if lipgloss.Width(view) >= len(title)+4 {

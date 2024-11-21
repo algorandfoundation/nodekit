@@ -2,7 +2,11 @@ package internal
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
@@ -140,4 +144,35 @@ func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte
 		}
 	}
 	return nil
+}
+
+func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (string, error) {
+	fee := 2000000
+	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
+	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
+		loraNetwork = "localnet"
+	}
+
+	var query = ""
+	idx := url.QueryEscape("[0]")
+	if offline {
+		query = fmt.Sprintf(
+			"type[0]=keyreg&fee=%d&sender[0]=%s&offline[0]=true",
+			fee,
+			part.Address,
+		)
+	} else {
+		query = fmt.Sprintf(
+			"type[0]=keyreg&fee[0]=%d&sender[0]=%s&selkey[0]=%s&sprfkey[0]=%s&votekey[0]=%s&votefst[0]=%d&votelst[0]=%d&votekd[0]=%d",
+			fee,
+			part.Address,
+			base64.RawURLEncoding.EncodeToString(part.Key.SelectionParticipationKey),
+			base64.RawURLEncoding.EncodeToString(*part.Key.StateProofKey),
+			base64.RawURLEncoding.EncodeToString(part.Key.VoteParticipationKey),
+			part.Key.VoteFirstValid,
+			part.Key.VoteLastValid,
+			part.Key.VoteKeyDilution,
+		)
+	}
+	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", idx, -1)), nil
 }
