@@ -4,15 +4,9 @@ import (
 	"context"
 	"github.com/algorandfoundation/hack-tui/internal/test"
 	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
-	"net/http"
 	"testing"
 	"time"
 )
-
-func Intercept(ctx context.Context, req *http.Request) error {
-	req.Response = &http.Response{}
-	return nil
-}
 
 func Test_GenerateCmd(t *testing.T) {
 	client := test.GetClient(false)

@@ -67,6 +67,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
+		m.modal, cmd = m.modal.HandleMessage(msg)
+		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	case app.DeleteFinished:
 		if len(m.keysPage.Rows()) <= 1 {

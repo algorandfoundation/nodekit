@@ -1,6 +1,7 @@
 package modal
 
 import (
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
 	"github.com/algorandfoundation/hack-tui/ui/style"
@@ -27,6 +28,19 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
+	case internal.StateModel:
+		m.State = &msg
+		m.transactionModal.State = &msg
+		m.infoModal.State = &msg
+
+		if m.Type == app.TransactionModal && !m.transactionModal.Active {
+			if msg.Accounts[m.Address].Participation.VoteFirstValid == m.transactionModal.Participation.Key.VoteFirstValid {
+				m.SetActive(true)
+				m.infoModal.Active = true
+				m.SetType(app.InfoModal)
+			}
+		}
+
 	case app.ModalEvent:
 		if msg.Type == app.InfoModal {
 			m.generateModal.SetStep(generate.AddressStep)

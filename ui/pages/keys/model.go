@@ -60,7 +60,7 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 	// Create Table
 	m.table = table.New(
 		table.WithColumns(m.makeColumns(80)),
-		table.WithRows(m.makeRows(keys)),
+		table.WithRows(*m.makeRows(keys)),
 		table.WithFocused(true),
 		table.WithHeight(m.Height),
 		table.WithWidth(m.Width),
@@ -119,10 +119,10 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 
 // makeRows processes a slice of ParticipationKeys and returns a sorted slice of table rows
 // filtered by the ViewModel's address.
-func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
+func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
 	rows := make([]table.Row, 0)
 	if keys == nil || m.Address == "" {
-		return rows
+		return &rows
 	}
 
 	var activeId *string
@@ -147,5 +147,5 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 	sort.SliceStable(rows, func(i, j int) bool {
 		return rows[i][0] < rows[j][0]
 	})
-	return rows
+	return &rows
 }

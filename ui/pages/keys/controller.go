@@ -21,16 +21,17 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	// When the State changes
 	case internal.StateModel:
 		m.Data = msg.ParticipationKeys
-		m.table.SetRows(m.makeRows(m.Data))
+		m.table.SetRows(*m.makeRows(m.Data))
+		m.Participation = msg.Accounts[m.Address].Participation
 	// When the Account is Selected
 	case app.AccountSelected:
 		m.Address = msg.Address
 		m.Participation = msg.Participation
-		m.table.SetRows(m.makeRows(m.Data))
+		m.table.SetRows(*m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
 	case app.DeleteFinished:
 		internal.RemovePartKeyByID(m.Data, msg.Id)
-		m.table.SetRows(m.makeRows(m.Data))
+		m.table.SetRows(*m.makeRows(m.Data))
 	// When the user interacts with the render
 	case tea.KeyMsg:
 		switch msg.String() {
