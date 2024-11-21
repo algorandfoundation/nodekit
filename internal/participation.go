@@ -168,8 +168,7 @@ func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (st
 	idx := url.QueryEscape("[0]")
 	if offline {
 		query = fmt.Sprintf(
-			"type[0]=keyreg&fee=%d&sender[0]=%s&offline[0]=true",
-			fee,
+			"type[0]=keyreg&sender[0]=%s",
 			part.Address,
 		)
 	} else {
