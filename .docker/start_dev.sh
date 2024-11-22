@@ -40,8 +40,7 @@ if [ -d "$ALGORAND_DATA" ]; then
         # Import wallet
         goal account import -m "artefact exist coil life turtle edge edge inside punch glance recycle teach melody diet method pause slam dumb race interest amused side learn able heavy"
 
-        algod -o -d "$ALGORAND_DATA" -l "0.0.0.0:8080" &
-        goal clerk send -a 100000000000 -t TUIDKH2C7MUHZDD77MAMUREJRKNK25SYXB7OAFA6JFBB24PEL5UX4S4GUU -f $(cat $ALGORAND_DATA/genesis.json | jq --raw-output '.alloc[] | select(.comment=="Wallet1").addr')
+        algod -o -d "$ALGORAND_DATA" -l "0.0.0.0:8080"
     fi
 
 else
