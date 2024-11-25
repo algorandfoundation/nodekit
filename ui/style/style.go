@@ -1,8 +1,9 @@
 package style
 
 import (
-	"github.com/charmbracelet/lipgloss"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -73,3 +74,12 @@ func WithNavigation(controls string, view string) string {
 	}
 	return view
 }
+
+const BANNER = `
+   _____  .__                __________              
+  /  _  \ |  |    ____   ____\______   \__ __  ____  
+ /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \ 
+/    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
+\____|__  /____/\___  / \____/|____|_  /____/|___|  /
+        \/     /_____/               \/           \/ 
+`

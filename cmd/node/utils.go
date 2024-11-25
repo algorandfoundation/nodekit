@@ -1,4 +1,4 @@
-package cmd
+package node
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"text/template"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -105,73 +104,6 @@ func affectALGORAND_DATA(path string) {
 	fmt.Println("")
 	fmt.Println("export ALGORAND_DATA=" + path)
 	fmt.Println("")
-}
-
-// Update the algorand.service file
-func editAlgorandServiceFile(dataDirectoryPath string) {
-
-	// TODO: look into setting algod path as well as the data directory path
-	// Find the path to the algod binary
-	algodPath, err := exec.LookPath("algod")
-	if err != nil {
-		fmt.Printf("Failed to find algod binary: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Path to the systemd service override file
-	// Assuming that this is the same everywhere systemd is used
-	overrideFilePath := "/etc/systemd/system/algorand.service.d/override.conf"
-
-	// Create the override directory if it doesn't exist
-	err = os.MkdirAll("/etc/systemd/system/algorand.service.d", 0755)
-	if err != nil {
-		fmt.Printf("Failed to create override directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Content of the override file
-	const overrideTemplate = `[Unit]
-Description=Algorand daemon {{.AlgodPath}} in {{.DataDirectoryPath}}
-[Service]
-ExecStart=
-ExecStart={{.AlgodPath}} -d {{.DataDirectoryPath}}`
-
-	// Data to fill the template
-	data := map[string]string{
-		"AlgodPath":         algodPath,
-		"DataDirectoryPath": dataDirectoryPath,
-	}
-
-	// Parse and execute the template
-	tmpl, err := template.New("override").Parse(overrideTemplate)
-	if err != nil {
-		fmt.Printf("Failed to parse template: %v\n", err)
-		os.Exit(1)
-	}
-
-	var overrideContent bytes.Buffer
-	err = tmpl.Execute(&overrideContent, data)
-	if err != nil {
-		fmt.Printf("Failed to execute template: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Write the override content to the file
-	err = os.WriteFile(overrideFilePath, overrideContent.Bytes(), 0644)
-	if err != nil {
-		fmt.Printf("Failed to write override file: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Reload systemd manager configuration
-	cmd := exec.Command("systemctl", "daemon-reload")
-	err = cmd.Run()
-	if err != nil {
-		fmt.Printf("Failed to reload systemd daemon: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("Algorand service file updated successfully.")
 }
 
 // Check if the program is running with admin (super-user) priviledges
@@ -304,8 +236,21 @@ func findAlgodPID() (int, error) {
 	return pid, nil
 }
 
-// Check systemctl has Algorand Service been created in the first place
-func checkSystemctlAlgorandServiceCreated() bool {
+// Check if Algorand service has been created
+func checkAlgorandServiceCreated() bool {
+	switch runtime.GOOS {
+	case "linux":
+		return checkSystemdAlgorandServiceCreated()
+	case "darwin":
+		return checkLaunchdAlgorandServiceCreated()
+	default:
+		fmt.Println("Unsupported operating system.")
+		return false
+	}
+}
+
+// Check if Algorand service has been created with systemd (Linux)
+func checkSystemdAlgorandServiceCreated() bool {
 	cmd := exec.Command("systemctl", "list-unit-files", "algorand.service")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -316,7 +261,40 @@ func checkSystemctlAlgorandServiceCreated() bool {
 	return strings.Contains(out.String(), "algorand.service")
 }
 
-func checkSystemctlAlgorandServiceActive() bool {
+// Check if Algorand service has been created with launchd (macOS)
+// Note that it needs to be run in super-user privilege mode to
+// be able to view the root level services.
+func checkLaunchdAlgorandServiceCreated() bool {
+	cmd := exec.Command("launchctl", "list", "com.algorand.algod")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	output := out.String()
+	if err != nil {
+		fmt.Printf("Failed to check launchd service: %v\n", err)
+		return false
+	}
+
+	if strings.Contains(output, "Could not find service") {
+		return false
+	}
+
+	return true
+}
+
+func checkAlgorandServiceActive() bool {
+	switch runtime.GOOS {
+	case "linux":
+		return checkSystemdAlgorandServiceActive()
+	case "darwin":
+		return checkLaunchdAlgorandServiceActive()
+	default:
+		fmt.Println("Unsupported operating system.")
+		return false
+	}
+}
+
+func checkSystemdAlgorandServiceActive() bool {
 	cmd := exec.Command("systemctl", "is-active", "algorand")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -325,6 +303,22 @@ func checkSystemctlAlgorandServiceActive() bool {
 		return false
 	}
 	return strings.TrimSpace(out.String()) == "active"
+}
+
+func checkLaunchdAlgorandServiceActive() bool {
+	cmd := exec.Command("launchctl", "print", "system/com.algorand.algod")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	output := out.String()
+	if err != nil {
+		return false
+	}
+	if strings.Contains(output, "Bad request") || strings.Contains(output, "Could not find service") {
+		return false
+	}
+
+	return true
 }
 
 // Extract version information from apt-cache policy output
@@ -337,4 +331,11 @@ func extractVersion(output, prefix string) string {
 		}
 	}
 	return ""
+}
+
+func isAlgodRunning() bool {
+	// Check if Algod is already running
+	// This works for systemctl started algorand.service as well as directly started algod
+	err := exec.Command("pgrep", "algod").Run()
+	return err == nil
 }

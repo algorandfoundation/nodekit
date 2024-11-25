@@ -62,6 +62,11 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		// Fetch Keys
 		s.UpdateKeys(ctx, client)
 
+		if s.Status.State == "SYNCING" {
+			lastRound = s.Status.LastRound
+			cb(s, nil)
+			continue
+		}
 		// Run Round Averages and RX/TX every 5 rounds
 		if s.Status.LastRound%5 == 0 {
 			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)

@@ -21,7 +21,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case internal.StateModel:
-		m.Data = msg.Accounts
+		m.Data = &msg
 		m.table.SetRows(*m.makeRows())
 	case tea.KeyMsg:
 		switch msg.String() {

@@ -2,14 +2,15 @@ package ui
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/style"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/style"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // StatusViewModel is extended from the internal.StatusModel
@@ -85,14 +86,22 @@ func (m StatusViewModel) View() string {
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	beginning = style.Blue.Render(" Round time: ") + fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
-	end = getBitRate(m.Data.Metrics.TX) + style.Green.Render("TX ")
+	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
+	if m.Data.Status.State == "SYNCING" {
+		roundTime = "--"
+	}
+	beginning = style.Blue.Render(" Round time: ") + roundTime
+	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.TX/1024) + style.Green.Render("TX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	beginning = style.Blue.Render(" TPS: ") + fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
-	end = getBitRate(m.Data.Metrics.RX) + style.Green.Render("RX ")
+	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
+	if m.Data.Status.State == "SYNCING" {
+		tps = "--"
+	}
+	beginning = style.Blue.Render(" TPS: ") + tps
+	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.RX/1024) + style.Green.Render("RX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)

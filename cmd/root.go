@@ -4,7 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/cmd/node"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
 	"github.com/algorandfoundation/hack-tui/ui/style"
@@ -13,19 +18,7 @@ import (
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io"
-	"os"
-	"strings"
 )
-
-const BANNER = `
-   _____  .__                __________              
-  /  _  \ |  |    ____   ____\______   \__ __  ____  
- /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \ 
-/    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
-\____|__  /____/\___  / \____/|____|_  /____/|___|  /
-        \/     /_____/               \/           \/ 
-`
 
 var (
 	server  string
@@ -34,7 +27,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "algorun",
 		Short: "Manage Algorand nodes",
-		Long:  style.Purple(BANNER) + "\n",
+		Long:  style.Purple(style.BANNER) + "\n",
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -145,6 +138,7 @@ func init() {
 
 	// Add Commands
 	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(node.NodeCmd)
 }
 
 // Execute executes the root command.

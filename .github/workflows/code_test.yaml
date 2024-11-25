@@ -1,4 +1,4 @@
-name: Tests
+name: Code Tests
 
 on:
   pull_request:
