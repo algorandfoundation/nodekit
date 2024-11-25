@@ -1,9 +1,10 @@
 package transaction
 
 import (
+	"strings"
+
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
 )
 
 func (m ViewModel) View() string {

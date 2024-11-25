@@ -1,8 +1,9 @@
 package controls
 
 import (
-	"github.com/charmbracelet/lipgloss"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 // View renders the model's content if it is visible, aligning it horizontally and ensuring it fits within the specified width.

@@ -2,6 +2,8 @@ package generate
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
@@ -10,7 +12,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
-	"strconv"
 )
 
 func (m ViewModel) Init() tea.Cmd {

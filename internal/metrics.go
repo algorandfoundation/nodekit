@@ -3,11 +3,12 @@ package internal
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/api"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 type MetricsModel struct {

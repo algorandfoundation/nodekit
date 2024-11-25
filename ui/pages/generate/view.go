@@ -2,8 +2,9 @@ package generate
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/ui/style"
 	"strings"
+
+	"github.com/algorandfoundation/hack-tui/ui/style"
 )
 
 func (m ViewModel) View() string {

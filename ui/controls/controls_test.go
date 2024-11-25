@@ -2,12 +2,13 @@ package controls
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
-	"testing"
-	"time"
 )
 
 func Test_Snapshot(t *testing.T) {

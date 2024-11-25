@@ -1,10 +1,11 @@
 package accounts
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/ui/style"
 
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/charmbracelet/bubbles/table"

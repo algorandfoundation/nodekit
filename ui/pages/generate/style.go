@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 )
 

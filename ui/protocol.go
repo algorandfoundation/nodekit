@@ -1,12 +1,13 @@
 package ui
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strconv"
-	"strings"
 )
 
 // ProtocolViewModel includes the internal.StatusModel and internal.MetricsModel

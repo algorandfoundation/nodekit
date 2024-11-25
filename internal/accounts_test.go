@@ -1,11 +1,12 @@
 package internal
 
 import (
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 type TestClock struct{}

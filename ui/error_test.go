@@ -2,13 +2,14 @@ package ui
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
-	"testing"
-	"time"
 )
 
 func Test_ErrorSnapshot(t *testing.T) {

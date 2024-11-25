@@ -2,9 +2,10 @@ package internal
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
 	"testing"
 	"time"
+
+	"github.com/algorandfoundation/hack-tui/api"
 )
 
 func Test_GetBlockMetrics(t *testing.T) {

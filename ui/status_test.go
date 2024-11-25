@@ -2,14 +2,10 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/internal"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/exp/golden"
-	"github.com/charmbracelet/x/exp/teatest"
 	"testing"
 	"time"
 
+	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -112,9 +108,6 @@ func Test_StatusMessages(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 	// Send the state
 	tm.Send(state)
 
@@ -129,25 +122,8 @@ func Test_StatusMessages(t *testing.T) {
 		Type:  tea.KeyRunes,
 		Runes: []rune("ctrl+c"),
 	})
->>>>>>> main
 	// Send quit msg
 	tm.Send(tea.QuitMsg{})
-=======
-	// Send the state
-	tm.Send(state)
-
-	// Send hide key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("h"),
-	})
-
-	// Send quit key
-	tm.Send(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("ctrl+c"),
-	})
->>>>>>> 967fa6b (test: status snapshots and 100%)
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }

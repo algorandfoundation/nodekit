@@ -1,11 +1,12 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
 )
 
 type ErrorViewModel struct {
