@@ -11,6 +11,8 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
 )
 
@@ -111,6 +113,23 @@ func Test_StatusMessages(t *testing.T) {
 	)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+	// Send the state
+	tm.Send(state)
+
+	// Send hide key
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("h"),
+	})
+
+	// Send quit key
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("ctrl+c"),
+	})
+>>>>>>> main
 	// Send quit msg
 	tm.Send(tea.QuitMsg{})
 =======

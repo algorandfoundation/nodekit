@@ -91,7 +91,7 @@ func (m StatusViewModel) View() string {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
-	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.TX/1024) + style.Green.Render("TX ")
+	end = getBitRate(m.Data.Metrics.TX) + style.Green.Render("TX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
@@ -101,7 +101,7 @@ func (m StatusViewModel) View() string {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps
-	end = fmt.Sprintf("%d KB/s ", m.Data.Metrics.RX/1024) + style.Green.Render("RX ")
+	end = getBitRate(m.Data.Metrics.RX) + style.Green.Render("RX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)

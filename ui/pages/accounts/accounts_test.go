@@ -2,14 +2,15 @@ package accounts
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
-	"testing"
-	"time"
 )
 
 func Test_Snapshot(t *testing.T) {
@@ -22,6 +23,7 @@ func Test_Snapshot(t *testing.T) {
 			Admin:             false,
 			Watching:          false,
 		})
+		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})

@@ -10,6 +10,12 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
+
+	"github.com/algorandfoundation/hack-tui/internal"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/exp/golden"
+	"github.com/charmbracelet/x/exp/teatest"
 )
 
 var protocolViewSnapshots = map[string]ProtocolViewModel{
@@ -147,6 +153,12 @@ func Test_ProtocolMessages(t *testing.T) {
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("h"),
+	})
+
+	// Send quit key
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("ctrl+c"),
 	})
 
 	// Send quit key
