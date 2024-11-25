@@ -25,6 +25,12 @@ var installCmd = &cobra.Command{
 func installNode() {
 	fmt.Println("Checking if Algod is installed...")
 
+	// Check that we are calling with sudo
+	if !isRunningWithSudo() {
+		fmt.Println("This command must be run with super-user priviledges (sudo).")
+		os.Exit(1)
+	}
+
 	// Check if Algod is installed
 	if !isAlgodInstalled() {
 		fmt.Println("Algod is not installed. Installing...")
@@ -47,12 +53,6 @@ func installNode() {
 
 func installNodeLinux() {
 	fmt.Println("Installing Algod on Linux")
-
-	// Check that we are calling with sudo
-	if !isRunningWithSudo() {
-		fmt.Println("This command must be run with super-user priviledges (sudo).")
-		os.Exit(1)
-	}
 
 	var installCmds [][]string
 	var postInstallHint string
@@ -87,7 +87,9 @@ func installNodeLinux() {
 			{"dnf", "install", "-y", "dnf-command(config-manager)"},
 			{"dnf", "config-manager", "--add-repo=https://releases.algorand.com/rpm/stable/algorand.repo"},
 			{"dnf", "install", "-y", "algorand-devtools"},
-			{"systemctl", "start", "algorand"},
+			{"systemctl", "enable", "algorand.service"},
+			{"systemctl", "start", "algorand.service"},
+			{"rm", "-f", "rpm_algorand.pub"},
 		}
 	} else if checkCmdToolExists("yum") { // On CentOs7 we use the yum package manager
 		fmt.Println("Using yum package manager")
@@ -97,7 +99,9 @@ func installNodeLinux() {
 			{"yum", "install", "yum-utils"},
 			{"yum-config-manager", "--add-repo", "https://releases.algorand.com/rpm/stable/algorand.repo"},
 			{"yum", "install", "-y", "algorand-devtools"},
-			{"systemctl", "start", "algorand"},
+			{"systemctl", "enable", "algorand.service"},
+			{"systemctl", "start", "algorand.service"},
+			{"rm", "-f", "rpm_algorand.pub"},
 		}
 	} else {
 		fmt.Println("Unsupported package manager, possibly due to non-Debian or non-Red Hat based Linux distribution. Will attempt to install using updater script.")
@@ -133,12 +137,6 @@ func installNodeLinux() {
 
 func installNodeMac() {
 	fmt.Println("Installing Algod on macOS...")
-
-	// Check that we are calling with sudo
-	if !isRunningWithSudo() {
-		fmt.Println("This command must be run with super-user privileges (sudo).")
-		os.Exit(1)
-	}
 
 	// Homebrew is our package manager of choice
 	if !checkCmdToolExists("brew") {

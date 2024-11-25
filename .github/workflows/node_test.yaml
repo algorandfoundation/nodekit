@@ -1,0 +1,58 @@
+## This is a temporary flow, until we have our custom docker images that work with systemd for linux.
+## Once we have that, we can remove this and use docker containers in parallel, covering the various OS:es.
+
+name: Node Command OS-Matrix Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "cmd/**"
+  pull_request:
+    paths:
+      - "cmd/**"
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22
+      - name: Run Ubuntu commands
+        run: |
+          git clone https://github.com/algorandfoundation/hack-tui.git
+          cd hack-tui
+          go build .
+          sudo ./hack-tui node install
+          sudo ./hack-tui node start
+          systemctl status algorand.service
+          export TOKEN=$(cat /var/lib/algorand/algod.admin.token)
+          curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
+          sudo ./hack-tui node stop
+          sudo ./hack-tui node upgrade
+          # sudo ./hack-tui node configure
+          sudo ./hack-tui node uninstall
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Run MacOs commands
+        run: |
+          brew install go
+          cd ~/
+          git clone https://github.com/algorandfoundation/hack-tui.git
+          cd hack-tui
+          go build .
+          sudo ./hack-tui node install
+          sudo ./hack-tui node start
+          sudo launchctl print system/com.algorand.algod
+          sleep 5
+          export TOKEN=$(cat ~/.algorand/algod.admin.token)
+          curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
+          sudo ./hack-tui node stop
+          sudo ./hack-tui node upgrade
+          # sudo ./hack-tui node configure
+          sudo ./hack-tui node uninstall
