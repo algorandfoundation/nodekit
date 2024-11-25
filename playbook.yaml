@@ -1,0 +1,21 @@
+- name: Test Instance
+  hosts: localhost
+  tasks:
+    - name: Ensure algorun exists
+      stat:
+        path: /usr/bin/algorun
+      register: binpath
+    - name: Fail missing binary
+      fail:
+        msg: "Must have algorun installed!"
+      when: not binpath.stat.exists
+    - name: Run installer
+      command: algorun node install
+    - name: Run installer twice
+      command: algorun node install
+    - name: Run upgrade
+      command: algorun node upgrade
+    - name: Run stop
+      command: algorun node stop
+    - name: Run Start
+      command: algorun node start
