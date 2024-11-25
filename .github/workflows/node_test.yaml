@@ -14,14 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.22
       - name: Run Ubuntu commands
         run: |
-          git clone https://github.com/algorandfoundation/hack-tui.git
-          cd hack-tui
           go build .
           sudo ./hack-tui node install
           sudo ./hack-tui node start
@@ -36,12 +37,14 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        run: brew install go
+
       - name: Run MacOs commands
         run: |
-          brew install go
-          cd ~/
-          git clone https://github.com/algorandfoundation/hack-tui.git
-          cd hack-tui
           go build .
           sudo ./hack-tui node install
           sudo ./hack-tui node start
