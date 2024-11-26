@@ -1,16 +1,16 @@
 services:
-  ubuntu.22.04:
-    privileged: true
-    environment:
-      - GOCOVERDIR=/app/coverage/int/ubuntu/22.04
-    build:
-      context: .
-      target: jammy
-      dockerfile: .docker/Ubuntu.dockerfile
-    ports:
-      - "2222:22"
-    volumes:
-      - "./coverage/int/ubuntu/22.04:/app/coverage/int/ubuntu/22.04"
+#  ubuntu.22.04:
+#    privileged: true
+#    environment:
+#      - GOCOVERDIR=/app/coverage/int/ubuntu/22.04
+#    build:
+#      context: .
+#      target: jammy
+#      dockerfile: .docker/Ubuntu.dockerfile
+#    ports:
+#      - "2222:22"
+#    volumes:
+#      - "./coverage/int/ubuntu/22.04:/app/coverage/int/ubuntu/22.04"
   ubuntu.24.04:
     privileged: true
     environment:
@@ -23,18 +23,18 @@ services:
       - "2223:22"
     volumes:
       - "./coverage/int/ubuntu/24.04:/app/coverage/int/ubuntu/24.04"
-  fedora.39:
-    privileged: true
-    environment:
-      - GOCOVERDIR=/app/coverage/int/fedora/39
-    build:
-      context: .
-      target: legacy
-      dockerfile: .docker/Fedora.dockerfile
-    ports:
-      - "2224:22"
-    volumes:
-      - "./coverage/int/fedora/39:/app/coverage/int/fedora/39"
+#  fedora.39:
+#    privileged: true
+#    environment:
+#      - GOCOVERDIR=/app/coverage/int/fedora/39
+#    build:
+#      context: .
+#      target: legacy
+#      dockerfile: .docker/Fedora.dockerfile
+#    ports:
+#      - "2224:22"
+#    volumes:
+#      - "./coverage/int/fedora/39:/app/coverage/int/fedora/39"
   fedora.40:
     privileged: true
     environment:

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-docker compose -f docker-compose.integration.yaml build --no-cache
 docker compose -f docker-compose.integration.yaml up -d
 
 for testInstance in $(docker compose ps --services)

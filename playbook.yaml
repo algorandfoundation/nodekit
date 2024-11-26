@@ -19,3 +19,4 @@
       command: algorun node stop
     - name: Run Start
       command: algorun node start
+      # TODO: start a private network, fund TUI account and run TUI integration
