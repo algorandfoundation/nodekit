@@ -1,7 +1,9 @@
 package internal
 
 import (
+	"context"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal/test"
 	"github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +20,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 
-	addresses, rewardsPool, feeSink, err := getAddressesFromGenesis(client)
+	addresses, rewardsPool, feeSink, err := test.GetAddressesFromGenesis(context.Background(), client)
 
 	if err != nil {
 		t.Fatal(err)
