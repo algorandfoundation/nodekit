@@ -49,6 +49,10 @@ func GenerateKeyPair(
 		return nil, err
 	}
 	if key.StatusCode() != 200 {
+		status := key.Status()
+		if status != "" {
+			return nil, errors.New(status)
+		}
 		return nil, errors.New("something went wrong")
 	}
 	for {
@@ -112,7 +116,7 @@ func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (st
 	}
 
 	var query = ""
-	idx := url.QueryEscape("[0]")
+	encodedIndex := url.QueryEscape("[0]")
 	if offline {
 		query = fmt.Sprintf(
 			"type[0]=keyreg&sender[0]=%s",
@@ -131,5 +135,5 @@ func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (st
 			part.Key.VoteKeyDilution,
 		)
 	}
-	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", idx, -1)), nil
+	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
 }
