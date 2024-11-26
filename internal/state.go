@@ -16,8 +16,7 @@ type StateModel struct {
 	ParticipationKeys *[]api.ParticipationKey
 
 	// Application State
-	Admin  bool
-	Offset int
+	Admin bool
 
 	// TODO: handle contexts instead of adding it to state
 	Watching bool
