@@ -4,7 +4,7 @@ WORKDIR /app
 
 ADD . .
 
-RUN go build -cover -o ./bin/algorun *.go
+RUN CGO_ENABLED=0 go build -cover -o ./bin/algorun *.go
 
 
 FROM fedora:39 as legacy

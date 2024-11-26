@@ -1,5 +1,5 @@
 build:
-	go build -o bin/algorun *.go
+	CGO_ENABLED=0 go build -o bin/algorun *.go
 test:
 	go test -coverpkg=./... -covermode=atomic ./...
 generate:
