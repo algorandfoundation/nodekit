@@ -175,7 +175,7 @@ Algod is running in the background as a system-level service.
 
 func runHomebrewInstallCommandsAsUser(user string) error {
 	homebrewCmds := [][]string{
-		{"brew", "tap", "HashMapsData2Value/homebrew-tap"},
+		{"brew", "tap", "algorandfoundation/homebrew-node"},
 		{"brew", "install", "algorand"},
 		{"brew", "--prefix", "algorand", "--installed"},
 	}
