@@ -62,7 +62,7 @@ jobs:
         run: docker compose down
 
       - name: Integration tests
-        run: ./run_integration.sh
+        run: make integration
 
       - name: Combine coverage
         run: make combine-coverage
