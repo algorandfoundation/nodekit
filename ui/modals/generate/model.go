@@ -49,7 +49,7 @@ func (m ViewModel) SetAddress(address string) {
 }
 
 var DefaultControls = "( esc to cancel )"
-var DefaultTitle = "Generate Participation Keys"
+var DefaultTitle = "Generate Consensus Participation Keys"
 var DefaultBorderColor = "2"
 
 func New(address string, state *internal.StateModel) *ViewModel {
