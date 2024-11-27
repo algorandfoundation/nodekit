@@ -75,7 +75,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "g":
 			// Only open modal when it is closed and not syncing
-			if !m.modal.Open && m.Data.Status.State != internal.SyncingState && m.Data.Metrics.RoundTime > 0 {
+			if !m.modal.Open && m.Data.Status.State == internal.StableState && m.Data.Metrics.RoundTime > 0 {
 				address := ""
 				selected := m.accountsPage.SelectedAccount()
 				if selected != nil {
@@ -86,7 +86,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Address: address,
 					Type:    app.GenerateModal,
 				})
-			} else if m.Data.Status.State == internal.SyncingState || m.Data.Metrics.RoundTime == 0 {
+			} else if m.Data.Status.State != internal.StableState || m.Data.Metrics.RoundTime == 0 {
 				genErr := errors.New("Please wait for more data to sync before generating a key")
 				m.modal, cmd = m.modal.HandleMessage(genErr)
 				cmds = append(cmds, cmd)
@@ -124,10 +124,10 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		m.PageWidth = msg.Width
-		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView())-1)
+		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
 
 		modalMsg := tea.WindowSizeMsg{
-			Width:  m.PageWidth - 2,
+			Width:  m.PageWidth,
 			Height: m.PageHeight,
 		}
 

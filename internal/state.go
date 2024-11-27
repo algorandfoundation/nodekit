@@ -52,6 +52,16 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if !s.Watching {
 			break
 		}
+
+		if s.Status.State == FastCatchupState {
+			time.Sleep(time.Second * 10)
+			err := s.Status.Fetch(ctx, client, new(HttpPkg))
+			if err != nil {
+				cb(nil, err)
+			}
+			continue
+		}
+
 		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
 		s.waitAfterError(err, cb)
 		if err != nil {
@@ -65,7 +75,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Status.State = "Unknown"
 
 		// Update Status
-		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.UpgradeNodeVote)
+		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.CatchpointAcquiredBlocks, status.JSON200.UpgradeNodeVote)
 
 		// Fetch Keys
 		s.UpdateKeys()

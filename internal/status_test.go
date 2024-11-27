@@ -14,7 +14,7 @@ func Test_StatusModel(t *testing.T) {
 	}
 
 	stale := true
-	m.Update(5, 10, &stale)
+	m.Update(5, 10, nil, &stale)
 
 	if m.LastRound != 5 {
 		t.Errorf("expected LastRound: 5, got %d", m.LastRound)
@@ -23,7 +23,7 @@ func Test_StatusModel(t *testing.T) {
 		t.Errorf("expected State: %s, got %s", SyncingState, m.State)
 	}
 
-	m.Update(10, 0, &stale)
+	m.Update(10, 0, nil, &stale)
 	if m.LastRound != 10 {
 		t.Errorf("expected LastRound: 10, got %d", m.LastRound)
 	}
