@@ -1,12 +1,12 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/modal"
-	"github.com/algorandfoundation/hack-tui/ui/modals/exception"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
 	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,10 +31,6 @@ type ViewportViewModel struct {
 	modal  *modal.ViewModel
 	page   app.Page
 	client api.ClientWithResponsesInterface
-
-	// Error Handler
-	errorMsg  *string
-	errorPage *exception.ViewModel
 }
 
 // Init is a no-op
@@ -90,6 +86,11 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Address: address,
 					Type:    app.GenerateModal,
 				})
+			} else if m.Data.Status.State == internal.SyncingState || m.Data.Metrics.RoundTime == 0 {
+				genErr := errors.New("Please wait for more data to sync before generating a key")
+				m.modal, cmd = m.modal.HandleMessage(genErr)
+				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
 			}
 
 		case "left":
@@ -225,8 +226,6 @@ func NewViewportViewModel(state *internal.StateModel, client api.ClientWithRespo
 		page: app.AccountsPage,
 		// RPC client
 		client: client,
-
-		errorPage: exception.New(""),
 	}
 
 	return &m, nil
