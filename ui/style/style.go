@@ -104,8 +104,28 @@ func WithOverlay(overlay string, view string) string {
 	row -= lipgloss.Height(overlay) / 2
 	col := lipgloss.Width(view) / 2
 	col -= lipgloss.Width(overlay) / 2
+
+	// Display the terminal resize
 	if col < 0 || row < 0 {
-		return view
+		overlayText := "Resize terminal to see overlay"
+		overlay = WithNavigation("( esc )", WithTitle("Screen Size",
+			ApplyBorder(
+				lipgloss.Width(overlayText)+4,
+				lipgloss.Height(overlayText)+2,
+				"1",
+			).Padding(1).Render(overlayText),
+		),
+		)
+		overlayLines = strings.Split(overlay, "\n")
+		row = lipgloss.Height(view) / 2
+		row -= lipgloss.Height(overlay) / 2
+		col = lipgloss.Width(view) / 2
+		col -= lipgloss.Width(overlay) / 2
+
+		// If it is still too small, just return the text
+		if col < 0 || row < 0 {
+			return overlayText
+		}
 	}
 
 	for i, overlayLine := range overlayLines {
