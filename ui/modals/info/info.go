@@ -93,14 +93,18 @@ func (m ViewModel) View() string {
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
 
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
+		"",
 		account,
 		id,
+		"",
 		selection,
 		vote,
 		stateProof,
+		"",
 		voteFirstValid,
 		voteLastValid,
 		voteKeyDilution,
+		"",
 	), m.Width, true)
 
 }

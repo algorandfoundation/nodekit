@@ -11,8 +11,8 @@ import (
 type Title string
 
 const (
-	OnlineTitle  Title = "Online Transaction"
-	OfflineTitle Title = "Offline Transaction"
+	OnlineTitle  Title = "Register Online"
+	OfflineTitle Title = "Register Offline"
 )
 
 func (m ViewModel) Init() tea.Cmd {

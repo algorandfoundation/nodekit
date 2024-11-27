@@ -29,6 +29,7 @@ func (m ViewModel) View() string {
 	case WaitingStep:
 		render = lipgloss.JoinVertical(lipgloss.Left,
 			"Generating Participation Keys...",
+			"",
 			"Please wait. This operation can take a few minutes.")
 	}
 
