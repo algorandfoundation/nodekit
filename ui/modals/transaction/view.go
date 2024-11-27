@@ -27,7 +27,7 @@ func (m ViewModel) View() string {
 	} else {
 		verb = "register"
 	}
-	intro := "Sign this transaction to "+verb+" your account keys:"
+	intro := "Sign this transaction to " + verb + " your account keys:"
 
 	link, _ := internal.ToLoraDeepLink(m.State.Status.Network, m.Active, *m.Participation)
 	loraText := lipgloss.JoinHorizontal(
