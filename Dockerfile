@@ -4,7 +4,7 @@ WORKDIR /app
 
 ADD . .
 
-RUN go build -o ./bin/algorun *.go
+RUN CGO_ENABLED=0 go build -o ./bin/algorun *.go
 
 FROM algorand/algod:latest
 
