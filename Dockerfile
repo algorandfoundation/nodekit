@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm as BUILDER
+FROM golang:1.23-bookworm AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ ADD .docker/start_dev.sh /node/run/start_dev.sh
 ADD .docker/start_empty.sh /node/run/start_empty.sh
 ADD .docker/start_fast_catchup.sh /node/run/start_fast_catchup.sh
 
-COPY --from=BUILDER /app/bin/algorun /bin/algorun
+COPY --from=builder /app/bin/algorun /bin/algorun
 
 RUN apt-get update && apt-get install jq -y
 
