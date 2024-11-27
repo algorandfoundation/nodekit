@@ -30,8 +30,8 @@ var statusCmd = &cobra.Command{
 		state := internal.StateModel{
 			Status: internal.StatusModel{
 				State:       "SYNCING",
-				Version:     "NA",
-				Network:     "NA",
+				Version:     "N/A",
+				Network:     "N/A",
 				Voting:      false,
 				NeedsUpdate: true,
 				LastRound:   0,

@@ -83,7 +83,7 @@ func (m ViewModel) makeRows() *[]table.Row {
 			expires = "SYNCING"
 		}
 		if !m.Data.Accounts[key].Expires.After(time.Now().Add(-(time.Hour * 24 * 365 * 50))) {
-			expires = "NA"
+			expires = "N/A"
 		}
 		rows = append(rows, table.Row{
 			m.Data.Accounts[key].Address,

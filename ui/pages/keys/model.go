@@ -131,7 +131,7 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
 	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
-			isActive := "NA"
+			isActive := "N/A"
 			if activeId != nil && *activeId == key.Id {
 				isActive = "YES"
 			}

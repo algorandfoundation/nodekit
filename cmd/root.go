@@ -62,8 +62,8 @@ var (
 			state := internal.StateModel{
 				Status: internal.StatusModel{
 					State:       "INITIALIZING",
-					Version:     "NA",
-					Network:     "NA",
+					Version:     "N/A",
+					Network:     "N/A",
 					Voting:      false,
 					NeedsUpdate: true,
 					LastRound:   0,

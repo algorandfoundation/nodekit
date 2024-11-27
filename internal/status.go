@@ -42,7 +42,7 @@ func (m *StatusModel) Update(lastRound int, catchupTime int, upgradeNodeVote *bo
 
 // Fetch handles algod.Status
 func (m *StatusModel) Fetch(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg HttpPkgInterface) error {
-	if m.Version == "" || m.Version == "NA" {
+	if m.Version == "" || m.Version == "N/A" {
 		v, err := client.GetVersionWithResponse(ctx)
 		if err != nil {
 			return err
