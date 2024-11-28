@@ -52,18 +52,18 @@ var (
 			client, err := getClient()
 			cobra.CheckErr(err)
 
-			partkeys, err := internal.GetPartKeys(context.Background(), client)
+			ctx := context.Background()
+			partkeys, err := internal.GetPartKeys(ctx, client)
 			if err != nil {
 				return fmt.Errorf(
 					style.Red.Render("failed to get participation keys: %s"),
 					err)
 			}
-
 			state := internal.StateModel{
 				Status: internal.StatusModel{
 					State:       "INITIALIZING",
-					Version:     "NA",
-					Network:     "NA",
+					Version:     "N/A",
+					Network:     "N/A",
 					Voting:      false,
 					NeedsUpdate: true,
 					LastRound:   0,
@@ -75,14 +75,17 @@ var (
 					TX:        0,
 				},
 				ParticipationKeys: partkeys,
+
+				Client:  client,
+				Context: ctx,
 			}
 			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
 
 			// Fetch current state
-			err = state.Status.Fetch(context.Background(), client)
+			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
 			cobra.CheckErr(err)
 
-			m, err := ui.MakeViewportViewModel(&state, client)
+			m, err := ui.NewViewportViewModel(&state, client)
 			cobra.CheckErr(err)
 
 			p := tea.NewProgram(
@@ -99,12 +102,9 @@ var (
 						p.Send(state)
 						p.Send(err)
 					}
-				}, context.Background(), client)
+				}, ctx, client)
 			}()
 			_, err = p.Run()
-			//for {
-			//	time.Sleep(10 * time.Second)
-			//}
 			return err
 		},
 	}

@@ -9,13 +9,21 @@ import (
 )
 
 type StateModel struct {
+	// Models
 	Status            StatusModel
 	Metrics           MetricsModel
 	Accounts          map[string]Account
 	ParticipationKeys *[]api.ParticipationKey
+
+	// Application State
+	Admin bool
+
 	// TODO: handle contexts instead of adding it to state
-	Admin    bool
 	Watching bool
+
+	// RPC
+	Client  api.ClientWithResponsesInterface
+	Context context.Context
 }
 
 func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err error)) {
@@ -27,13 +35,13 @@ func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err er
 }
 
 // TODO: allow context to handle loop
-func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client api.ClientWithResponsesInterface) {
 	s.Watching = true
 	if s.Metrics.Window == 0 {
 		s.Metrics.Window = 100
 	}
 
-	err := s.Status.Fetch(ctx, client)
+	err := s.Status.Fetch(ctx, client, new(HttpPkg))
 	if err != nil {
 		cb(nil, err)
 	}
@@ -44,6 +52,16 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if !s.Watching {
 			break
 		}
+
+		if s.Status.State == FastCatchupState {
+			time.Sleep(time.Second * 10)
+			err := s.Status.Fetch(ctx, client, new(HttpPkg))
+			if err != nil {
+				cb(nil, err)
+			}
+			continue
+		}
+
 		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
 		s.waitAfterError(err, cb)
 		if err != nil {
@@ -57,18 +75,18 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Status.State = "Unknown"
 
 		// Update Status
-		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.UpgradeNodeVote)
+		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.CatchpointAcquiredBlocks, status.JSON200.UpgradeNodeVote)
 
 		// Fetch Keys
-		s.UpdateKeys(ctx, client)
+		s.UpdateKeys()
 
-		if s.Status.State == "SYNCING" {
+		if s.Status.State == SyncingState {
 			lastRound = s.Status.LastRound
 			cb(s, nil)
 			continue
 		}
 		// Run Round Averages and RX/TX every 5 rounds
-		if s.Status.LastRound%5 == 0 {
+		if s.Status.LastRound%5 == 0 || (s.Status.LastRound > 100 && s.Metrics.RoundTime.Seconds() == 0) {
 			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
 			s.waitAfterError(err, cb)
 			if err != nil {
@@ -88,7 +106,7 @@ func (s *StateModel) Stop() {
 	s.Watching = false
 }
 
-func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client api.ClientWithResponsesInterface) {
 	// Fetch RX/TX
 	res, err := GetMetrics(ctx, client)
 	if err != nil {
@@ -107,18 +125,18 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client *api.Clien
 		s.Metrics.LastRX = res["algod_network_received_bytes_total"]
 	}
 }
-func (s *StateModel) UpdateAccounts(client *api.ClientWithResponses) {
-	s.Accounts = AccountsFromState(s, new(Clock), client)
+func (s *StateModel) UpdateAccounts() {
+	s.Accounts = AccountsFromState(s, new(Clock), s.Client)
 }
 
-func (s *StateModel) UpdateKeys(ctx context.Context, client *api.ClientWithResponses) {
+func (s *StateModel) UpdateKeys() {
 	var err error
-	s.ParticipationKeys, err = GetPartKeys(ctx, client)
+	s.ParticipationKeys, err = GetPartKeys(s.Context, s.Client)
 	if err != nil {
 		s.Admin = false
 	}
 	if err == nil {
 		s.Admin = true
-		s.UpdateAccounts(client)
+		s.UpdateAccounts()
 	}
 }

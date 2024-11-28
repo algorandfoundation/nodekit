@@ -12,22 +12,27 @@ import (
 )
 
 type ViewModel struct {
-	Width  int
-	Height int
-	Data   *internal.StateModel
+	Data *internal.StateModel
 
-	table      table.Model
-	navigation string
-	controls   string
+	Title       string
+	Navigation  string
+	Controls    string
+	BorderColor string
+	Width       int
+	Height      int
+
+	table table.Model
 }
 
 func New(state *internal.StateModel) ViewModel {
 	m := ViewModel{
-		Width:      0,
-		Height:     0,
-		Data:       state,
-		controls:   "( (g)enerate )",
-		navigation: "| " + style.Green.Render("(a)ccounts") + " | (k)eys | (t)xn |",
+		Title:       "Accounts",
+		Width:       0,
+		Height:      0,
+		BorderColor: "6",
+		Data:        state,
+		Controls:    "( (g)enerate )",
+		Navigation:  "| " + style.Green.Render("accounts") + " | keys |",
 	}
 
 	m.table = table.New(
@@ -43,22 +48,23 @@ func New(state *internal.StateModel) ViewModel {
 		Bold(false)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Background(lipgloss.Color(m.BorderColor)).
 		Bold(false)
 	m.table.SetStyles(s)
 	return m
 }
 
-func (m ViewModel) SelectedAccount() internal.Account {
-	var account internal.Account
+func (m ViewModel) SelectedAccount() *internal.Account {
+	var account *internal.Account
 	var selectedRow = m.table.SelectedRow()
 	if selectedRow != nil {
-		account = m.Data.Accounts[selectedRow[0]]
+		selectedAccount := m.Data.Accounts[selectedRow[0]]
+		account = &selectedAccount
 	}
 	return account
 }
 func (m ViewModel) makeColumns(width int) []table.Column {
-	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 5
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 9) / 5
 	return []table.Column{
 		{Title: "Account", Width: avgWidth},
 		{Title: "Keys", Width: avgWidth},
@@ -72,12 +78,12 @@ func (m ViewModel) makeRows() *[]table.Row {
 	rows := make([]table.Row, 0)
 
 	for key := range m.Data.Accounts {
-		expires := m.Data.Accounts[key].Expires.String()
-		if m.Data.Status.State == "SYNCING" {
+		expires := m.Data.Accounts[key].Expires.Format(time.RFC822)
+		if m.Data.Status.State != internal.StableState {
 			expires = "SYNCING"
 		}
 		if !m.Data.Accounts[key].Expires.After(time.Now().Add(-(time.Hour * 24 * 365 * 50))) {
-			expires = "NA"
+			expires = "N/A"
 		}
 		rows = append(rows, table.Row{
 			m.Data.Accounts[key].Address,

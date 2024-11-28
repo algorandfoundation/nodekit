@@ -21,7 +21,7 @@ func Test_StateModel(t *testing.T) {
 		Status: StatusModel{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       "SYNCING",
+			State:       SyncingState,
 		},
 		Metrics: MetricsModel{
 			RoundTime: 0,
@@ -29,6 +29,8 @@ func Test_StateModel(t *testing.T) {
 			RX:        0,
 			TPS:       0,
 		},
+		Client:  client,
+		Context: context.Background(),
 	}
 	count := 0
 	go state.Watch(func(model *StateModel, err error) {

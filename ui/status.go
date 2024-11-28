@@ -45,6 +45,7 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	return m, nil
 }
 
+// getBitRate converts a given byte rate to a human-readable string format. The output may vary from B/s to GB/s.
 func getBitRate(bytes int) string {
 	txString := fmt.Sprintf("%d B/s ", bytes)
 	if bytes >= 1024 {
@@ -79,14 +80,21 @@ func (m StatusViewModel) View() string {
 		size = m.TerminalWidth / 2
 	}
 	beginning := style.Blue.Render(" Latest Round: ") + strconv.Itoa(int(m.Data.Status.LastRound))
-	end := style.Yellow.Render(strings.ToUpper(m.Data.Status.State)) + " "
+
+	var end string
+	switch m.Data.Status.State {
+	case internal.StableState:
+		end = style.Green.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
+	default:
+		end = style.Yellow.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
+	}
 	middle := strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
-	if m.Data.Status.State == "SYNCING" {
+	if m.Data.Status.State != internal.StableState {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
@@ -96,7 +104,7 @@ func (m StatusViewModel) View() string {
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
-	if m.Data.Status.State == "SYNCING" {
+	if m.Data.Status.State != internal.StableState {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps

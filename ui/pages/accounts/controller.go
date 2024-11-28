@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -16,9 +17,6 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
 	case internal.StateModel:
 		m.Data = &msg
@@ -27,12 +25,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			selAcc := m.SelectedAccount()
-			if selAcc != (internal.Account{}) {
-				return m, EmitAccountSelected(selAcc)
+			if selAcc != nil {
+				var cmds []tea.Cmd
+				cmds = append(cmds, app.EmitAccountSelected(*selAcc))
+				cmds = append(cmds, app.EmitShowPage(app.KeysPage))
+				return m, tea.Batch(cmds...)
 			}
 			return m, nil
-		case "ctrl+c":
-			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
 		borderRender := style.Border.Render("")
@@ -47,7 +46,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetColumns(m.makeColumns(m.Width))
 	}
 
-	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
+	// Handle Table Update
+	m.table, _ = m.table.Update(msg)
+
+	return m, nil
 }

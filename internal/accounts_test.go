@@ -1,16 +1,15 @@
 package internal
 
 import (
+	"context"
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/hack-tui/internal/test"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
-
-type TestClock struct{}
-
-func (TestClock) Now() time.Time { return time.Time{} }
 
 func Test_AccountsFromState(t *testing.T) {
 
@@ -21,7 +20,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
 
-	addresses, rewardsPool, feeSink, err := getAddressesFromGenesis(client)
+	addresses, rewardsPool, feeSink, err := test.GetAddressesFromGenesis(context.Background(), client)
 
 	if err != nil {
 		t.Fatal(err)
@@ -67,7 +66,7 @@ func Test_AccountsFromState(t *testing.T) {
 
 	effectiveFirstValid := 0
 	effectiveLastValid := 10000
-
+	lastProposedRound := 1336
 	// Create mockedPart Keys
 	var mockedPartKeys = []api.ParticipationKey{
 		{
@@ -83,7 +82,7 @@ func Test_AccountsFromState(t *testing.T) {
 				VoteLastValid:             9999999,
 				VoteKeyDilution:           0,
 			},
-			LastBlockProposal: nil,
+			LastBlockProposal: &lastProposedRound,
 			LastStateProof:    nil,
 			LastVote:          nil,
 		},
@@ -117,7 +116,7 @@ func Test_AccountsFromState(t *testing.T) {
 				VoteLastValid:             9999999,
 				VoteKeyDilution:           0,
 			},
-			LastBlockProposal: nil,
+			LastBlockProposal: &lastProposedRound,
 			LastStateProof:    nil,
 			LastVote:          nil,
 		},
@@ -145,7 +144,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 
 	// Calculate expiration
-	clock := new(TestClock)
+	clock := new(mock.Clock)
 	now := clock.Now()
 	roundDiff := max(0, effectiveLastValid-int(state.Status.LastRound))
 	distance := int(state.Metrics.RoundTime) * roundDiff
@@ -154,18 +153,20 @@ func Test_AccountsFromState(t *testing.T) {
 	// Construct expected accounts
 	expectedAccounts := map[string]Account{
 		onlineAccounts[0].Address: {
-			Address: onlineAccounts[0].Address,
-			Status:  onlineAccounts[0].Status,
-			Balance: onlineAccounts[0].Amount / 1_000_000,
-			Keys:    2,
-			Expires: expires,
+			Participation: onlineAccounts[0].Participation,
+			Address:       onlineAccounts[0].Address,
+			Status:        onlineAccounts[0].Status,
+			Balance:       onlineAccounts[0].Amount / 1_000_000,
+			Keys:          2,
+			Expires:       expires,
 		},
 		onlineAccounts[1].Address: {
-			Address: onlineAccounts[1].Address,
-			Status:  onlineAccounts[1].Status,
-			Balance: onlineAccounts[1].Amount / 1_000_000,
-			Keys:    1,
-			Expires: expires,
+			Participation: onlineAccounts[1].Participation,
+			Address:       onlineAccounts[1].Address,
+			Status:        onlineAccounts[1].Status,
+			Balance:       onlineAccounts[1].Amount / 1_000_000,
+			Keys:          1,
+			Expires:       expires,
 		},
 	}
 

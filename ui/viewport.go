@@ -1,29 +1,19 @@
 package ui
 
 import (
-	"context"
+	"errors"
 	"fmt"
-
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
+	"github.com/algorandfoundation/hack-tui/ui/modal"
 	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
-	"github.com/algorandfoundation/hack-tui/ui/pages/generate"
 	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
-	"github.com/algorandfoundation/hack-tui/ui/pages/transaction"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type ViewportPage string
-
-const (
-	AccountsPage    ViewportPage = "accounts"
-	KeysPage        ViewportPage = "keys"
-	GeneratePage    ViewportPage = "generate"
-	TransactionPage ViewportPage = "transaction"
-	ErrorPage       ViewportPage = "error"
-)
-
+// ViewportViewModel represents the state and view model for a viewport in the application.
 type ViewportViewModel struct {
 	PageWidth, PageHeight         int
 	TerminalWidth, TerminalHeight int
@@ -35,32 +25,17 @@ type ViewportViewModel struct {
 	protocol ProtocolViewModel
 
 	// Pages
-	accountsPage    accounts.ViewModel
-	keysPage        keys.ViewModel
-	generatePage    generate.ViewModel
-	transactionPage transaction.ViewModel
+	accountsPage accounts.ViewModel
+	keysPage     keys.ViewModel
 
-	page   ViewportPage
-	client *api.ClientWithResponses
-
-	// Error Handler
-	errorMsg  *string
-	errorPage ErrorViewModel
-}
-
-func DeleteKey(client *api.ClientWithResponses, key keys.DeleteKey) tea.Cmd {
-	return func() tea.Msg {
-		err := internal.DeletePartKey(context.Background(), client, key.Id)
-		if err != nil {
-			return keys.DeleteFinished(err.Error())
-		}
-		return keys.DeleteFinished(key.Id)
-	}
+	modal  *modal.ViewModel
+	page   app.Page
+	client api.ClientWithResponsesInterface
 }
 
 // Init is a no-op
 func (m ViewportViewModel) Init() tea.Cmd {
-	return nil
+	return m.modal.Init()
 }
 
 // Update Handle the viewport lifecycle
@@ -76,105 +51,88 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
-	case generate.Cancel:
-		m.page = AccountsPage
-		return m, nil
-	case error:
-		strMsg := msg.Error()
-		m.errorMsg = &strMsg
+	case app.Page:
+		if msg == app.KeysPage {
+			m.keysPage.Address = m.accountsPage.SelectedAccount().Address
+		}
+		m.page = msg
 	// When the state updates
 	case internal.StateModel:
-		if m.errorMsg != nil {
-			m.errorMsg = nil
-			m.page = AccountsPage
-		}
 		m.Data = &msg
-		// Navigate to the transaction page when a partkey is selected
-	case *api.ParticipationKey:
-		m.page = TransactionPage
-	// Navigate to the keys page when an account is selected
-	case internal.Account:
-		m.page = KeysPage
-	case keys.DeleteKey:
-		return m, DeleteKey(m.client, msg)
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+		m.modal, cmd = m.modal.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+		return m, tea.Batch(cmds...)
+	case app.DeleteFinished:
+		if len(m.keysPage.Rows()) <= 1 {
+			cmd = app.EmitShowPage(app.AccountsPage)
+			cmds = append(cmds, cmd)
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
-		// Tab Backwards
-		case "shift+tab":
-			if m.page == AccountsPage {
-				return m, nil
-			}
-			if m.page == TransactionPage {
-				return m, accounts.EmitAccountSelected(m.accountsPage.SelectedAccount())
-			}
-			if m.page == KeysPage {
-				m.page = AccountsPage
-				return m, nil
-			}
-		// Tab Forwards
-		case "tab":
-			if m.page == AccountsPage {
-				selAcc := m.accountsPage.SelectedAccount()
-				if selAcc != (internal.Account{}) {
-					m.page = KeysPage
-					return m, accounts.EmitAccountSelected(selAcc)
-				}
-				return m, nil
-			}
-			if m.page == KeysPage {
-				selKey := m.keysPage.SelectedKey()
-				if selKey != nil && m.Data.Status.State != "SYNCING" {
-					m.page = TransactionPage
-					return m, keys.EmitKeySelected(selKey)
-				}
-			}
-			return m, nil
-		case "a":
-			m.page = AccountsPage
 		case "g":
-			m.generatePage.Inputs[0].SetValue(m.accountsPage.SelectedAccount().Address)
-			m.page = GeneratePage
-			return m, nil
-		case "k":
-			selAcc := m.accountsPage.SelectedAccount()
-			if selAcc != (internal.Account{}) {
-				m.page = KeysPage
-				return m, accounts.EmitAccountSelected(selAcc)
+			// Only open modal when it is closed and not syncing
+			if !m.modal.Open && m.Data.Status.State == internal.StableState && m.Data.Metrics.RoundTime > 0 {
+				address := ""
+				selected := m.accountsPage.SelectedAccount()
+				if selected != nil {
+					address = selected.Address
+				}
+				return m, app.EmitModalEvent(app.ModalEvent{
+					Key:     nil,
+					Address: address,
+					Type:    app.GenerateModal,
+				})
+			} else if m.Data.Status.State != internal.StableState || m.Data.Metrics.RoundTime == 0 {
+				genErr := errors.New("Please wait for more data to sync before generating a key")
+				m.modal, cmd = m.modal.HandleMessage(genErr)
+				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
 			}
-			return m, nil
-		case "t":
-			if m.Data.Status.State != "SYNCING" {
 
-				if m.page == AccountsPage {
-					acct := m.accountsPage.SelectedAccount()
-					data := *m.Data.ParticipationKeys
-					for i, key := range data {
-						if key.Address == acct.Address {
-							m.page = TransactionPage
-							return m, keys.EmitKeySelected(&data[i])
-						}
-					}
+		case "left":
+			// Disable when overlay is active or on Accounts
+			if m.modal.Open || m.page == app.AccountsPage {
+				return m, nil
+			}
+			// Navigate to the Keys Page
+			if m.page == app.KeysPage {
+				return m, app.EmitShowPage(app.AccountsPage)
+			}
+		case "right":
+			// Disable when overlay is active
+			if m.modal.Open {
+				return m, nil
+			}
+			if m.page == app.AccountsPage {
+				selAcc := m.accountsPage.SelectedAccount()
+				if selAcc != nil {
+					m.page = app.KeysPage
+					return m, app.EmitAccountSelected(*selAcc)
 				}
-				if m.page == KeysPage {
-					selKey := m.keysPage.SelectedKey()
-					if selKey != nil {
-						m.page = TransactionPage
-						return m, keys.EmitKeySelected(selKey)
-					}
-				}
+				return m, nil
 			}
 			return m, nil
 		case "ctrl+c":
-			if m.page != GeneratePage {
-				return m, tea.Quit
-			}
+			return m, tea.Quit
 		}
 
 	case tea.WindowSizeMsg:
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		m.PageWidth = msg.Width
-		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView())-1)
+		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
+
+		modalMsg := tea.WindowSizeMsg{
+			Width:  m.PageWidth,
+			Height: m.PageHeight,
+		}
+
+		m.modal, cmd = m.modal.HandleMessage(modalMsg)
+		cmds = append(cmds, cmd)
 
 		// Custom size message
 		pageMsg := tea.WindowSizeMsg{
@@ -189,64 +147,47 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
 
-		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
-		cmds = append(cmds, cmd)
-
-		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
-		cmds = append(cmds, cmd)
-
-		m.errorPage, cmd = m.errorPage.HandleMessage(pageMsg)
-		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
 		return m, tea.Batch(cmds...)
+	}
 
+	// Ignore commands while open
+	if !m.modal.Open {
+		// Get Page Updates
+		switch m.page {
+		case app.AccountsPage:
+			m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+		case app.KeysPage:
+			m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+		}
+		cmds = append(cmds, cmd)
 	}
-	// Get Page Updates
-	switch m.page {
-	case AccountsPage:
-		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
-	case KeysPage:
-		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
-	case GeneratePage:
-		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
-	case TransactionPage:
-		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
-	case ErrorPage:
-		m.errorPage, cmd = m.errorPage.HandleMessage(msg)
-	}
+
+	// Run Modal Updates Last,
+	// This ensures Page Behavior is checked before mutating modal state
+	m.modal, cmd = m.modal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
 // View renders the viewport.Model
 func (m ViewportViewModel) View() string {
-	errMsg := m.errorMsg
-
-	if errMsg != nil {
-		m.errorPage.Message = *errMsg
-		m.page = ErrorPage
-	}
 
 	// Handle Page render
 	var page tea.Model
 	switch m.page {
-	case AccountsPage:
+	case app.AccountsPage:
 		page = m.accountsPage
-	case GeneratePage:
-		page = m.generatePage
-	case KeysPage:
+	case app.KeysPage:
 		page = m.keysPage
-	case TransactionPage:
-		page = m.transactionPage
-	case ErrorPage:
-		page = m.errorPage
 	}
 
 	if page == nil {
 		return "Error loading page..."
 	}
 
-	return fmt.Sprintf("%s\n%s", m.headerView(), page.View())
+	m.modal.Parent = fmt.Sprintf("%s\n%s", m.headerView(), page.View())
+	return m.modal.View()
 }
 
 // headerView generates the top elements
@@ -265,8 +206,8 @@ func (m ViewportViewModel) headerView() string {
 	return lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
 }
 
-// MakeViewportViewModel handles the construction of the TUI viewport
-func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithResponses) (*ViewportViewModel, error) {
+// NewViewportViewModel handles the construction of the TUI viewport
+func NewViewportViewModel(state *internal.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 
@@ -275,17 +216,16 @@ func MakeViewportViewModel(state *internal.StateModel, client *api.ClientWithRes
 		protocol: MakeProtocolViewModel(state),
 
 		// Pages
-		accountsPage:    accounts.New(state),
-		keysPage:        keys.New("", state.ParticipationKeys),
-		generatePage:    generate.New("", client),
-		transactionPage: transaction.New(state),
+		accountsPage: accounts.New(state),
+		keysPage:     keys.New("", state.ParticipationKeys),
+
+		// Modal
+		modal: modal.New("", false, state),
 
 		// Current Page
-		page: AccountsPage,
+		page: app.AccountsPage,
 		// RPC client
 		client: client,
-
-		errorPage: NewErrorViewModel(""),
 	}
 
 	return &m, nil

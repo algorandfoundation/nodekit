@@ -5,13 +5,17 @@ import (
 )
 
 func (m ViewModel) View() string {
-	table := style.ApplyBorder(m.Width, m.Height, "8").Render(m.table.View())
+	table := style.ApplyBorder(m.Width, m.Height, m.BorderColor).Render(m.table.View())
+	ctls := m.Controls
+	if m.Data.Status.LastRound < uint64(m.Data.Metrics.Window) {
+		ctls = "( Insufficient Data )"
+	}
 	return style.WithNavigation(
-		m.navigation,
+		m.Navigation,
 		style.WithControls(
-			m.controls,
+			ctls,
 			style.WithTitle(
-				"Accounts",
+				m.Title,
 				table,
 			),
 		),

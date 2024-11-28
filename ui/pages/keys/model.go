@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"github.com/algorandfoundation/hack-tui/internal"
 	"sort"
 
 	"github.com/algorandfoundation/hack-tui/ui/style"
@@ -11,39 +12,61 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// ViewModel represents the view state and logic for managing participation keys.
 type ViewModel struct {
+	// Address for or the filter condition in ViewModel.
 	Address string
-	Data    *[]api.ParticipationKey
-	Width   int
-	Height  int
+	// Participation represents the consensus protocol parameters used by this account.
+	Participation *api.AccountParticipation
 
-	SelectedKeyToDelete *api.ParticipationKey
+	// Data holds a pointer to a slice of ParticipationKey, representing the set of participation keys managed by the ViewModel.
+	Data *[]api.ParticipationKey
 
-	table      table.Model
-	controls   string
-	navigation string
+	// Title represents the title displayed at the top of the ViewModel's UI.
+	Title string
+	// Controls describe the set of actions or commands available for the user to interact with the ViewModel.
+	Controls string
+	// Navigation represents the navigation bar or breadcrumbs in the ViewModel's UI, indicating the current page or section.
+	Navigation string
+	// BorderColor represents the color of the border in the ViewModel's UI.
+	BorderColor string
+	// Width represents the width of the ViewModel's UI in terms of display units.
+	Width int
+	// Height represents the height of the ViewModel's UI in terms of display units.
+	Height int
+
+	// table manages the tabular representation of participation keys in the ViewModel.
+	table table.Model
 }
 
+// New initializes and returns a new ViewModel for managing participation keys.
 func New(address string, keys *[]api.ParticipationKey) ViewModel {
 	m := ViewModel{
+		// State
 		Address: address,
 		Data:    keys,
-		Width:   80,
-		Height:  24,
 
-		controls:   "( (g)enerate | (d)elete )",
-		navigation: "| (a)ccounts | " + style.Green.Render("(k)eys") + " | (t)xn |",
+		// Sizing
+		Width:  0,
+		Height: 0,
 
-		table: table.New(),
+		// Page Wrapper
+		Title:       "Keys",
+		Controls:    "( (g)enerate )",
+		Navigation:  "| accounts | " + style.Green.Render("keys") + " |",
+		BorderColor: "4",
 	}
+
+	// Create Table
 	m.table = table.New(
 		table.WithColumns(m.makeColumns(80)),
-		table.WithRows(m.makeRows(keys)),
+		table.WithRows(*m.makeRows(keys)),
 		table.WithFocused(true),
 		table.WithHeight(m.Height),
 		table.WithWidth(m.Width),
 	)
 
+	// Style Table
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
@@ -52,76 +75,77 @@ func New(address string, keys *[]api.ParticipationKey) ViewModel {
 		Bold(false)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Background(lipgloss.Color(m.BorderColor)).
 		Bold(false)
 	m.table.SetStyles(s)
 
 	return m
 }
+func (m *ViewModel) Rows() []table.Row {
+	return m.table.Rows()
+}
 
-func (m ViewModel) SelectedKey() *api.ParticipationKey {
+// SelectedKey returns the currently selected participation key from the ViewModel's data set, or nil if no key is selected.
+func (m ViewModel) SelectedKey() (*api.ParticipationKey, bool) {
 	if m.Data == nil {
-		return nil
+		return nil, false
 	}
 	var partkey *api.ParticipationKey
+	var active bool
+	selected := m.table.SelectedRow()
 	for _, key := range *m.Data {
-		selected := m.table.SelectedRow()
 		if len(selected) > 0 && key.Id == selected[0] {
 			partkey = &key
+			active = selected[2] == "YES"
 		}
 	}
-	return partkey
+	return partkey, active
 }
+
+// makeColumns generates a set of table columns suitable for displaying participation key data, based on the given `width`.
 func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 14) / 7
+	avgWidth := (width - lipgloss.Width(style.Border.Render("")) - 9) / 5
 
 	//avgWidth := 1
 	return []table.Column{
 		{Title: "ID", Width: avgWidth},
 		{Title: "Address", Width: avgWidth},
-		{Title: "SelectionParticipationKey", Width: 0},
-		{Title: "VoteParticipationKey", Width: 0},
-		{Title: "StateProofKey", Width: 0},
-		{Title: "VoteFirstValid", Width: avgWidth},
-		{Title: "VoteLastValid", Width: avgWidth},
-		{Title: "VoteKeyDilution", Width: avgWidth},
-		{Title: "EffectiveLastValid", Width: 0},
-		{Title: "EffectiveFirstValid", Width: 0},
-		{Title: "LastVote", Width: avgWidth},
-		{Title: "LastBlockProposal", Width: avgWidth},
-		{Title: "LastStateProof", Width: 0},
+		{Title: "Active", Width: avgWidth},
+		{Title: "Last Vote", Width: avgWidth},
+		{Title: "Last Block Proposal", Width: avgWidth},
 	}
 }
 
-func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
+// makeRows processes a slice of ParticipationKeys and returns a sorted slice of table rows
+// filtered by the ViewModel's address.
+func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
 	rows := make([]table.Row, 0)
-	if keys == nil {
-		return rows
+	if keys == nil || m.Address == "" {
+		return &rows
+	}
+
+	var activeId *string
+	if m.Participation != nil {
+		activeId = internal.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
 	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
+			isActive := "N/A"
+			if activeId != nil && *activeId == key.Id {
+				isActive = "YES"
+			}
 			rows = append(rows, table.Row{
 				key.Id,
 				key.Address,
-				*utils.UrlEncodeBytesPtrOrNil(key.Key.SelectionParticipationKey[:]),
-				*utils.UrlEncodeBytesPtrOrNil(key.Key.VoteParticipationKey[:]),
-				*utils.UrlEncodeBytesPtrOrNil(*key.Key.StateProofKey),
-				utils.IntToStr(key.Key.VoteFirstValid),
-				utils.IntToStr(key.Key.VoteLastValid),
-				utils.IntToStr(key.Key.VoteKeyDilution),
-				//utils.StrOrNA(key.Key.VoteKeyDilution),
-				//utils.StrOrNA(key.Key.StateProofKey),
-				utils.StrOrNA(key.EffectiveLastValid),
-				utils.StrOrNA(key.EffectiveFirstValid),
+				isActive,
 				utils.StrOrNA(key.LastVote),
 				utils.StrOrNA(key.LastBlockProposal),
-				utils.StrOrNA(key.LastStateProof),
 			})
 		}
 	}
 	sort.SliceStable(rows, func(i, j int) bool {
 		return rows[i][0] < rows[j][0]
 	})
-	return rows
+	return &rows
 }

@@ -59,7 +59,7 @@ func parseMetricsContent(content string) (MetricsResponse, error) {
 }
 
 // GetMetrics parses the /metrics endpoint from algod into a map
-func GetMetrics(ctx context.Context, client *api.ClientWithResponses) (MetricsResponse, error) {
+func GetMetrics(ctx context.Context, client api.ClientWithResponsesInterface) (MetricsResponse, error) {
 	res, err := client.MetricsWithResponse(ctx)
 	if err != nil {
 		return nil, err

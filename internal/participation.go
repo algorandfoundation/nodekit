@@ -2,14 +2,18 @@ package internal
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
 )
 
 // GetPartKeys get the participation keys from the node
-func GetPartKeys(ctx context.Context, client *api.ClientWithResponses) (*[]api.ParticipationKey, error) {
+func GetPartKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]api.ParticipationKey, error) {
 	parts, err := client.GetParticipationKeysWithResponse(ctx)
 	if err != nil {
 		return nil, err
@@ -21,7 +25,7 @@ func GetPartKeys(ctx context.Context, client *api.ClientWithResponses) (*[]api.P
 }
 
 // ReadPartKey get a specific participation key by id
-func ReadPartKey(ctx context.Context, client *api.ClientWithResponses, participationId string) (*api.ParticipationKey, error) {
+func ReadPartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) (*api.ParticipationKey, error) {
 	key, err := client.GetParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
 		return nil, err
@@ -32,82 +36,49 @@ func ReadPartKey(ctx context.Context, client *api.ClientWithResponses, participa
 	return key.JSON200, err
 }
 
-// waitForNewKey await the new key based on known existing keys
-// We should try to update the API endpoint
-func waitForNewKey(
-	ctx context.Context,
-	client *api.ClientWithResponses,
-	keys *[]api.ParticipationKey,
-	interval time.Duration,
-) (*[]api.ParticipationKey, error) {
-	// Fetch the latest keys
-	currentKeys, err := GetPartKeys(ctx, client)
-	if err != nil {
-		return nil, err
-	}
-	// Check the length against known keys
-	if len(*currentKeys) == len(*keys) {
-		// Sleep then try again
-		time.Sleep(interval)
-		return waitForNewKey(ctx, client, keys, interval)
-	}
-	return currentKeys, nil
-}
-
-// findKeyPair look for a new key based on address between two key lists
-// this is not robust, and we should try to update the API endpoint to wait for
-// the key creation and return its metadata to the caller
-func findKeyPair(
-	originalKeys *[]api.ParticipationKey,
-	currentKeys *[]api.ParticipationKey,
-	address string,
-) (*api.ParticipationKey, error) {
-	var participationKey api.ParticipationKey
-	for _, key := range *currentKeys {
-		if key.Address == address {
-			for _, oKey := range *originalKeys {
-				if oKey.Id != key.Id {
-					participationKey = key
-				}
-			}
-		}
-	}
-	return &participationKey, nil
-}
-
 // GenerateKeyPair creates a keypair and finds the result
 func GenerateKeyPair(
 	ctx context.Context,
-	client *api.ClientWithResponses,
+	client api.ClientWithResponsesInterface,
 	address string,
 	params *api.GenerateParticipationKeysParams,
 ) (*api.ParticipationKey, error) {
-	// The api response is an empty body, we need to fetch known keys first
-	originalKeys, err := GetPartKeys(ctx, client)
-	if err != nil {
-		return nil, err
-	}
 	// Generate a new keypair
 	key, err := client.GenerateParticipationKeysWithResponse(ctx, address, params)
 	if err != nil {
 		return nil, err
 	}
 	if key.StatusCode() != 200 {
-		return nil, errors.New(key.Status())
+		status := key.Status()
+		if status != "" {
+			return nil, errors.New(status)
+		}
+		return nil, errors.New("something went wrong")
 	}
-
-	// Wait for the api to have a new key
-	keys, err := waitForNewKey(ctx, client, originalKeys, 2*time.Second)
-	if err != nil {
-		return nil, err
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		case <-time.After(2 * time.Second):
+			partKeys, err := GetPartKeys(ctx, client)
+			if partKeys == nil || err != nil {
+				return nil, errors.New("failed to get participation keys")
+			}
+			for _, k := range *partKeys {
+				if k.Address == address &&
+					k.Key.VoteFirstValid == params.First &&
+					k.Key.VoteLastValid == params.Last {
+					return &k, nil
+				}
+			}
+		case <-time.After(20 * time.Minute):
+			return nil, errors.New("timeout waiting for key to be created")
+		}
 	}
-
-	// Find the new keypair in the results
-	return findKeyPair(originalKeys, keys, address)
 }
 
 // DeletePartKey remove a key from the node
-func DeletePartKey(ctx context.Context, client *api.ClientWithResponses, participationId string) error {
+func DeletePartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) error {
 	deletion, err := client.DeleteParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
 		return err
@@ -126,4 +97,43 @@ func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
 			return
 		}
 	}
+}
+
+func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte) *string {
+	for _, item := range *slice {
+		if string(item.Key.VoteParticipationKey) == string(votekey) {
+			return &item.Id
+		}
+	}
+	return nil
+}
+
+func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (string, error) {
+	fee := 2000000
+	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
+	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
+		loraNetwork = "localnet"
+	}
+
+	var query = ""
+	encodedIndex := url.QueryEscape("[0]")
+	if offline {
+		query = fmt.Sprintf(
+			"type[0]=keyreg&sender[0]=%s",
+			part.Address,
+		)
+	} else {
+		query = fmt.Sprintf(
+			"type[0]=keyreg&fee[0]=%d&sender[0]=%s&selkey[0]=%s&sprfkey[0]=%s&votekey[0]=%s&votefst[0]=%d&votelst[0]=%d&votekd[0]=%d",
+			fee,
+			part.Address,
+			base64.RawURLEncoding.EncodeToString(part.Key.SelectionParticipationKey),
+			base64.RawURLEncoding.EncodeToString(*part.Key.StateProofKey),
+			base64.RawURLEncoding.EncodeToString(part.Key.VoteParticipationKey),
+			part.Key.VoteFirstValid,
+			part.Key.VoteLastValid,
+			part.Key.VoteKeyDilution,
+		)
+	}
+	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
 }
