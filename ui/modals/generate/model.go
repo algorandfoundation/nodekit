@@ -19,9 +19,8 @@ type Range string
 
 const (
 	Day   Range = "day"
-	Week  Range = "week"
 	Month Range = "month"
-	Year  Range = "year"
+	Round Range = "round"
 )
 
 type ViewModel struct {

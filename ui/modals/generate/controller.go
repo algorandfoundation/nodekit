@@ -1,12 +1,14 @@
 package generate
 
 import (
+	"strconv"
+	"time"
+
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"strconv"
-	"time"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -59,12 +61,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			if m.Step == DurationStep {
 				switch m.Range {
 				case Day:
-					m.Range = Week
-				case Week:
 					m.Range = Month
 				case Month:
-					m.Range = Year
-				case Year:
+					m.Range = Round
+				case Round:
 					m.Range = Day
 				}
 				return &m, nil
@@ -77,18 +77,20 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			case DurationStep:
 				m.SetStep(WaitingStep)
 				val, _ := strconv.Atoi(m.InputTwo.Value())
-				var dur time.Duration
+				var rangeType internal.RangeType
+				var dur int
 				switch m.Range {
 				case Day:
-					dur = time.Duration(int(time.Hour*24) * val)
-				case Week:
-					dur = time.Duration(int(time.Hour*24*7) * val)
+					dur = int(time.Hour*24) * val
+					rangeType = "seconds"
 				case Month:
-					dur = time.Duration(int(time.Hour*24*30) * val)
-				case Year:
-					dur = time.Duration(int(time.Hour*24*365) * val)
+					dur = int(time.Hour*24*30) * val
+					rangeType = "seconds"
+				case Round:
+					dur = val
+					rangeType = "rounds"
 				}
-				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), dur, m.State))
+				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), rangeType, dur, m.State))
 
 			}
 
