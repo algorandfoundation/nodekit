@@ -19,7 +19,7 @@ func Test_WithStyles(t *testing.T) {
 	}
 
 	render = WithOverlay("Overflow the container with additional text which should result in a different message", testStr)
-	if render != "Resize terminal to see overlay" {
+	if render != "Resize terminal to see content" {
 		t.Error("Should be empty")
 	}
 }

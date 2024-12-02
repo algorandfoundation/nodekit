@@ -107,7 +107,7 @@ func WithOverlay(overlay string, view string) string {
 
 	// Display the terminal resize
 	if col < 0 || row < 0 {
-		overlayText := "Resize terminal to see overlay"
+		overlayText := "Resize terminal to see content"
 		overlay = WithNavigation("( esc )", WithTitle("Screen Size",
 			ApplyBorder(
 				lipgloss.Width(overlayText)+4,
