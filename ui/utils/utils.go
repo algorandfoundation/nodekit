@@ -5,22 +5,7 @@ import (
 	"fmt"
 )
 
-func IntPtrToZero(num *int) int {
-	if num == nil {
-		return 0
-	}
-	return *num
-}
-
 func toPtr[T any](constVar T) *T { return &constVar }
-
-func toPtrOrNil[T comparable](comparable T) *T {
-	var zero T
-	if comparable == zero {
-		return nil
-	}
-	return &comparable
-}
 
 func UrlEncodeBytesPtrOrNil(b []byte) *string {
 	if b == nil || len(b) == 0 || isZeros(b) {

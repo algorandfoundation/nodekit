@@ -2,37 +2,21 @@ package ui
 
 import (
 	"bytes"
+	"github.com/algorandfoundation/hack-tui/internal/test"
+	"github.com/algorandfoundation/hack-tui/ui/app"
+	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
 	"testing"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 
 func Test_ViewportViewRender(t *testing.T) {
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
-	state := internal.StateModel{
-		Status: internal.StatusModel{
-			LastRound:   1337,
-			NeedsUpdate: true,
-			State:       "SYNCING",
-		},
-		Metrics: internal.MetricsModel{
-			RoundTime: 0,
-			TX:        0,
-			RX:        0,
-			TPS:       0,
-		},
-	}
+	client := test.GetClient(false)
+	state := uitest.GetState(client)
 	// Create the Model
-	m, err := MakeViewportViewModel(&state, client)
+	m, err := NewViewportViewModel(state, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +35,32 @@ func Test_ViewportViewRender(t *testing.T) {
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
 	)
+	tm.Send(app.AccountSelected(
+		state.Accounts["ABC"]))
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("left"),
+	})
 
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("right"),
+	})
+
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("right"),
+	})
+
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("left"),
+	})
+
+	tm.Send(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("left"),
+	})
 	// Send quit key
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,

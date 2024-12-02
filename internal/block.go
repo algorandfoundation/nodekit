@@ -13,7 +13,7 @@ type BlockMetrics struct {
 	TPS     float64
 }
 
-func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round uint64, window int) (*BlockMetrics, error) {
+func GetBlockMetrics(ctx context.Context, client api.ClientWithResponsesInterface, round uint64, window int) (*BlockMetrics, error) {
 	var avgs = BlockMetrics{
 		AvgTime: 0,
 		TPS:     0,

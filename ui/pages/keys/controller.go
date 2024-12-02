@@ -2,6 +2,7 @@ package keys
 
 import (
 	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -17,51 +18,41 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	// When the State changes
 	case internal.StateModel:
 		m.Data = msg.ParticipationKeys
-		m.table.SetRows(m.makeRows(m.Data))
-	case internal.Account:
+		m.table.SetRows(*m.makeRows(m.Data))
+		m.Participation = msg.Accounts[m.Address].Participation
+	// When the Account is Selected
+	case app.AccountSelected:
 		m.Address = msg.Address
-		m.table.SetRows(m.makeRows(m.Data))
-	case DeleteFinished:
-		if m.SelectedKeyToDelete == nil {
-			panic("SelectedKeyToDelete is unexpectedly nil")
-		}
-		internal.RemovePartKeyByID(m.Data, m.SelectedKeyToDelete.Id)
-		m.SelectedKeyToDelete = nil
-		m.table.SetRows(m.makeRows(m.Data))
-
+		m.Participation = msg.Participation
+		m.table.SetRows(*m.makeRows(m.Data))
+	// When a confirmation Modal is finished deleting
+	case app.DeleteFinished:
+		internal.RemovePartKeyByID(m.Data, msg.Id)
+		m.table.SetRows(*m.makeRows(m.Data))
+	// When the user interacts with the render
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc":
+			return m, app.EmitShowPage(app.AccountsPage)
+		// Show the Info Modal
 		case "enter":
-			selKey := m.SelectedKey()
+			selKey, active := m.SelectedKey()
 			if selKey != nil {
-				return m, EmitKeySelected(selKey)
+				// Show the Info Modal with the selected Key
+				return m, app.EmitModalEvent(app.ModalEvent{
+					Key:     selKey,
+					Active:  active,
+					Address: selKey.Address,
+					Type:    app.InfoModal,
+				})
 			}
 			return m, nil
-		case "g":
-			// TODO: navigation
-		case "d":
-			if m.SelectedKeyToDelete == nil {
-				m.SelectedKeyToDelete = m.SelectedKey()
-			} else {
-				m.SelectedKeyToDelete = nil
-			}
-			return m, nil
-		case "y": // "Yes do delete" option in the delete confirmation modal
-			if m.SelectedKeyToDelete != nil {
-				return m, EmitDeleteKey(m.SelectedKeyToDelete)
-			}
-			return m, nil
-		case "n": // "do NOT delete" option in the delete confirmation modal
-			if m.SelectedKeyToDelete != nil {
-				m.SelectedKeyToDelete = nil
-			}
-			return m, nil
-		case "ctrl+c":
-			return m, tea.Quit
 		}
 
+	// Handle Resize Events
 	case tea.WindowSizeMsg:
 		borderRender := style.Border.Render("")
 		borderWidth := lipgloss.Width(borderRender)
@@ -74,9 +65,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetColumns(m.makeColumns(m.Width))
 	}
 
-	var cmds []tea.Cmd
-	var cmd tea.Cmd
-	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
+	// Handle Table Update
+	m.table, _ = m.table.Update(msg)
+
+	return m, nil
 }

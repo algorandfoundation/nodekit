@@ -3,10 +3,9 @@ package internal
 import (
 	"context"
 	"fmt"
-	"testing"
-
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
+	"testing"
 )
 
 func Test_ListParticipationKeys(t *testing.T) {
