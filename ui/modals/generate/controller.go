@@ -30,6 +30,7 @@ func (m *ViewModel) SetStep(step Step) {
 	case DurationStep:
 		m.Controls = "( (s)witch range )"
 		m.Title = "Validity Range"
+		m.InputTwo.SetValue("")
 		m.InputTwo.Focus()
 		m.InputTwo.PromptStyle = focusedStyle
 		m.InputTwo.TextStyle = focusedStyle
@@ -87,7 +88,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			case DurationStep:
 				val, err := strconv.Atoi(m.InputTwo.Value())
 				if err != nil || val <= 0 {
-					m.InputTwoError = "Error: enter a positive number"
+					m.InputTwoError = "Error: duration must be a positive number"
 					return &m, nil
 				}
 				m.InputTwoError = ""

@@ -72,14 +72,14 @@ func New(address string, state *internal.StateModel) *ViewModel {
 		BorderColor:   DefaultBorderColor,
 	}
 	input.Cursor.Style = cursorStyle
-	input.CharLimit = 68 // TODO Why not 58? Does this define length?
+	input.CharLimit = 58
 	input.Placeholder = "Wallet Address"
 	input.Focus()
 	input.PromptStyle = focusedStyle
 	input.TextStyle = focusedStyle
 
 	input2.Cursor.Style = cursorStyle
-	input2.CharLimit = 68
+	input2.CharLimit = 58
 	input2.Placeholder = "Length of time"
 
 	input2.PromptStyle = noStyle
