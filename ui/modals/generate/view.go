@@ -2,6 +2,8 @@ package generate
 
 import (
 	"fmt"
+
+	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -17,6 +19,12 @@ func (m ViewModel) View() string {
 			m.Input.View(),
 			"",
 		)
+		if m.InputError != "" {
+			render = lipgloss.JoinVertical(lipgloss.Left,
+				render,
+				style.Red.Render(m.InputError),
+			)
+		}
 	case DurationStep:
 		render = lipgloss.JoinVertical(lipgloss.Left,
 			"",
@@ -26,11 +34,19 @@ func (m ViewModel) View() string {
 			m.InputTwo.View(),
 			"",
 		)
+		if m.InputTwoError != "" {
+			render = lipgloss.JoinVertical(lipgloss.Left,
+				render,
+				style.Red.Render(m.InputTwoError),
+			)
+		}
 	case WaitingStep:
 		render = lipgloss.JoinVertical(lipgloss.Left,
+			"",
 			"Generating Participation Keys...",
 			"",
-			"Please wait. This operation can take a few minutes.")
+			"Please wait. This operation can take a few minutes.",
+			"")
 	}
 
 	return lipgloss.NewStyle().Width(70).Render(render)

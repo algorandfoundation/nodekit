@@ -1,12 +1,14 @@
 package generate
 
 import (
+	"strconv"
+	"time"
+
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"strconv"
-	"time"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -23,6 +25,7 @@ func (m *ViewModel) SetStep(step Step) {
 	case AddressStep:
 		m.Controls = "( esc to cancel )"
 		m.Title = DefaultTitle
+		m.InputError = ""
 		m.BorderColor = DefaultBorderColor
 	case DurationStep:
 		m.Controls = "( (s)witch range )"
@@ -30,6 +33,7 @@ func (m *ViewModel) SetStep(step Step) {
 		m.InputTwo.Focus()
 		m.InputTwo.PromptStyle = focusedStyle
 		m.InputTwo.TextStyle = focusedStyle
+		m.InputTwoError = ""
 		m.Input.Blur()
 	case WaitingStep:
 		m.Controls = ""
@@ -72,11 +76,22 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		case "enter":
 			switch m.Step {
 			case AddressStep:
+				addr := m.Input.Value()
+				if !internal.ValidateAddress(addr) {
+					m.InputError = "Error: invalid address"
+					return &m, nil
+				}
+				m.InputError = ""
 				m.SetStep(DurationStep)
 				return &m, app.EmitShowModal(app.GenerateModal)
 			case DurationStep:
+				val, err := strconv.Atoi(m.InputTwo.Value())
+				if err != nil || val <= 0 {
+					m.InputTwoError = "Error: enter a positive number"
+					return &m, nil
+				}
+				m.InputTwoError = ""
 				m.SetStep(WaitingStep)
-				val, _ := strconv.Atoi(m.InputTwo.Value())
 				var dur time.Duration
 				switch m.Range {
 				case Day:

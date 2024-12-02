@@ -28,12 +28,14 @@ type ViewModel struct {
 	Width  int
 	Height int
 
-	Address  string
-	Input    *textinput.Model
-	InputTwo *textinput.Model
-	Spinner  *spinner.Model
-	Step     Step
-	Range    Range
+	Address       string
+	Input         *textinput.Model
+	InputError    string
+	InputTwo      *textinput.Model
+	InputTwoError string
+	Spinner       *spinner.Model
+	Step          Step
+	Range         Range
 
 	Title       string
 	Controls    string
@@ -57,18 +59,20 @@ func New(address string, state *internal.StateModel) *ViewModel {
 	input2 := textinput.New()
 
 	m := ViewModel{
-		Address:     address,
-		State:       state,
-		Input:       &input,
-		InputTwo:    &input2,
-		Step:        AddressStep,
-		Range:       Day,
-		Title:       DefaultTitle,
-		Controls:    DefaultControls,
-		BorderColor: DefaultBorderColor,
+		Address:       address,
+		State:         state,
+		Input:         &input,
+		InputError:    "",
+		InputTwo:      &input2,
+		InputTwoError: "",
+		Step:          AddressStep,
+		Range:         Day,
+		Title:         DefaultTitle,
+		Controls:      DefaultControls,
+		BorderColor:   DefaultBorderColor,
 	}
 	input.Cursor.Style = cursorStyle
-	input.CharLimit = 68
+	input.CharLimit = 68 // TODO Why not 58? Does this define length?
 	input.Placeholder = "Wallet Address"
 	input.Focus()
 	input.PromptStyle = focusedStyle

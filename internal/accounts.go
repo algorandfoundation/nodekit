@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // Account represents a user's account, including address, status, balance, and number of keys.
@@ -105,4 +106,12 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 	}
 
 	return values
+}
+
+func ValidateAddress(address string) bool {
+	_, err := types.DecodeAddress(address)
+	if err != nil {
+		return false
+	}
+	return true
 }
