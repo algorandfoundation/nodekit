@@ -118,7 +118,10 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "ctrl+c":
 		case "q":
-			return m, tea.Quit
+			// Close the app when anything other than generate modal is visible
+			if !m.modal.Open || (m.modal.Open && m.modal.Type != app.GenerateModal) {
+				return m, tea.Quit
+			}
 		}
 
 	case tea.WindowSizeMsg:

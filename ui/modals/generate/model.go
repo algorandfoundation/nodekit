@@ -45,7 +45,7 @@ type ViewModel struct {
 	cursorMode cursor.Mode
 }
 
-func (m ViewModel) SetAddress(address string) {
+func (m *ViewModel) SetAddress(address string) {
 	m.Address = address
 	m.Input.SetValue(address)
 }

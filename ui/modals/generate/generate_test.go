@@ -14,9 +14,9 @@ import (
 func Test_New(t *testing.T) {
 	m := New("ABC", test.GetState(nil))
 
-	m.SetAddress("ACB")
+	m.SetAddress("TUIDKH2C7MUHZDD77MAMUREJRKNK25SYXB7OAFA6JFBB24PEL5UX4S4GUU")
 
-	if m.Address != "ABC" {
+	if m.Address != "TUIDKH2C7MUHZDD77MAMUREJRKNK25SYXB7OAFA6JFBB24PEL5UX4S4GUU" {
 		t.Error("Did not set address")
 	}
 
@@ -44,6 +44,7 @@ func Test_New(t *testing.T) {
 
 	m.SetStep(DurationStep)
 	m.Range = Week
+	m.InputTwo.SetValue("1")
 	m, cmd = m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("enter"),
@@ -54,6 +55,7 @@ func Test_New(t *testing.T) {
 
 	m.SetStep(DurationStep)
 	m.Range = Month
+	m.InputTwo.SetValue("1")
 	m, cmd = m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("enter"),
@@ -64,6 +66,7 @@ func Test_New(t *testing.T) {
 
 	m.SetStep(DurationStep)
 	m.Range = Year
+	m.InputTwo.SetValue("1")
 	m, cmd = m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("enter"),
