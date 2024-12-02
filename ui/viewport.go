@@ -117,6 +117,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "ctrl+c":
+		case "q":
 			return m, tea.Quit
 		}
 
