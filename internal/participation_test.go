@@ -4,9 +4,46 @@ import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
+	"github.com/algorandfoundation/hack-tui/internal/test"
+	"github.com/algorandfoundation/hack-tui/internal/test/mock"
 	"testing"
 )
+
+func Test_ToLoraDeeplink(t *testing.T) {
+	link, err := ToLoraDeepLink("tuinet-v1", true, true, api.ParticipationKey{
+		Address:             "ABC",
+		EffectiveFirstValid: nil,
+		EffectiveLastValid:  nil,
+		Id:                  "",
+		Key:                 api.AccountParticipation{},
+		LastBlockProposal:   nil,
+		LastStateProof:      nil,
+		LastVote:            nil,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&sender%5B0%5D=ABC" {
+		t.Error("Link should be a known deeplink")
+	}
+
+	link, err = ToLoraDeepLink("tuinet-v1", false, true, mock.Keys[0])
+	if err != nil {
+		t.Error(err)
+	}
+	if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&fee%5B0%5D=2000000&sender%5B0%5D=ABC&selkey%5B0%5D=VEVTVEtFWQ&sprfkey%5B0%5D=VEVTVEtFWQ&votekey%5B0%5D=VEVTVEtFWQ&votefst%5B0%5D=0&votelst%5B0%5D=30000&votekd%5B0%5D=100" {
+		t.Error("Link should be a known deeplink fee")
+	}
+
+	link, err = ToLoraDeepLink("tuinet-v1", false, false, mock.Keys[0])
+	if err != nil {
+		t.Error(err)
+	}
+	if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&fee%5B0%5D=1000&sender%5B0%5D=ABC&selkey%5B0%5D=VEVTVEtFWQ&sprfkey%5B0%5D=VEVTVEtFWQ&votekey%5B0%5D=VEVTVEtFWQ&votefst%5B0%5D=0&votelst%5B0%5D=30000&votekd%5B0%5D=100" {
+		t.Error("Link should be a known deeplink fee")
+	}
+
+}
 
 func Test_ListParticipationKeys(t *testing.T) {
 	ctx := context.Background()
@@ -23,16 +60,9 @@ func Test_ListParticipationKeys(t *testing.T) {
 	}
 
 	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
+	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, client)
+	keys, err := GetPartKeys(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,17 +84,9 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
+	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, client)
+	keys, err := GetPartKeys(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +94,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ReadPartKey(ctx, client, (*keys)[0].Id)
+	_, err = ReadPartKey(ctx, tClient, (*keys)[0].Id)
 
 	if err != nil {
 		t.Fatal(err)
@@ -88,31 +110,23 @@ func Test_GenerateParticipationKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	// Generate error
 	_, err = GenerateKeyPair(ctx, client, "", nil)
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err = api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Setup test client
+	tClient := test.GetClient(false)
 
 	params := api.GenerateParticipationKeysParams{
 		Dilution: nil,
 		First:    0,
-		Last:     10000,
+		Last:     30,
 	}
 
 	// This returns nothing and sucks
-	key, err := GenerateKeyPair(ctx, client, "QNZ7GONNHTNXFW56Y24CNJQEMYKZKKI566ASNSWPD24VSGKJWHGO6QOP7U", &params)
+	key, err := GenerateKeyPair(ctx, tClient, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,21 +135,14 @@ func Test_GenerateParticipationKey(t *testing.T) {
 
 func Test_DeleteParticipationKey(t *testing.T) {
 	ctx := context.Background()
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	client := test.GetClient(false)
 	params := api.GenerateParticipationKeysParams{
 		Dilution: nil,
 		First:    0,
-		Last:     10000,
+		Last:     30000,
 	}
-	key, err := GenerateKeyPair(ctx, client, "QNZ7GONNHTNXFW56Y24CNJQEMYKZKKI566ASNSWPD24VSGKJWHGO6QOP7U", &params)
+	key, err := GenerateKeyPair(ctx, client, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
