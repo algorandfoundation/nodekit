@@ -108,8 +108,15 @@ func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte
 	return nil
 }
 
-func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (string, error) {
-	fee := 2000000
+func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part api.ParticipationKey) (string, error) {
+	var fee int
+	if incentiveEligible {
+		fee = 2000000
+	} else {
+		//TODO: get suggested params
+		fee = 1000
+	}
+
 	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
 	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
 		loraNetwork = "localnet"

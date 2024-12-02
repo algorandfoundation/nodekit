@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/app"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -42,7 +43,17 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	m.UpdateState()
 	return &m, cmd
 }
+func (m *ViewModel) Account() *internal.Account {
+	if m.Participation == nil || m.State == nil || m.State.Accounts == nil {
+		return nil
+	}
+	acct, ok := m.State.Accounts[m.Participation.Address]
+	if ok {
+		return &acct
+	}
 
+	return nil
+}
 func (m *ViewModel) UpdateState() {
 	if m.Participation == nil {
 		return
@@ -51,7 +62,14 @@ func (m *ViewModel) UpdateState() {
 	if m.ATxn == nil {
 		m.ATxn = &encoder.AUrlTxn{}
 	}
-	fee := uint64(1000)
+
+	var fee uint64
+	if m.Account().IncentiveEligible {
+		fee = uint64(2000000)
+	} else {
+		// TODO: Maybe keep suggested params in state?
+		fee = uint64(1000)
+	}
 	m.ATxn.AUrlTxnKeyCommon.Sender = m.Participation.Address
 	m.ATxn.AUrlTxnKeyCommon.Type = string(types.KeyRegistrationTx)
 	m.ATxn.AUrlTxnKeyCommon.Fee = &fee
