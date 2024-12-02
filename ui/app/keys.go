@@ -36,7 +36,7 @@ func GenerateCmd(account string, rangeType internal.RangeType, duration int, sta
 	return func() tea.Msg {
 		var params api.GenerateParticipationKeysParams
 
-		if rangeType == "seconds" {
+		if rangeType == internal.TimeRange {
 			params = api.GenerateParticipationKeysParams{
 				Dilution: nil,
 				First:    int(state.Status.LastRound),

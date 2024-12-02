@@ -3,6 +3,6 @@ package internal
 type RangeType string
 
 const (
-	Hours  RangeType = "seconds"
-	Rounds RangeType = "rounds"
+	TimeRange  RangeType = "seconds"
+	RoundRange RangeType = "rounds"
 )

@@ -43,16 +43,6 @@ func Test_New(t *testing.T) {
 	}
 
 	m.SetStep(DurationStep)
-	m.Range = Week
-	m, cmd = m.HandleMessage(tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune("enter"),
-	})
-	if cmd == nil {
-		t.Error("Did not return the generate command")
-	}
-
-	m.SetStep(DurationStep)
 	m.Range = Month
 	m, cmd = m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
@@ -63,7 +53,7 @@ func Test_New(t *testing.T) {
 	}
 
 	m.SetStep(DurationStep)
-	m.Range = Year
+	m.Range = Round
 	m, cmd = m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("enter"),

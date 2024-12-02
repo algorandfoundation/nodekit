@@ -82,13 +82,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				switch m.Range {
 				case Day:
 					dur = int(time.Hour*24) * val
-					rangeType = "seconds"
+					rangeType = internal.TimeRange
 				case Month:
 					dur = int(time.Hour*24*30) * val
-					rangeType = "seconds"
+					rangeType = internal.TimeRange
 				case Round:
 					dur = val
-					rangeType = "rounds"
+					rangeType = internal.RoundRange
 				}
 				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), rangeType, dur, m.State))
 

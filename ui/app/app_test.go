@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/internal/test"
 	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
 	"testing"
@@ -10,7 +11,7 @@ import (
 
 func Test_GenerateCmd(t *testing.T) {
 	client := test.GetClient(false)
-	fn := GenerateCmd("ABC", time.Second*60, uitest.GetState(client))
+	fn := GenerateCmd("ABC", internal.TimeRange, int(time.Second*60), uitest.GetState(client))
 	res := fn()
 	evt, ok := res.(ModalEvent)
 	if !ok {
@@ -21,7 +22,7 @@ func Test_GenerateCmd(t *testing.T) {
 	}
 
 	client = test.GetClient(true)
-	fn = GenerateCmd("ABC", time.Second*60, uitest.GetState(client))
+	fn = GenerateCmd("ABC", internal.TimeRange, int(time.Second*60), uitest.GetState(client))
 	res = fn()
 	evt, ok = res.(ModalEvent)
 	if !ok {
