@@ -67,6 +67,36 @@ algod_crypto_vrf_hash_total 0`
 	}
 	return &res, nil
 }
+func (c *Client) GetParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeyByIDResponse, error) {
+	var res api.GetParticipationKeyByIDResponse
+	if !c.Invalid {
+		httpResponse := http.Response{StatusCode: 200}
+		res = api.GetParticipationKeyByIDResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      &mock.Keys[0],
+			JSON400:      nil,
+			JSON401:      nil,
+			JSON404:      nil,
+			JSON500:      nil,
+		}
+	} else {
+		httpResponse := http.Response{StatusCode: 404}
+		res = api.GetParticipationKeyByIDResponse{
+			Body:         nil,
+			HTTPResponse: &httpResponse,
+			JSON200:      nil,
+			JSON400:      nil,
+			JSON401:      nil,
+			JSON404:      nil,
+			JSON500:      nil,
+		}
+	}
+	if c.Errors {
+		return nil, errors.New("test error")
+	}
+	return &res, nil
+}
 func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
 	var res api.GetParticipationKeysResponse
 	clone := mock.Keys
