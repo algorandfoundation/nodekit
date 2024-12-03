@@ -29,7 +29,7 @@ const BANNER = `
 `
 
 var (
-	server  string
+	algod  string
 	token   = strings.Repeat("a", 64)
 	Version = ""
 	rootCmd = &cobra.Command{
@@ -43,8 +43,8 @@ var (
 			log.SetOutput(cmd.OutOrStdout())
 			initConfig()
 
-			if viper.GetString("server") == "" {
-				return fmt.Errorf(style.Red.Render("server is required"))
+			if viper.GetString("algod") == "" {
+				return fmt.Errorf(style.Red.Render("algod is required"))
 			}
 			if viper.GetString("token") == "" {
 				return fmt.Errorf(style.Red.Render("token is required"))
@@ -130,20 +130,20 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVarP(&server, "server", "s", "", style.LightBlue("algod endpoint address URI, including http[s]"))
+	rootCmd.PersistentFlags().StringVarP(&algod, "algod", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
 	rootCmd.PersistentFlags().StringVarP(&token, "token", "t", "", lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		style.LightBlue("algod "),
 		style.BoldUnderline("admin"),
 		style.LightBlue(" token"),
 	))
-	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
+	_ = viper.BindPFlag("algod", rootCmd.PersistentFlags().Lookup("algod"))
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 
 	// Update Long Text
 	rootCmd.Long +=
 		style.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-			style.LightBlue("Server: ") + viper.GetString("server")
+			style.LightBlue("Algod: ") + viper.GetString("algod")
 
 	if viper.GetString("data") != "" {
 		rootCmd.Long +=
@@ -191,15 +191,15 @@ func initConfig() {
 	viper.AutomaticEnv()
 	_ = viper.ReadInConfig()
 
-	// Check for server
-	loadedServer := viper.GetString("server")
+	// Check for algod
+	loadedAlgod := viper.GetString("algod")
 	loadedToken := viper.GetString("token")
 
 	// Load ALGORAND_DATA/config.json
 	algorandData, exists := os.LookupEnv("ALGORAND_DATA")
 
 	// Load the Algorand Data Configuration
-	if exists && algorandData != "" && loadedServer == "" {
+	if exists && algorandData != "" && loadedAlgod == "" {
 		// Placeholder for Struct
 		var algodConfig AlgodConfig
 
@@ -253,8 +253,8 @@ func initConfig() {
 			viper.Set("token", strings.Replace(string(byteValue), "\n", "", 1))
 		}
 
-		// Set the server configuration
-		viper.Set("server", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
+		// Set the algod configuration
+		viper.Set("algod", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
 		viper.Set("data", dataConfigPath)
 	}
 
@@ -265,5 +265,5 @@ func getClient() (*api.ClientWithResponses, error) {
 	if err != nil {
 		return nil, err
 	}
-	return api.NewClientWithResponses(viper.GetString("server"), api.WithRequestEditorFn(apiToken.Intercept))
+	return api.NewClientWithResponses(viper.GetString("algod"), api.WithRequestEditorFn(apiToken.Intercept))
 }
