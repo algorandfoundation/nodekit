@@ -6,10 +6,15 @@ import (
 	"testing"
 )
 
-// Test the stub root command
-func Test_ExecuteRootCommand(t *testing.T) {
+func clearViper() {
 	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	viper.Set("algod", "http://localhost:8080")
+	viper.Set("ALGORAND_DATA", "")
+}
+
+// Test the stub root command
+func Test_ExecuteRootCommand(t *testing.T) {
+	clearViper()
 
 	// Execute
 	err := rootCmd.Execute()
@@ -32,6 +37,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		if algod != "http://127.0.0.1:8080" {
 			t.Fatal("Invalid Algod")
 		}
+		clearViper()
 	})
 
 	t.Run("InitConfigWithoutEndpoint", func(t *testing.T) {
@@ -48,8 +54,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		if algod != "http://127.0.0.1:8080" {
 			t.Fatal("Invalid Algod")
 		}
-
-		t.Setenv("ALGORAND_DATA", "")
+		clearViper()
 	})
 
 	t.Run("InitConfigWithAddress", func(t *testing.T) {
@@ -66,9 +71,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		if algod != "http://255.255.255.255:8080" {
 			t.Fatal("Invalid Algod")
 		}
-		viper.Set("token", "")
-		viper.Set("algod", "")
-		t.Setenv("ALGORAND_DATA", "")
+		clearViper()
 	})
 
 	t.Run("InitConfigWithAddressAndDefaultPort", func(t *testing.T) {
@@ -85,7 +88,6 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		if algod != "http://255.255.255.255:8080" {
 			t.Fatal("Invalid Algod")
 		}
-
-		t.Setenv("ALGORAND_DATA", "")
+		clearViper()
 	})
 }
