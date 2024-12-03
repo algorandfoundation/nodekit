@@ -54,11 +54,29 @@ var (
 			cobra.CheckErr(err)
 
 			ctx := context.Background()
+			v, err := client.GetStatusWithResponse(ctx)
+			if err != nil {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: %s") +
+					"\n\nExplanation: Could not reach algod. Check that algod is running and the provided connection arguments.\n",
+					err)
+			} else if v.StatusCode() == 401 {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: Unauthorized") +
+					"\n\nExplanation: algod token is invalid. Algorun requires the "+style.BoldUnderline("admin token")+" for algod. You can find this in the algod.admin.token file in the algod data directory.\n",
+					)
+			} else if v.StatusCode() != 200 {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: error code %d") +
+					"\n\nExplanation: algorun requires the "+style.BoldUnderline("admin token")+" for algod. You can find this in the algod.admin.token file in the algod data directory.\n",
+					v.StatusCode())
+			}
+
 			partkeys, err := internal.GetPartKeys(ctx, client)
 			if err != nil {
 				return fmt.Errorf(
-					style.Red.Render("failed to get participation keys: %s") + 
-					"\n\nExplanation: algorun requires the "+style.Bold("Admin token")+" for algod in order to operate on participation keys. You can find this in the algod.admin.token file in the algod data directory.\n",
+					style.Red.Render("failed to get participation keys: %s") +
+					"\n\nExplanation: algorun requires the "+style.BoldUnderline("admin token")+" for algod in order to operate on participation keys. You can find this in the algod.admin.token file in the algod data directory.\n",
 					err)
 			}
 			state := internal.StateModel{
