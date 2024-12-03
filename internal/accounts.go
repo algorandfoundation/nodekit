@@ -12,6 +12,8 @@ import (
 // Account represents a user's account, including address, status, balance, and number of keys.
 type Account struct {
 	Participation *api.AccountParticipation
+	// IncentiveEligible determines the minimum fee
+	IncentiveEligible bool
 	// Account Address is the algorand encoded address
 	Address string
 	// Status is the Online/Offline/"NotParticipating" status of the account
@@ -69,9 +71,10 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 		val, ok := values[key.Address]
 		if !ok {
 			var account = api.Account{
-				Address: key.Address,
-				Status:  "Unknown",
-				Amount:  0,
+				Address:           key.Address,
+				Status:            "Unknown",
+				IncentiveEligible: nil,
+				Amount:            0,
 			}
 			if state.Status.State != SyncingState {
 				var err error
@@ -83,13 +86,22 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 				}
 			}
 
+			// Check for eligibility
+			var incentiveEligible = false
+			if account.IncentiveEligible == nil {
+				incentiveEligible = false
+			} else {
+				incentiveEligible = *account.IncentiveEligible
+			}
+
 			values[key.Address] = Account{
-				Participation: account.Participation,
-				Address:       key.Address,
-				Status:        account.Status,
-				Balance:       account.Amount / 1000000,
-				Expires:       GetExpiresTime(t, key, state),
-				Keys:          1,
+				Participation:     account.Participation,
+				Address:           key.Address,
+				Status:            account.Status,
+				Balance:           account.Amount / 1000000,
+				Expires:           GetExpiresTime(t, key, state),
+				IncentiveEligible: incentiveEligible,
+				Keys:              1,
 			}
 		} else {
 			val.Keys++

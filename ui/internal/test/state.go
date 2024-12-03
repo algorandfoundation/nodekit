@@ -42,11 +42,12 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		val, ok := values[key.Address]
 		if !ok {
 			values[key.Address] = internal.Account{
-				Address: key.Address,
-				Status:  "Offline",
-				Balance: 0,
-				Expires: internal.GetExpiresTime(clock, key, sm),
-				Keys:    1,
+				Address:           key.Address,
+				Status:            "Offline",
+				Balance:           0,
+				IncentiveEligible: true,
+				Expires:           internal.GetExpiresTime(clock, key, sm),
+				Keys:              1,
 			}
 		} else {
 			val.Keys++

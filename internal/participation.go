@@ -108,8 +108,7 @@ func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte
 	return nil
 }
 
-func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (string, error) {
-	fee := 2000000
+func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part api.ParticipationKey) (string, error) {
 	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
 	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
 		loraNetwork = "localnet"
@@ -124,8 +123,7 @@ func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (st
 		)
 	} else {
 		query = fmt.Sprintf(
-			"type[0]=keyreg&fee[0]=%d&sender[0]=%s&selkey[0]=%s&sprfkey[0]=%s&votekey[0]=%s&votefst[0]=%d&votelst[0]=%d&votekd[0]=%d",
-			fee,
+			"type[0]=keyreg&sender[0]=%s&selkey[0]=%s&sprfkey[0]=%s&votekey[0]=%s&votefst[0]=%d&votelst[0]=%d&votekd[0]=%d",
 			part.Address,
 			base64.RawURLEncoding.EncodeToString(part.Key.SelectionParticipationKey),
 			base64.RawURLEncoding.EncodeToString(*part.Key.StateProofKey),
@@ -134,6 +132,9 @@ func ToLoraDeepLink(network string, offline bool, part api.ParticipationKey) (st
 			part.Key.VoteLastValid,
 			part.Key.VoteKeyDilution,
 		)
+		if incentiveEligible {
+			query += fmt.Sprintf("&fee[0]=%d", 2000000)
+		}
 	}
 	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
 }
