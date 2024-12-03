@@ -36,6 +36,9 @@ var (
 	LightBlue = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("12")).
 			Render
+	Bold = lipgloss.NewStyle().
+		Bold(true).
+		Render
 )
 
 func WithHyperlink(text string, url string) string {

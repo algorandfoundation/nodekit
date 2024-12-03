@@ -56,7 +56,8 @@ var (
 			partkeys, err := internal.GetPartKeys(ctx, client)
 			if err != nil {
 				return fmt.Errorf(
-					style.Red.Render("failed to get participation keys: %s"),
+					style.Red.Render("failed to get participation keys: %s") + 
+					"\n\nExplanation: algorun requires the "+style.Bold("Admin token")+" for algod in order to operate on participation keys. You can find this in the algod.admin.token file in the algod data directory.\n",
 					err)
 			}
 			state := internal.StateModel{
