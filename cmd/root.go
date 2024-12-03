@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
@@ -129,8 +130,13 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVar(&server, "server", "", style.LightBlue("server address"))
-	rootCmd.PersistentFlags().StringVar(&token, "token", "", style.LightBlue("server token"))
+	rootCmd.PersistentFlags().StringVarP(&server, "server", "s", "", style.LightBlue("algod endpoint address URI, including http[s]"))
+	rootCmd.PersistentFlags().StringVarP(&token, "token", "t", "", lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		style.LightBlue("algod "),
+		style.BoldUnderline("admin"),
+		style.LightBlue(" token"),
+	))
 	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 

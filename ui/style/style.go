@@ -39,6 +39,10 @@ var (
 	Bold = lipgloss.NewStyle().
 		Bold(true).
 		Render
+	BoldUnderline = lipgloss.NewStyle().
+		Bold(true).
+		Underline(true).
+		Render
 )
 
 func WithHyperlink(text string, url string) string {
