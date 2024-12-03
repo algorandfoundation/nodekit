@@ -63,16 +63,15 @@ func (m *ViewModel) UpdateState() {
 		m.ATxn = &encoder.AUrlTxn{}
 	}
 
-	var fee uint64
-	if m.Account().IncentiveEligible {
-		fee = uint64(2000000)
-	} else {
-		// TODO: Maybe keep suggested params in state?
-		fee = uint64(1000)
+	var fee *uint64
+	if m.Account().IncentiveEligible && !m.Active {
+		feeInst := uint64(2000000)
+		fee = &feeInst
 	}
+
 	m.ATxn.AUrlTxnKeyCommon.Sender = m.Participation.Address
 	m.ATxn.AUrlTxnKeyCommon.Type = string(types.KeyRegistrationTx)
-	m.ATxn.AUrlTxnKeyCommon.Fee = &fee
+	m.ATxn.AUrlTxnKeyCommon.Fee = fee
 
 	if !m.Active {
 		m.Title = string(OnlineTitle)
