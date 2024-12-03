@@ -78,13 +78,31 @@ func (m ViewModel) makeRows() *[]table.Row {
 	rows := make([]table.Row, 0)
 
 	for key := range m.Data.Accounts {
-		expires := m.Data.Accounts[key].Expires.Format(time.RFC822)
+		var expires = "N/A"
+		if m.Data.Accounts[key].Expires != nil {
+			// This condition will only exist for a split second
+			// until algod deletes the key
+			if m.Data.Accounts[key].Expires.Before(time.Now()) {
+				expires = "EXPIRED"
+			} else {
+				expires = m.Data.Accounts[key].Expires.Format(time.RFC822)
+			}
+
+			// Expires within the week
+			if m.Data.Accounts[key].Expires.Before(time.Now().Add(time.Hour * 24 * 7)) {
+				expires = "⚠ " + expires
+			}
+		}
+
+		// Override the state while syncing
 		if m.Data.Status.State != internal.StableState {
 			expires = "SYNCING"
 		}
-		if !m.Data.Accounts[key].Expires.After(time.Now().Add(-(time.Hour * 24 * 365 * 50))) {
-			expires = "N/A"
+
+		if m.Data.Accounts[key].Status == "Online" && expires == "N/A" && m.Data.Accounts[key].Expires != nil {
+			expires = "⚠ NON-RESIDENT-KEY"
 		}
+
 		rows = append(rows, table.Row{
 			m.Data.Accounts[key].Address,
 			strconv.Itoa(m.Data.Accounts[key].Keys),

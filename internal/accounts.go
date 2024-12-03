@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -26,7 +27,7 @@ type Account struct {
 	// A count of how many participation Keys exist on this node for this Account
 	Keys int
 	// Expires is the date the participation key will expire
-	Expires time.Time
+	Expires *time.Time
 }
 
 // Get Online Status of Account
@@ -51,15 +52,21 @@ func GetAccount(client api.ClientWithResponsesInterface, address string) (api.Ac
 	return *r.JSON200, nil
 }
 
-func GetExpiresTime(t Time, key api.ParticipationKey, state *StateModel) time.Time {
+// GetExpiresTime calculates and returns the expiration time for a participation key based on the current account state.
+func GetExpiresTime(t Time, key api.ParticipationKey, state *StateModel) *time.Time {
 	now := t.Now()
-	var expires = now.Add(-(time.Hour * 24 * 365 * 100))
-	if key.LastBlockProposal != nil && state.Status.LastRound != 0 && state.Metrics.RoundTime != 0 {
-		roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
+	var expires time.Time
+	if state.Accounts[key.Address].Status == "Online" &&
+		state.Accounts[key.Address].Participation != nil &&
+		bytes.Equal(*state.Accounts[key.Address].Participation.StateProofKey, *key.Key.StateProofKey) &&
+		state.Status.LastRound != 0 &&
+		state.Metrics.RoundTime != 0 {
+		roundDiff := max(0, key.Key.VoteLastValid-int(state.Status.LastRound))
 		distance := int(state.Metrics.RoundTime) * roundDiff
 		expires = now.Add(time.Duration(distance))
+		return &expires
 	}
-	return expires
+	return nil
 }
 
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
@@ -94,7 +101,6 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 			} else {
 				incentiveEligible = *account.IncentiveEligible
 			}
-
 			values[key.Address] = Account{
 				Participation:     account.Participation,
 				Address:           key.Address,
@@ -106,12 +112,9 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 			}
 		} else {
 			val.Keys++
-			if val.Expires.Before(t.Now()) {
-				now := t.Now()
-				var expires = GetExpiresTime(t, key, state)
-				if !expires.Before(now) {
-					val.Expires = expires
-				}
+			if val.Participation != nil &&
+				bytes.Equal(*val.Participation.StateProofKey, *key.Key.StateProofKey) {
+				val.Expires = GetExpiresTime(t, key, state)
 			}
 			values[key.Address] = val
 		}
