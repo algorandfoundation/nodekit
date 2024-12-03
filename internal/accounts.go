@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/hack-tui/api"
 )
 
@@ -117,4 +118,12 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 	}
 
 	return values
+}
+
+func ValidateAddress(address string) bool {
+	_, err := types.DecodeAddress(address)
+	if err != nil {
+		return false
+	}
+	return true
 }

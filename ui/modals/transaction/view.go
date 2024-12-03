@@ -78,7 +78,9 @@ func (m ViewModel) View() string {
 			lipgloss.Center,
 			intro,
 			"",
-			style.Red.Render(ansi.Wordwrap("QR Code too large to display. Please adjust terminal dimensions or font size.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("Mobile QR is available but it does not fit on screen.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("Adjust terminal dimensions or font size to display.", m.Width, " ")),
+			"",
 			"-or-",
 			loraText,
 		)
