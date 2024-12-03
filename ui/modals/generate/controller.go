@@ -25,13 +25,16 @@ func (m *ViewModel) SetStep(step Step) {
 	case AddressStep:
 		m.Controls = "( esc to cancel )"
 		m.Title = DefaultTitle
+		m.InputError = ""
 		m.BorderColor = DefaultBorderColor
 	case DurationStep:
 		m.Controls = "( (s)witch range )"
 		m.Title = "Validity Range"
+		m.InputTwo.SetValue("")
 		m.InputTwo.Focus()
 		m.InputTwo.PromptStyle = focusedStyle
 		m.InputTwo.TextStyle = focusedStyle
+		m.InputTwoError = ""
 		m.Input.Blur()
 	case WaitingStep:
 		m.Controls = ""
@@ -72,11 +75,22 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		case "enter":
 			switch m.Step {
 			case AddressStep:
+				addr := m.Input.Value()
+				if !internal.ValidateAddress(addr) {
+					m.InputError = "Error: invalid address"
+					return &m, nil
+				}
+				m.InputError = ""
 				m.SetStep(DurationStep)
 				return &m, app.EmitShowModal(app.GenerateModal)
 			case DurationStep:
+				val, err := strconv.Atoi(m.InputTwo.Value())
+				if err != nil || val <= 0 {
+					m.InputTwoError = "Error: duration must be a positive number"
+					return &m, nil
+				}
+				m.InputTwoError = ""
 				m.SetStep(WaitingStep)
-				val, _ := strconv.Atoi(m.InputTwo.Value())
 				var rangeType internal.RangeType
 				var dur int
 				switch m.Range {

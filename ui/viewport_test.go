@@ -64,7 +64,7 @@ func Test_ViewportViewRender(t *testing.T) {
 	// Send quit key
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
-		Runes: []rune("ctrl+c"),
+		Runes: []rune("q"),
 	})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
