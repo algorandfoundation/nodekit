@@ -6,10 +6,15 @@ import (
 	"testing"
 )
 
-// Test the stub root command
-func Test_ExecuteRootCommand(t *testing.T) {
+func clearViper() {
 	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	viper.Set("algod", "http://localhost:8080")
+	viper.Set("ALGORAND_DATA", "")
+}
+
+// Test the stub root command
+func Test_ExecuteRootCommand(t *testing.T) {
+	clearViper()
 
 	// Execute
 	err := rootCmd.Execute()
@@ -17,68 +22,72 @@ func Test_ExecuteRootCommand(t *testing.T) {
 	if err == nil {
 		t.Fatal(err)
 	}
-}
 
-func Test_InitConfig(t *testing.T) {
-	cwd, _ := os.Getwd()
-	viper.Set("token", "")
-	viper.Set("algod", "")
-	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
+	t.Run("InitConfig", func(t *testing.T) {
+		cwd, _ := os.Getwd()
+		viper.Set("token", "")
+		viper.Set("algod", "")
+		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
 
-	initConfig()
-	algod := viper.Get("algod")
-	if algod == "" {
-		t.Fatal("Invalid Algod")
-	}
-	if algod != "http://127.0.0.1:8080" {
-		t.Fatal("Invalid Algod")
-	}
-}
+		initConfig()
+		algod := viper.Get("algod")
+		if algod == "" {
+			t.Fatal("Invalid Algod")
+		}
+		if algod != "http://127.0.0.1:8080" {
+			t.Fatal("Invalid Algod")
+		}
+		clearViper()
+	})
 
-func Test_InitConfigWithoutEndpoint(t *testing.T) {
-	cwd, _ := os.Getwd()
-	viper.Set("token", "")
-	viper.Set("algod", "")
-	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
+	t.Run("InitConfigWithoutEndpoint", func(t *testing.T) {
+		cwd, _ := os.Getwd()
+		viper.Set("token", "")
+		viper.Set("algod", "")
+		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
 
-	initConfig()
-	algod := viper.Get("algod")
-	if algod == "" {
-		t.Fatal("Invalid Algod")
-	}
-	if algod != "http://127.0.0.1:8080" {
-		t.Fatal("Invalid Algod")
-	}
-}
+		initConfig()
+		algod := viper.Get("algod")
+		if algod == "" {
+			t.Fatal("Invalid Algod")
+		}
+		if algod != "http://127.0.0.1:8080" {
+			t.Fatal("Invalid Algod")
+		}
+		clearViper()
+	})
 
-func Test_InitConfigWithAddress(t *testing.T) {
-	cwd, _ := os.Getwd()
-	viper.Set("token", "")
-	viper.Set("algod", "")
-	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
+	t.Run("InitConfigWithAddress", func(t *testing.T) {
+		cwd, _ := os.Getwd()
+		viper.Set("token", "")
+		viper.Set("algod", "")
+		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
 
-	initConfig()
-	algod := viper.Get("algod")
-	if algod == "" {
-		t.Fatal("Invalid Algod")
-	}
-	if algod != "http://255.255.255.255:8080" {
-		t.Fatal("Invalid Algod")
-	}
-}
+		initConfig()
+		algod := viper.Get("algod")
+		if algod == "" {
+			t.Fatal("Invalid Algod")
+		}
+		if algod != "http://255.255.255.255:8080" {
+			t.Fatal("Invalid Algod")
+		}
+		clearViper()
+	})
 
-func Test_InitConfigWithAddressAndDefaultPort(t *testing.T) {
-	cwd, _ := os.Getwd()
-	viper.Set("token", "")
-	viper.Set("algod", "")
-	t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddressAndDefaultPort")
+	t.Run("InitConfigWithAddressAndDefaultPort", func(t *testing.T) {
+		cwd, _ := os.Getwd()
+		viper.Set("token", "")
+		viper.Set("algod", "")
+		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddressAndDefaultPort")
 
-	initConfig()
-	algod := viper.Get("algod")
-	if algod == "" {
-		t.Fatal("Invalid Algod")
-	}
-	if algod != "http://255.255.255.255:8080" {
-		t.Fatal("Invalid Algod")
-	}
+		initConfig()
+		algod := viper.Get("algod")
+		if algod == "" {
+			t.Fatal("Invalid Algod")
+		}
+		if algod != "http://255.255.255.255:8080" {
+			t.Fatal("Invalid Algod")
+		}
+		clearViper()
+	})
 }
