@@ -7,6 +7,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui"
+	"github.com/algorandfoundation/hack-tui/ui/explanations"
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -43,11 +44,12 @@ var (
 			log.SetOutput(cmd.OutOrStdout())
 			initConfig()
 
-			if viper.GetString("algod") == "" {
-				return fmt.Errorf(style.Red.Render("algod is required"))
+			if viper.GetString("algod-endpoint") == "" {
+				return fmt.Errorf(style.Red.Render("algod-endpoint is required") + explanations.NodeNotFound)
 			}
-			if viper.GetString("token") == "" {
-				return fmt.Errorf(style.Red.Render("token is required"))
+
+			if viper.GetString("algod-token") == "" {
+				return fmt.Errorf(style.Red.Render("algod-token is required"))
 			}
 
 			client, err := getClient()
@@ -57,18 +59,14 @@ var (
 			v, err := client.GetStatusWithResponse(ctx)
 			if err != nil {
 				return fmt.Errorf(
-					style.Red.Render("failed to get status: %s")+
-						"\n\nExplanation: Could not reach algod. Check that algod is running and the provided connection arguments.\n",
+					style.Red.Render("failed to get status: %s")+explanations.Unreachable,
 					err)
 			} else if v.StatusCode() == 401 {
 				return fmt.Errorf(
-					style.Red.Render("failed to get status: Unauthorized") +
-						"\n\nExplanation: algod token is invalid. Algorun requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n",
-				)
+					style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
 			} else if v.StatusCode() != 200 {
 				return fmt.Errorf(
-					style.Red.Render("failed to get status: error code %d")+
-						"\n\nExplanation: algorun requires the "+style.BoldUnderline("admin token")+" for algod. You can find this in the algod.admin.token file in the algod data directory.\n",
+					style.Red.Render("failed to get status: error code %d")+explanations.TokenNotAdmin,
 					v.StatusCode())
 			}
 
@@ -76,7 +74,7 @@ var (
 			if err != nil {
 				return fmt.Errorf(
 					style.Red.Render("failed to get participation keys: %s")+
-						"\n\nExplanation: algorun requires the "+style.BoldUnderline("admin token")+" for algod in order to operate on participation keys. You can find this in the algod.admin.token file in the algod data directory.\n",
+						explanations.TokenNotAdmin,
 					err)
 			}
 			state := internal.StateModel{
@@ -155,13 +153,13 @@ func init() {
 		style.BoldUnderline("admin"),
 		style.LightBlue(" token"),
 	))
-	_ = viper.BindPFlag("algod", rootCmd.PersistentFlags().Lookup("algod"))
-	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
+	_ = viper.BindPFlag("algod-endpoint", rootCmd.PersistentFlags().Lookup("algod-endpoint"))
+	_ = viper.BindPFlag("algod-token", rootCmd.PersistentFlags().Lookup("algod-token"))
 
 	// Update Long Text
 	rootCmd.Long +=
 		style.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-			style.LightBlue("Algod: ") + viper.GetString("algod")
+			style.LightBlue("Algod: ") + viper.GetString("algod-endpoint")
 
 	if viper.GetString("data") != "" {
 		rootCmd.Long +=
@@ -210,8 +208,8 @@ func initConfig() {
 	_ = viper.ReadInConfig()
 
 	// Check for algod
-	loadedAlgod := viper.GetString("algod")
-	loadedToken := viper.GetString("token")
+	loadedAlgod := viper.GetString("algod-endpoint")
+	loadedToken := viper.GetString("algod-token")
 
 	// Load ALGORAND_DATA/config.json
 	algorandData, exists := os.LookupEnv("ALGORAND_DATA")
@@ -268,20 +266,20 @@ func initConfig() {
 			byteValue, err = io.ReadAll(tokenFile)
 			check(err)
 
-			viper.Set("token", strings.Replace(string(byteValue), "\n", "", 1))
+			viper.Set("algod-token", strings.Replace(string(byteValue), "\n", "", 1))
 		}
 
 		// Set the algod configuration
-		viper.Set("algod", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
+		viper.Set("algod-endpoint", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
 		viper.Set("data", dataConfigPath)
 	}
 
 }
 
 func getClient() (*api.ClientWithResponses, error) {
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", viper.GetString("token"))
+	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", viper.GetString("algod-token"))
 	if err != nil {
 		return nil, err
 	}
-	return api.NewClientWithResponses(viper.GetString("algod"), api.WithRequestEditorFn(apiToken.Intercept))
+	return api.NewClientWithResponses(viper.GetString("algod-endpoint"), api.WithRequestEditorFn(apiToken.Intercept))
 }
