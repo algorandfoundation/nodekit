@@ -148,8 +148,8 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVarP(&algod, "algod", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
-	rootCmd.PersistentFlags().StringVarP(&token, "token", "t", "", lipgloss.JoinHorizontal(
+	rootCmd.PersistentFlags().StringVarP(&algod, "algod-endpoint", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
+	rootCmd.PersistentFlags().StringVarP(&token, "algod-token", "t", "", lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		style.LightBlue("algod "),
 		style.BoldUnderline("admin"),
