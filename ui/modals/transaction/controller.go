@@ -64,10 +64,11 @@ func (m *ViewModel) UpdateState() {
 	}
 
 	var fee *uint64
-	if m.Account().IncentiveEligible && !m.Active {
-		feeInst := uint64(2000000)
-		fee = &feeInst
-	}
+	// TODO: enable fee with either feature flag or config flag
+	//if m.Account().IncentiveEligible && !m.Active {
+	//feeInst := uint64(2000000)
+	//fee = &feeInst
+	//}
 
 	m.ATxn.AUrlTxnKeyCommon.Sender = m.Participation.Address
 	m.ATxn.AUrlTxnKeyCommon.Type = string(types.KeyRegistrationTx)
