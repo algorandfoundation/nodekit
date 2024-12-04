@@ -36,93 +36,14 @@ curl -fsSL https://nodekit.algorand.co/install.sh | bash
 Launch the TUI by replacing the `<ENDPOINT>` and `<TOKEN>` 
 with your server in the following example
 
+> [!IMPORTANT]
+> TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
+
 ```bash
 algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
 ```
 
-# Building
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/algorandfoundation/hack-tui.git
-```
-
-2. Change to the project directory
-
-```bash
-cd hack-tui
-```
-
-3. Run the build command
-
-```bash
-make build
-```
-
-4. Start a participation node
-
-```bash
-docker compose up
-```
-
-> [!NOTE]
-> The docker image is used for development and testing purposes. TUI will also work with native algod.
-> If you have a node installed already, you can skip this step.
-
-5. Connect to the node
-
-```bash
-./bin/algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
-
-> [!CAUTION]
-> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
-
-> [!NOTE]
-> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node. Note that algorun requires the admin algod token.
-
-# ℹ️ Usage
-
-## ⚙️ Configuration
-
-Configuration is loaded in the following order:
-
-1. Configuration file (.algorun.yaml)
-   1. Current Directory
-   2. Home Directory
-   3. /etc/algorun/
-2. ENV Configuration
-   - ALGORUN\_\*
-3. CLI Flag Arguments
-4. ALGORAND_DATA parsing
-
-### .algorun.yaml
-
-Example configuration file:
-
-```yaml
-algod-endpoint: "http://localhost:8080"
-algod-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-```
-
-### Environment Variables
-
-| Name                   | Example                                                                                |
-|------------------------|----------------------------------------------------------------------------------------|
-| ALGORUN_ALGOD-ENDPOINT | ALGORUN_ALGOD-ENDPOINT="http://localhost:8080"                                         |
-| ALGORUN_ALGOD-TOKEN    | ALGORUN_ALGOD-TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
-
-### Flags
-
-The application supports the `algod-endpoint` and `algod-token` flags for configuration.
-
-```bash
-algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
-
-> [!IMPORTANT]
-> TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
+# ℹ️ Advanced Usage
 
 ## 🧑‍💻 Commands
 
@@ -146,4 +67,53 @@ Display the usage information for the command
 
 ```bash
 algorun help
+```
+## ⚙️ Configuration
+
+Configuration is loaded in the following order:
+
+1. [ALGORAND_DATA Parsing](#algorand_data)
+2. [Configuration File](#configuration-file)
+3. [Environment Variables](#environment-variables)
+4. [Command Line Flag Arguments](#flags)
+
+### ALGORAND_DATA
+
+The TUI searches the environment for an `ALGORAND_DATA` variable. 
+It then looks for the `algod-token` and `algod-endpoint` from the
+current configuration.
+
+### Configuration File
+
+The configuration file is named `.algorun.yaml` and is loaded in the following order:
+
+1. Current Directory
+2. Home Directory
+3. /etc/algorun/
+
+Example `.algorun.yaml` configuration file:
+
+```yaml
+algod-endpoint: "http://localhost:8080"
+algod-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+```
+
+### Environment Variables
+
+Environment variables can be set in order to override a configuration or ALGORAND_DATA setting
+but cannot be used to override the command line arguments.
+
+The following are the additional ENV variables the TUI supports
+
+| Name                   | Example                                                                                |
+|------------------------|----------------------------------------------------------------------------------------|
+| ALGORUN_ALGOD-ENDPOINT | ALGORUN_ALGOD-ENDPOINT="http://localhost:8080"                                         |
+| ALGORUN_ALGOD-TOKEN    | ALGORUN_ALGOD-TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
+
+### Flags
+
+The application supports the `algod-endpoint` and `algod-token` flags for configuration.
+
+```bash
+algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```

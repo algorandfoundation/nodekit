@@ -2,7 +2,7 @@
 
 A guide on how to contribute to this project.
 
-# Getting Started
+# Building
 
 Clone the project
 
@@ -22,7 +22,8 @@ Build the project
 make build
 ```
 
-Running a Participation Node
+Optionally, run a sandboxed participation node
+
 
 ```bash
 docker compose up
@@ -31,11 +32,18 @@ docker compose up
 Create a configuration file for the participation node in the root directory of the project (.algorun.yaml)
 
 ```yaml
-server: http://localhost:8080
-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+algod-endpoint: http://localhost:8080
+algod-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
 Launch the TUI
+
+
+> [!NOTE]
+> If you skipped the docker container or config file, try running `./bin/algorun` standalone, 
+> which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. 
+> Otherwise, provide the `--algod-endpoint` and `--algod-token` arguments so that it can find your node. 
+> Note that algorun requires the admin algod token.
 
 ```bash
 ./bin/algorun
