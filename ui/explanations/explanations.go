@@ -1,6 +1,6 @@
 package explanations
 
-import	(
+import (
 	"github.com/algorandfoundation/hack-tui/ui/style"
 )
 
@@ -10,4 +10,4 @@ var Unreachable = "\n\nExplanation: Could not reach algod. Check that algod is r
 
 var TokenInvalid = "\n\nExplanation: algod token is invalid. Algorun requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
 
-var TokenNotAdmin = "\n\nExplanation: algorun requires the "+style.BoldUnderline("admin token")+" for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
+var TokenNotAdmin = "\n\nExplanation: algorun requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"

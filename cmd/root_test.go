@@ -7,7 +7,7 @@ import (
 )
 
 func clearViper() {
-	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	viper.Set("algod-token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	viper.Set("algod", "http://localhost:8080")
 	viper.Set("ALGORAND_DATA", "")
 }
@@ -25,7 +25,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 	t.Run("InitConfig", func(t *testing.T) {
 		cwd, _ := os.Getwd()
-		viper.Set("token", "")
+		viper.Set("algod-token", "")
 		viper.Set("algod", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
 
@@ -42,7 +42,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 	t.Run("InitConfigWithoutEndpoint", func(t *testing.T) {
 		cwd, _ := os.Getwd()
-		viper.Set("token", "")
+		viper.Set("algod-token", "")
 		viper.Set("algod", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
 
@@ -59,7 +59,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 	t.Run("InitConfigWithAddress", func(t *testing.T) {
 		cwd, _ := os.Getwd()
-		viper.Set("token", "")
+		viper.Set("algod-token", "")
 		viper.Set("algod", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
 
@@ -76,7 +76,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 
 	t.Run("InitConfigWithAddressAndDefaultPort", func(t *testing.T) {
 		cwd, _ := os.Getwd()
-		viper.Set("token", "")
+		viper.Set("algod-token", "")
 		viper.Set("algod", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddressAndDefaultPort")
 
