@@ -5,8 +5,8 @@
 </div>
 
 <div align="center">
-    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
-        <img alt="CI Badge" src="https://img.shields.io/badge/CI-TODO-red"/>
+    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml">
+        <img alt="CI Badge" src="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml/badge.svg"/>
     </a>
     <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
         <img alt="CD Badge" src="https://img.shields.io/badge/CD-TODO-red"/>
@@ -27,12 +27,20 @@ Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](htt
 
 # 🚀 Get Started
 
-Run the build or ~~download the latest cli(WIP)~~.
+Download the latest release by running
 
-> [!NOTE]
-> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
+```bash
+curl -fsSL https://nodekit.algorand.co/install.sh | bash
+```
 
-## Building
+Launch the TUI by replacing the `<ENDPOINT>` and `<TOKEN>` 
+with your server in the following example
+
+```bash
+algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
+```
+
+# Building
 
 1. Clone the repository
 
@@ -65,7 +73,7 @@ docker compose up
 5. Connect to the node
 
 ```bash
-./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+./bin/algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
 > [!CAUTION]
@@ -89,30 +97,28 @@ Configuration is loaded in the following order:
 3. CLI Flag Arguments
 4. ALGORAND_DATA parsing
 
-This results in `ALGORAND_DATA` taking precedence in the loading order.
-
 ### .algorun.yaml
 
 Example configuration file:
 
 ```yaml
-server: "http://localhost:8080"
-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+algod-endpoint: "http://localhost:8080"
+algod-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 ```
 
 ### Environment Variables
 
-| Name           | Example                                                                          |
-| -------------- | -------------------------------------------------------------------------------- |
-| ALGORUN_SERVER | ALGORUN_SERVER="http://localhost:8080"                                           |
-| ALGORUN_TOKEN  | ALGORUN_TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
+| Name                   | Example                                                                                |
+|------------------------|----------------------------------------------------------------------------------------|
+| ALGORUN_ALGOD-ENDPOINT | ALGORUN_ALGOD-ENDPOINT="http://localhost:8080"                                         |
+| ALGORUN_ALGOD-TOKEN    | ALGORUN_ALGOD-TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
 
 ### Flags
 
-The application supports the `server` and `token` flags for configuration.
+The application supports the `algod-endpoint` and `algod-token` flags for configuration.
 
 ```bash
-algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
 > [!IMPORTANT]
