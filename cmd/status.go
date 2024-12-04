@@ -20,8 +20,8 @@ var statusCmd = &cobra.Command{
 	Long:  style.Purple(BANNER) + "\n" + style.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		initConfig()
-		if viper.GetString("server") == "" {
-			return errors.New(style.Magenta("server is required"))
+		if viper.GetString("algod-endpoint") == "" {
+			return errors.New(style.Magenta("algod-endpoint is required"))
 		}
 
 		// Get Algod from configuration

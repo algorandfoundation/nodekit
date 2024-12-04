@@ -6,7 +6,7 @@ import (
 )
 
 func Test_Main(t *testing.T) {
-	viper.Set("token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	viper.Set("server", "http://localhost:8080")
+	viper.Set("algod-token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	viper.Set("algod-endpoint", "http://localhost:8080")
 	main()
 }
