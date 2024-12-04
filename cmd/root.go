@@ -130,7 +130,6 @@ var (
 
 func check(err interface{}) {
 	if err != nil {
-		log.Fatal(err)
 		panic(err)
 	}
 }

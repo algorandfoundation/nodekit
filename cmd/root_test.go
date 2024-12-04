@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"github.com/spf13/viper"
 	"os"
 	"testing"
@@ -23,6 +24,22 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	t.Run("Invalid algod-endpoint", func(t *testing.T) {
+		viper.Set("algod-endpoint", "")
+		err := rootCmd.Execute()
+		if err == nil {
+			t.Error("No error for invalid algod-endpoint")
+		}
+		clearViper()
+	})
+	t.Run("Invalid algod-token", func(t *testing.T) {
+		viper.Set("algod-endpoint", "http://localhost:8080")
+		viper.Set("algod-token", "")
+		err := rootCmd.Execute()
+		if err == nil {
+			t.Error("No error for invalid algod-endpoint")
+		}
+	})
 	t.Run("InitConfig", func(t *testing.T) {
 		cwd, _ := os.Getwd()
 		viper.Set("algod-token", "")
@@ -89,5 +106,14 @@ func Test_ExecuteRootCommand(t *testing.T) {
 			t.Fatal("Invalid Algod")
 		}
 		clearViper()
+	})
+
+	t.Run("check error", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+		check(errors.New("test"))
 	})
 }
