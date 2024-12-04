@@ -79,8 +79,8 @@ var (
 				Client:  client,
 				Context: ctx,
 			}
-			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
-
+			state.Accounts, err = internal.AccountsFromState(&state, new(internal.Clock), client)
+			cobra.CheckErr(err)
 			// Fetch current state
 			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
 			cobra.CheckErr(err)

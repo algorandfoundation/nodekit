@@ -156,6 +156,18 @@ func (c *Client) DeleteParticipationKeyByIDWithResponse(ctx context.Context, par
 	return &res, nil
 }
 
+func (c *Client) AccountInformationWithResponse(ctx context.Context, address string, params *api.AccountInformationParams, reqEditors ...api.RequestEditorFn) (*api.AccountInformationResponse, error) {
+	httpResponse := http.Response{StatusCode: 200}
+	return &api.AccountInformationResponse{
+		Body:         nil,
+		HTTPResponse: &httpResponse,
+		JSON200:      &mock.ABCAccount,
+		JSON400:      nil,
+		JSON401:      nil,
+		JSON500:      nil,
+	}, nil
+}
+
 func (c *Client) GenerateParticipationKeysWithResponse(ctx context.Context, address string, params *api.GenerateParticipationKeysParams, reqEditors ...api.RequestEditorFn) (*api.GenerateParticipationKeysResponse, error) {
 	mock.Keys = append(mock.Keys, api.ParticipationKey{
 		Address:             "ABC",

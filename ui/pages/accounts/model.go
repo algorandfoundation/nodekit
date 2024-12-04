@@ -77,19 +77,19 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 func (m ViewModel) makeRows() *[]table.Row {
 	rows := make([]table.Row, 0)
 
-	for key := range m.Data.Accounts {
+	for addr := range m.Data.Accounts {
 		var expires = "N/A"
-		if m.Data.Accounts[key].Expires != nil {
+		if m.Data.Accounts[addr].Expires != nil {
 			// This condition will only exist for a split second
 			// until algod deletes the key
-			if m.Data.Accounts[key].Expires.Before(time.Now()) {
+			if m.Data.Accounts[addr].Expires.Before(time.Now()) {
 				expires = "EXPIRED"
 			} else {
-				expires = m.Data.Accounts[key].Expires.Format(time.RFC822)
+				expires = m.Data.Accounts[addr].Expires.Format(time.RFC822)
 			}
 
 			// Expires within the week
-			if m.Data.Accounts[key].Expires.Before(time.Now().Add(time.Hour * 24 * 7)) {
+			if m.Data.Accounts[addr].Expires.Before(time.Now().Add(time.Hour * 24 * 7)) {
 				expires = "⚠ " + expires
 			}
 		}
@@ -99,16 +99,20 @@ func (m ViewModel) makeRows() *[]table.Row {
 			expires = "SYNCING"
 		}
 
-		if m.Data.Accounts[key].Status == "Online" && expires == "N/A" && m.Data.Accounts[key].Expires != nil {
-			expires = "⚠ NON-RESIDENT-KEY"
+		if m.Data.Accounts[addr].NonResidentKey {
+			if expires == "⚠ EXPIRED" {
+				expires = "⚠ EXPIRED-NON-RESIDENT-KEY"
+			} else {
+				expires = "⚠ NON-RESIDENT-KEY"
+			}
 		}
 
 		rows = append(rows, table.Row{
-			m.Data.Accounts[key].Address,
-			strconv.Itoa(m.Data.Accounts[key].Keys),
-			m.Data.Accounts[key].Status,
+			m.Data.Accounts[addr].Address,
+			strconv.Itoa(m.Data.Accounts[addr].Keys),
+			m.Data.Accounts[addr].Status,
 			expires,
-			strconv.Itoa(m.Data.Accounts[key].Balance),
+			strconv.Itoa(m.Data.Accounts[addr].Balance),
 		})
 	}
 	sort.SliceStable(rows, func(i, j int) bool {

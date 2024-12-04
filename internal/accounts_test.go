@@ -62,66 +62,6 @@ func Test_AccountsFromState(t *testing.T) {
 		t.Fatal("Expected error for invalid address")
 	}
 
-	// Test Account from State
-
-	effectiveFirstValid := 0
-	effectiveLastValid := 10000
-	lastProposedRound := 1336
-	// Create mockedPart Keys
-	var mockedPartKeys = []api.ParticipationKey{
-		{
-			Address:             onlineAccounts[0].Address,
-			EffectiveFirstValid: &effectiveFirstValid,
-			EffectiveLastValid:  &effectiveLastValid,
-			Id:                  "",
-			Key: api.AccountParticipation{
-				SelectionParticipationKey: nil,
-				StateProofKey:             nil,
-				VoteParticipationKey:      nil,
-				VoteFirstValid:            0,
-				VoteLastValid:             9999999,
-				VoteKeyDilution:           0,
-			},
-			LastBlockProposal: &lastProposedRound,
-			LastStateProof:    nil,
-			LastVote:          nil,
-		},
-		{
-			Address:             onlineAccounts[0].Address,
-			EffectiveFirstValid: nil,
-			EffectiveLastValid:  nil,
-			Id:                  "",
-			Key: api.AccountParticipation{
-				SelectionParticipationKey: nil,
-				StateProofKey:             nil,
-				VoteParticipationKey:      nil,
-				VoteFirstValid:            0,
-				VoteLastValid:             9999999,
-				VoteKeyDilution:           0,
-			},
-			LastBlockProposal: nil,
-			LastStateProof:    nil,
-			LastVote:          nil,
-		},
-		{
-			Address:             onlineAccounts[1].Address,
-			EffectiveFirstValid: &effectiveFirstValid,
-			EffectiveLastValid:  &effectiveLastValid,
-			Id:                  "",
-			Key: api.AccountParticipation{
-				SelectionParticipationKey: nil,
-				StateProofKey:             nil,
-				VoteParticipationKey:      nil,
-				VoteFirstValid:            0,
-				VoteLastValid:             9999999,
-				VoteKeyDilution:           0,
-			},
-			LastBlockProposal: &lastProposedRound,
-			LastStateProof:    nil,
-			LastVote:          nil,
-		},
-	}
-
 	// Mock StateModel
 	state := &StateModel{
 		Metrics: MetricsModel{
@@ -140,39 +80,35 @@ func Test_AccountsFromState(t *testing.T) {
 			NeedsUpdate: false,
 			LastRound:   1337,
 		},
-		ParticipationKeys: &mockedPartKeys,
+		ParticipationKeys: &mock.Keys,
 	}
 
 	// Calculate expiration
 	clock := new(mock.Clock)
 	now := clock.Now()
-	roundDiff := max(0, effectiveLastValid-int(state.Status.LastRound))
+	roundDiff := max(0, mock.Keys[0].Key.VoteLastValid-int(state.Status.LastRound))
 	distance := int(state.Metrics.RoundTime) * roundDiff
 	expires := now.Add(time.Duration(distance))
-
+	tClient := test.GetClient(false)
+	acct, _ = GetAccount(tClient, "ABC")
 	// Construct expected accounts
 	expectedAccounts := map[string]Account{
-		onlineAccounts[0].Address: {
-			Participation: onlineAccounts[0].Participation,
-			Address:       onlineAccounts[0].Address,
-			Status:        onlineAccounts[0].Status,
-			Balance:       onlineAccounts[0].Amount / 1_000_000,
-			Keys:          2,
-			Expires:       expires,
-		},
-		onlineAccounts[1].Address: {
-			Participation: onlineAccounts[1].Participation,
-			Address:       onlineAccounts[1].Address,
-			Status:        onlineAccounts[1].Status,
-			Balance:       onlineAccounts[1].Amount / 1_000_000,
-			Keys:          1,
-			Expires:       expires,
+		"ABC": {
+			Participation:     acct.Participation,
+			Address:           acct.Address,
+			Status:            acct.Status,
+			IncentiveEligible: true,
+			Balance:           acct.Amount / 1_000_000,
+			Keys:              2,
+			Expires:           &expires,
 		},
 	}
 
 	// Call AccountsFromState
-	accounts := AccountsFromState(state, clock, client)
-
+	accounts, err := AccountsFromState(state, clock, tClient)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// Assert results
 	assert.Equal(t, expectedAccounts, accounts)
 
