@@ -72,16 +72,18 @@ algorun help
 
 Configuration is loaded in the following order:
 
-1. [ALGORAND_DATA Parsing](#algorand_data)
+1. [Command Line Flag Arguments](#flags)
 2. [Configuration File](#configuration-file)
 3. [Environment Variables](#environment-variables)
-4. [Command Line Flag Arguments](#flags)
+4. [ALGORAND_DATA Parsing](#algorand_data)
 
-### ALGORAND_DATA
+### Flags
 
-The TUI searches the environment for an `ALGORAND_DATA` variable. 
-It then looks for the `algod-token` and `algod-endpoint` from the
-current configuration.
+The application supports the `algod-endpoint` and `algod-token` flags for configuration.
+
+```bash
+algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+```
 
 ### Configuration File
 
@@ -110,10 +112,9 @@ The following are the additional ENV variables the TUI supports
 | ALGORUN_ALGOD-ENDPOINT | ALGORUN_ALGOD-ENDPOINT="http://localhost:8080"                                         |
 | ALGORUN_ALGOD-TOKEN    | ALGORUN_ALGOD-TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
 
-### Flags
+### ALGORAND_DATA
 
-The application supports the `algod-endpoint` and `algod-token` flags for configuration.
+The TUI searches the environment for an `ALGORAND_DATA` variable. 
+It then loads the `algod-token` and `algod-endpoint` values from
+the algod data directory.
 
-```bash
-algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
