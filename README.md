@@ -5,8 +5,8 @@
 </div>
 
 <div align="center">
-    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
-        <img alt="CI Badge" src="https://img.shields.io/badge/CI-TODO-red"/>
+    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml">
+        <img alt="CI Badge" src="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml/badge.svg"/>
     </a>
     <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
         <img alt="CD Badge" src="https://img.shields.io/badge/CD-TODO-red"/>
@@ -27,103 +27,30 @@ Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](htt
 
 # 🚀 Get Started
 
-Run the build or ~~download the latest cli(WIP)~~.
-
-> [!NOTE]
-> We do not have pre-built binaries yet. If you are comfortable doing so, you are welcome to build it yourself and provide feedback.
-
-## Building
-
-1. Clone the repository
+Download the latest release by running
 
 ```bash
-git clone https://github.com/algorandfoundation/hack-tui.git
+curl -fsSL https://raw.githubusercontent.com/algorandfoundation/hack-tui/refs/heads/main/install.sh | bash
 ```
 
-2. Change to the project directory
-
-```bash
-cd hack-tui
-```
-
-3. Run the build command
-
-```bash
-make build
-```
-
-4. Start a participation node
-
-```bash
-docker compose up
-```
-
-> [!NOTE]
-> The docker image is used for development and testing purposes. TUI will also work with native algod.
-> If you have a node installed already, you can skip this step.
-
-5. Connect to the node
-
-```bash
-./bin/algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
-
-> [!CAUTION]
-> This project is in alpha state and under heavy development. We do not recommend performing actions (e.g. key management) on participation nodes connected to public networks.
-
-> [!NOTE]
-> If you skipped the docker container, try running `./bin/algorun` standalone, which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. Otherwise, provide the `--server` and `--token` arguments so that it can find your node. Note that algorun requires the admin algod token.
-
-# ℹ️ Usage
-
-## ⚙️ Configuration
-
-Configuration is loaded in the following order:
-
-1. Configuration file (.algorun.yaml)
-   1. Current Directory
-   2. Home Directory
-   3. /etc/algorun/
-2. ENV Configuration
-   - ALGORUN\_\*
-3. CLI Flag Arguments
-4. ALGORAND_DATA parsing
-
-This results in `ALGORAND_DATA` taking precedence in the loading order.
-
-### .algorun.yaml
-
-Example configuration file:
-
-```yaml
-server: "http://localhost:8080"
-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-```
-
-### Environment Variables
-
-| Name           | Example                                                                          |
-| -------------- | -------------------------------------------------------------------------------- |
-| ALGORUN_SERVER | ALGORUN_SERVER="http://localhost:8080"                                           |
-| ALGORUN_TOKEN  | ALGORUN_TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
-
-### Flags
-
-The application supports the `server` and `token` flags for configuration.
-
-```bash
-algorun --server http://localhost:8080 --token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
+Launch the TUI by replacing the `<ENDPOINT>` and `<TOKEN>` 
+with your server in the following example
 
 > [!IMPORTANT]
 > TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
+
+```bash
+./algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
+```
+
+# ℹ️ Advanced Usage
 
 ## 🧑‍💻 Commands
 
 The default command will launch the full TUI application
 
 ```bash
-algorun
+./algorun
 ```
 
 ### Status
@@ -131,7 +58,7 @@ algorun
 Render only the status overview in the terminal
 
 ```bash
-algorun status
+./algorun status
 ```
 
 ### Help
@@ -139,5 +66,55 @@ algorun status
 Display the usage information for the command
 
 ```bash
-algorun help
+./algorun help
 ```
+## ⚙️ Configuration
+
+Configuration precedence takes place in the following order:
+
+1. [ALGORAND_DATA Parsing](#algorand_data)
+2. [Configuration File](#configuration-file)
+3. [Environment Variables](#environment-variables)
+4. [Command Line Flag Arguments](#flags)
+
+### Flags
+
+The application supports the `algod-endpoint` and `algod-token` flags for configuration.
+
+```bash
+./algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+```
+
+### Configuration File
+
+The configuration file is named `.algorun.yaml` and is loaded in the following order:
+
+1. Current Directory
+2. Home Directory
+3. /etc/algorun/
+
+Example `.algorun.yaml` configuration file:
+
+```yaml
+algod-endpoint: "http://localhost:8080"
+algod-token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+```
+
+### Environment Variables
+
+Environment variables can be set in order to override a configuration or ALGORAND_DATA setting
+but cannot be used to override the command line arguments.
+
+The following are the additional ENV variables the TUI supports
+
+| Name                   | Example                                                                                |
+|------------------------|----------------------------------------------------------------------------------------|
+| ALGORUN_ALGOD-ENDPOINT | ALGORUN_ALGOD-ENDPOINT="http://localhost:8080"                                         |
+| ALGORUN_ALGOD-TOKEN    | ALGORUN_ALGOD-TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |
+
+### ALGORAND_DATA
+
+The TUI searches the environment for an `ALGORAND_DATA` variable. 
+It then loads the `algod-token` and `algod-endpoint` values from
+the algod data directory.
+
