@@ -30,3 +30,5 @@ esac
 
 echo "Downloading: $release/$version/$target"
 curl --fail --location --progress-bar --output algorun "$release/$version/$target"
+
+chmod +x algorun
