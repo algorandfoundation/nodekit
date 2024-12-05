@@ -67,7 +67,7 @@ All submodules and endpoints **SHOULD** align with the command/ui namespaces.
 Example Command:
 
 ```bash
-hacktui status
+algorun status
 ```
 
 Example Structure
@@ -130,6 +130,7 @@ This package is the ViewModel and View in MVC.
 # Generating RPC package
 
 The `api` package is generated via [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen).
+This is only required when adding new or missing RPC interfaces from the algod specification.
 Its configuration is found under `generate.yaml` and can be run with the following make command:
 
 ```bash
