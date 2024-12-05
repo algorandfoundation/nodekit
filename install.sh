@@ -17,6 +17,9 @@ if [[ ${OS:-} = Windows_NT ]]; then
   exit 1
 fi
 
+trap "echo Something went wrong." int
+trap "echo Something went wrong." exit
+
 case $os in
 'Darwin x86_64')
     target=algorun-amd64-darwin
@@ -36,3 +39,10 @@ echo "Downloading: $release/$version/$target"
 curl --fail --location --progress-bar --output algorun "$release/$version/$target"
 
 chmod +x algorun
+
+trap - int
+trap - exit
+
+echo "Downloaded"
+echo "Run with:"
+echo "./algorun"
