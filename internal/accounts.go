@@ -135,7 +135,7 @@ func UpdateAccountExpiredTime(t Time, account Account, state *StateModel) Accoun
 	var nonResidentKey = true
 	for _, key := range *state.ParticipationKeys {
 		// We have the key locally, update the residency
-		if key.Address == account.Address && account.Participation != nil && IsParticipationKeyActive(key, *account.Participation) {
+		if account.Status == "Offline" || (key.Address == account.Address && account.Participation != nil && IsParticipationKeyActive(key, *account.Participation)) {
 			nonResidentKey = false
 		}
 	}

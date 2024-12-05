@@ -100,9 +100,7 @@ func (m ViewModel) makeRows() *[]table.Row {
 		}
 
 		if m.Data.Accounts[addr].NonResidentKey {
-			if expires == "⚠ EXPIRED" {
-				expires = "⚠ EXPIRED-NON-RESIDENT-KEY"
-			} else {
+			if expires != "⚠ EXPIRED" && expires != "EXPIRED" {
 				expires = "⚠ NON-RESIDENT-KEY"
 			}
 		}
