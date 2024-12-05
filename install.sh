@@ -9,7 +9,7 @@ fi
 
 os=$(uname -ms)
 # TODO: replace with algorandfoundation org and publicly host script
-release="https://github.com/awesome-algorand/hack-tui/releases/download/"
+release="https://github.com/awesome-algorand/hack-tui/releases/download"
 version="v1.0.0-beta.1"
 
 if [[ ${OS:-} = Windows_NT ]]; then
