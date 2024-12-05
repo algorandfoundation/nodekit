@@ -30,7 +30,7 @@ Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](htt
 Download the latest release by running
 
 ```bash
-curl -fsSL https://nodekit.algorand.co/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/algorandfoundation/hack-tui/refs/heads/main/install.sh | bash
 ```
 
 Launch the TUI by replacing the `<ENDPOINT>` and `<TOKEN>` 
@@ -70,12 +70,12 @@ Display the usage information for the command
 ```
 ## ⚙️ Configuration
 
-Configuration is loaded in the following order:
+Configuration precedence takes place in the following order:
 
-1. [Command Line Flag Arguments](#flags)
+1. [ALGORAND_DATA Parsing](#algorand_data)
 2. [Configuration File](#configuration-file)
 3. [Environment Variables](#environment-variables)
-4. [ALGORAND_DATA Parsing](#algorand_data)
+4. [Command Line Flag Arguments](#flags)
 
 ### Flags
 
