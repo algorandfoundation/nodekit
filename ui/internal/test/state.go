@@ -37,7 +37,6 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		Context:           context.Background(),
 	}
 	values := make(map[string]internal.Account)
-	clock := new(mock2.Clock)
 	for _, key := range *sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
@@ -46,7 +45,7 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 				Status:            "Offline",
 				Balance:           0,
 				IncentiveEligible: true,
-				Expires:           internal.GetExpiresTime(clock, key, sm),
+				Expires:           nil,
 				Keys:              1,
 			}
 		} else {
