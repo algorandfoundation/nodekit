@@ -40,7 +40,7 @@ with your server in the following example
 > TUI requires the *admin* token in order to access participation key information. This can be found in the `algod.admin.token` file, e.g. `/var/lib/algorand/algod.admin.token`
 
 ```bash
-algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
+./algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
 ```
 
 # ℹ️ Advanced Usage
@@ -50,7 +50,7 @@ algorun --algod-endpoint <ENDPOINT> --algod-token <TOKEN>
 The default command will launch the full TUI application
 
 ```bash
-algorun
+./algorun
 ```
 
 ### Status
@@ -58,7 +58,7 @@ algorun
 Render only the status overview in the terminal
 
 ```bash
-algorun status
+./algorun status
 ```
 
 ### Help
@@ -66,7 +66,7 @@ algorun status
 Display the usage information for the command
 
 ```bash
-algorun help
+./algorun help
 ```
 ## ⚙️ Configuration
 
@@ -82,7 +82,7 @@ Configuration is loaded in the following order:
 The application supports the `algod-endpoint` and `algod-token` flags for configuration.
 
 ```bash
-algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+./algorun --algod-endpoint http://localhost:8080 --algod-token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
 
 ### Configuration File
