@@ -1,13 +1,13 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	"sort"
 
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/ui/utils"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )

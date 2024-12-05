@@ -2,9 +2,9 @@ package test
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	mock2 "github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"time"
 )
 

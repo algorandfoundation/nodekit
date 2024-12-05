@@ -14,7 +14,7 @@ EOF
 )
   
 os=$(uname -ms)
-release="https://github.com/algorandfoundation/hack-tui/releases/download"
+release="https://github.com/algorandfoundation/algorun-tui/releases/download"
 version="v1.0.0-beta.1"
 
 Red=''

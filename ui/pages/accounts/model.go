@@ -1,12 +1,12 @@
 package accounts
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )

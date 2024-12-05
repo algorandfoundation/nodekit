@@ -3,9 +3,9 @@ package modal
 import (
 	"bytes"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/internal/test/mock"
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"

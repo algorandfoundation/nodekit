@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 var VoteKey = []byte("TESTKEY")

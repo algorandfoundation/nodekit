@@ -3,9 +3,9 @@ package transaction
 import (
 	"encoding/base64"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algourl/encoder"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/app"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 type State string

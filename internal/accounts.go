@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 // Account represents a user's account, including address, status, balance, and number of keys.

@@ -1,7 +1,7 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"

@@ -1,20 +1,20 @@
-# ⌨️ Hack-TUI
+# ⌨️ AlgoRun-TUI
 
 <div align="center">
     <img alt="Terminal Render" src="/assets/Banner.gif" width="65%">
 </div>
 
 <div align="center">
-    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml">
-        <img alt="CI Badge" src="https://github.com/algorandfoundation/hack-tui/actions/workflows/test.yaml/badge.svg"/>
+    <a target="_blank" href="https://github.com/algorandfoundation/algorun-tui/actions/workflows/test.yaml">
+        <img alt="CI Badge" src="https://github.com/algorandfoundation/algorun-tui/actions/workflows/test.yaml/badge.svg"/>
     </a>
-    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui">
+    <a target="_blank" href="https://github.com/algorandfoundation/algorun-tui">
         <img alt="CD Badge" src="https://img.shields.io/badge/CD-TODO-red"/>
     </a>
-    <a target="_blank" href="https://github.com/algorandfoundation/hack-tui/stargazers">
-        <img alt="Repository Stars Badge" src="https://img.shields.io/github/stars/algorandfoundation/hack-tui?color=7B1E7A&logo=star&style=flat" />
+    <a target="_blank" href="https://github.com/algorandfoundation/algorun-tui/stargazers">
+        <img alt="Repository Stars Badge" src="https://img.shields.io/github/stars/algorandfoundation/algorun-tui?color=7B1E7A&logo=star&style=flat" />
     </a>
-    <img alt="Repository Visitors Badge" src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Falgorandfoundation%2Fhack-tui&countColor=%237B1E7A&style=flat" />
+    <img alt="Repository Visitors Badge" src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Falgorandfoundation%2Falgorun-tui&countColor=%237B1E7A&style=flat" />
 </div>
 
 ---
@@ -30,7 +30,7 @@ Built with [bubbles](https://github.com/charmbracelet/bubbles) & [bubbletea](htt
 Download the latest release by running
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/algorandfoundation/hack-tui/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/algorandfoundation/algorun-tui/refs/heads/main/install.sh | bash
 ```
 
 Launch the TUI by replacing the `<ENDPOINT>` and `<TOKEN>` 

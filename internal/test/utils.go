@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"io"
 )
 

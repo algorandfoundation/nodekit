@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/internal/test"
-	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/test"
+	uitest "github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	"testing"
 	"time"
 )

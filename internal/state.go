@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 type StateModel struct {

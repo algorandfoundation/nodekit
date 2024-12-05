@@ -7,13 +7,13 @@ A guide on how to contribute to this project.
 Clone the project
 
 ```bash
-git clone git@github.com:algorandfoundation/hack-tui.git
+git clone git@github.com:algorandfoundation/algorun-tui.git
 ```
 
 Change to the directory
 
 ```bash
-cd hack-tui
+cd algorun-tui
 ```
 
 Build the project

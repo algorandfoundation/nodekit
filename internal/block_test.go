@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"testing"
 	"time"
 )

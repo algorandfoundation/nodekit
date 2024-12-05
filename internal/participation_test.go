@@ -3,9 +3,9 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal/test"
-	"github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"testing"
 )
 

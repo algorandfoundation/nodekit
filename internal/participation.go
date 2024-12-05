@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 // GetPartKeys get the participation keys from the node

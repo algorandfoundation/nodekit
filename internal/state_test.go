@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
 	"time"

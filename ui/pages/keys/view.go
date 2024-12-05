@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 )
 
 func (m ViewModel) View() string {

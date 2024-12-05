@@ -1,8 +1,8 @@
 package modal
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 )
 

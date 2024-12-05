@@ -1,8 +1,8 @@
 package exception
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"

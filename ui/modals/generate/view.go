@@ -3,7 +3,7 @@ package generate
 import (
 	"fmt"
 
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 )
 

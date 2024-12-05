@@ -3,8 +3,8 @@ package test
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"net/http"
 )
 

@@ -3,12 +3,12 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/modal"
-	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
-	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/modal"
+	"github.com/algorandfoundation/algorun-tui/ui/pages/accounts"
+	"github.com/algorandfoundation/algorun-tui/ui/pages/keys"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )

@@ -2,9 +2,9 @@ package internal
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal/test"
-	"github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
 	"testing"

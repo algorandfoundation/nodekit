@@ -1,7 +1,7 @@
 package explanations
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 )
 
 var NodeNotFound = "\n\nExplanation: algorun could not find your node automatically. Provide --algod-endpoint and --algod-token, or set the goal-compatible ALGORAND_DATA environment variable to the algod data directory, e.g. /var/lib/algorand\n"
