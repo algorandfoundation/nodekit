@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+if [ -f algorun ]; then
+    echo An algorun file already exists in the current directory. Delete or rename it before installing.
+    exit 1
+fi
+
 os=$(uname -ms)
 # TODO: replace with algorandfoundation org and publicly host script
 release="https://github.com/awesome-algorand/hack-tui/releases/download/"
@@ -11,7 +16,6 @@ if [[ ${OS:-} = Windows_NT ]]; then
   echo "Unsupported platform"
   exit 1
 fi
-
 
 case $os in
 'Darwin x86_64')
