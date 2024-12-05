@@ -133,7 +133,8 @@ func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part a
 			part.Key.VoteKeyDilution,
 		)
 		if incentiveEligible {
-			query += fmt.Sprintf("&fee[0]=%d", 2000000)
+			// TODO: enable fee with either feature flag or config flag
+			// query += fmt.Sprintf("&fee[0]=%d", 2000000)
 		}
 	}
 	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
