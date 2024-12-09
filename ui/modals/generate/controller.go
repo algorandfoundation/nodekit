@@ -1,12 +1,14 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/app"
+	"strconv"
+	"time"
+
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"strconv"
-	"time"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -23,13 +25,16 @@ func (m *ViewModel) SetStep(step Step) {
 	case AddressStep:
 		m.Controls = "( esc to cancel )"
 		m.Title = DefaultTitle
+		m.InputError = ""
 		m.BorderColor = DefaultBorderColor
 	case DurationStep:
 		m.Controls = "( (s)witch range )"
 		m.Title = "Validity Range"
+		m.InputTwo.SetValue("")
 		m.InputTwo.Focus()
 		m.InputTwo.PromptStyle = focusedStyle
 		m.InputTwo.TextStyle = focusedStyle
+		m.InputTwoError = ""
 		m.Input.Blur()
 	case WaitingStep:
 		m.Controls = ""
@@ -59,12 +64,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			if m.Step == DurationStep {
 				switch m.Range {
 				case Day:
-					m.Range = Week
-				case Week:
 					m.Range = Month
 				case Month:
-					m.Range = Year
-				case Year:
+					m.Range = Round
+				case Round:
 					m.Range = Day
 				}
 				return &m, nil
@@ -72,23 +75,36 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		case "enter":
 			switch m.Step {
 			case AddressStep:
+				addr := m.Input.Value()
+				if !internal.ValidateAddress(addr) {
+					m.InputError = "Error: invalid address"
+					return &m, nil
+				}
+				m.InputError = ""
 				m.SetStep(DurationStep)
 				return &m, app.EmitShowModal(app.GenerateModal)
 			case DurationStep:
+				val, err := strconv.Atoi(m.InputTwo.Value())
+				if err != nil || val <= 0 {
+					m.InputTwoError = "Error: duration must be a positive number"
+					return &m, nil
+				}
+				m.InputTwoError = ""
 				m.SetStep(WaitingStep)
-				val, _ := strconv.Atoi(m.InputTwo.Value())
-				var dur time.Duration
+				var rangeType internal.RangeType
+				var dur int
 				switch m.Range {
 				case Day:
-					dur = time.Duration(int(time.Hour*24) * val)
-				case Week:
-					dur = time.Duration(int(time.Hour*24*7) * val)
+					dur = int(time.Hour*24) * val
+					rangeType = internal.TimeRange
 				case Month:
-					dur = time.Duration(int(time.Hour*24*30) * val)
-				case Year:
-					dur = time.Duration(int(time.Hour*24*365) * val)
+					dur = int(time.Hour*24*30) * val
+					rangeType = internal.TimeRange
+				case Round:
+					dur = val
+					rangeType = internal.RoundRange
 				}
-				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), dur, m.State))
+				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), rangeType, dur, m.State))
 
 			}
 

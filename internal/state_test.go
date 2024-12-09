@@ -2,11 +2,10 @@ package internal
 
 import (
 	"context"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
 	"time"
-
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 
 func Test_StateModel(t *testing.T) {

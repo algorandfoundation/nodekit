@@ -2,10 +2,10 @@ package keys
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal/test/mock"
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

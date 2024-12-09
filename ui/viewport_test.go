@@ -2,9 +2,9 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/hack-tui/internal/test"
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	uitest "github.com/algorandfoundation/hack-tui/ui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/internal/test"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	uitest "github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	"testing"
 	"time"
 
@@ -64,7 +64,7 @@ func Test_ViewportViewRender(t *testing.T) {
 	// Send quit key
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
-		Runes: []rune("ctrl+c"),
+		Runes: []rune("q"),
 	})
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))

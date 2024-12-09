@@ -23,7 +23,7 @@ if [ -d "$ALGORAND_DATA" ]; then
         algod -o -d "$ALGORAND_DATA" -l "0.0.0.0:8080"
     else
         sed -i "s/NUM_ROUNDS/${NUM_ROUNDS:-30000}/" "/node/run/template.json"
-        sed -i "s/\"NetworkName\": \"\"/\"NetworkName\": \"hack-tui\"/" "/node/run/template.json"
+        sed -i "s/\"NetworkName\": \"\"/\"NetworkName\": \"algorun-tui\"/" "/node/run/template.json"
         goal network create --noclean -n tuinet -r "${ALGORAND_DATA}/.." -t "/node/run/template.json"
 
         # Cycle Network

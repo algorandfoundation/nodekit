@@ -2,14 +2,13 @@ package ui
 
 import (
 	"bytes"
-	"testing"
-	"time"
-
-	"github.com/algorandfoundation/hack-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
+	"testing"
+	"time"
 )
 
 var protocolViewSnapshots = map[string]ProtocolViewModel{

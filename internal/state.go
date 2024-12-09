@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/api"
+	"github.com/algorandfoundation/algorun-tui/api"
 )
 
 type StateModel struct {
@@ -125,8 +125,10 @@ func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client api.Client
 		s.Metrics.LastRX = res["algod_network_received_bytes_total"]
 	}
 }
-func (s *StateModel) UpdateAccounts() {
-	s.Accounts = AccountsFromState(s, new(Clock), s.Client)
+func (s *StateModel) UpdateAccounts() error {
+	var err error
+	s.Accounts, err = AccountsFromState(s, new(Clock), s.Client)
+	return err
 }
 
 func (s *StateModel) UpdateKeys() {
@@ -137,6 +139,9 @@ func (s *StateModel) UpdateKeys() {
 	}
 	if err == nil {
 		s.Admin = true
-		s.UpdateAccounts()
+		err = s.UpdateAccounts()
+		if err != nil {
+			// TODO: Handle error
+		}
 	}
 }

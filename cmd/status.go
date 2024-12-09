@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui"
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 // statusCmd is the main entrypoint for the `status` cobra.Command with a tea.Program
@@ -21,8 +20,8 @@ var statusCmd = &cobra.Command{
 	Long:  style.Purple(style.BANNER) + "\n" + style.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		initConfig()
-		if viper.GetString("server") == "" {
-			return errors.New(style.Magenta("server is required"))
+		if viper.GetString("algod-endpoint") == "" {
+			return errors.New(style.Magenta("algod-endpoint is required"))
 		}
 
 		// Get Algod from configuration

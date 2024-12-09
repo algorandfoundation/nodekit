@@ -2,9 +2,9 @@ package test
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	mock2 "github.com/algorandfoundation/hack-tui/internal/test/mock"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"time"
 )
 
@@ -37,16 +37,16 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		Context:           context.Background(),
 	}
 	values := make(map[string]internal.Account)
-	clock := new(mock2.Clock)
 	for _, key := range *sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
 			values[key.Address] = internal.Account{
-				Address: key.Address,
-				Status:  "Offline",
-				Balance: 0,
-				Expires: internal.GetExpiresTime(clock, key, sm),
-				Keys:    1,
+				Address:           key.Address,
+				Status:            "Offline",
+				Balance:           0,
+				IncentiveEligible: true,
+				Expires:           nil,
+				Keys:              1,
 			}
 		} else {
 			val.Keys++

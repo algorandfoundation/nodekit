@@ -3,9 +3,8 @@ package internal
 import (
 	"context"
 	"errors"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"time"
-
-	"github.com/algorandfoundation/hack-tui/api"
 )
 
 type BlockMetrics struct {

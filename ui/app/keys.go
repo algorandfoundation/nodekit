@@ -2,10 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	tea "github.com/charmbracelet/bubbletea"
 	"time"
+
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type DeleteFinished struct {
@@ -31,12 +32,22 @@ func EmitDeleteKey(ctx context.Context, client api.ClientWithResponsesInterface,
 	}
 }
 
-func GenerateCmd(account string, duration time.Duration, state *internal.StateModel) tea.Cmd {
+func GenerateCmd(account string, rangeType internal.RangeType, duration int, state *internal.StateModel) tea.Cmd {
 	return func() tea.Msg {
-		params := api.GenerateParticipationKeysParams{
-			Dilution: nil,
-			First:    int(state.Status.LastRound),
-			Last:     int(state.Status.LastRound) + int((duration / state.Metrics.RoundTime)),
+		var params api.GenerateParticipationKeysParams
+
+		if rangeType == internal.TimeRange {
+			params = api.GenerateParticipationKeysParams{
+				Dilution: nil,
+				First:    int(state.Status.LastRound),
+				Last:     int(state.Status.LastRound) + int((time.Duration(duration) / state.Metrics.RoundTime)),
+			}
+		} else {
+			params = api.GenerateParticipationKeysParams{
+				Dilution: nil,
+				First:    int(state.Status.LastRound),
+				Last:     int(state.Status.LastRound) + int(duration),
+			}
 		}
 
 		key, err := internal.GenerateKeyPair(state.Context, state.Client, account, &params)

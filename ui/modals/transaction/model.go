@@ -2,10 +2,10 @@ package transaction
 
 import (
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/algorandfoundation/algourl/encoder"
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/style"
 )
 
 type ViewModel struct {

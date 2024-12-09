@@ -1,8 +1,8 @@
 package transaction
 
 import (
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 )
@@ -29,7 +29,7 @@ func (m ViewModel) View() string {
 	}
 	intro := "Sign this transaction to " + verb + " your account keys:"
 
-	link, _ := internal.ToLoraDeepLink(m.State.Status.Network, m.Active, *m.Participation)
+	link, _ := internal.ToLoraDeepLink(m.State.Status.Network, m.Active, m.Account().IncentiveEligible, *m.Participation)
 	loraText := lipgloss.JoinHorizontal(
 		lipgloss.Bottom,
 		style.WithHyperlink("Click here", link),
@@ -78,7 +78,9 @@ func (m ViewModel) View() string {
 			lipgloss.Center,
 			intro,
 			"",
-			style.Red.Render(ansi.Wordwrap("QR Code too large to display. Please adjust terminal dimensions or font size.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("Mobile QR is available but it does not fit on screen.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("Adjust terminal dimensions or font size to display.", m.Width, " ")),
+			"",
 			"-or-",
 			loraText,
 		)

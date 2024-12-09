@@ -4,24 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"strings"
-
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/cmd/node"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui"
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/cmd/node"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui"
+	"github.com/algorandfoundation/algorun-tui/ui/explanations"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
+	"os"
+	"strings"
 )
 
 var (
-	server  string
+	algod   string
 	token   = strings.Repeat("a", 64)
 	Version = ""
 	rootCmd = &cobra.Command{
@@ -35,21 +36,37 @@ var (
 			log.SetOutput(cmd.OutOrStdout())
 			initConfig()
 
-			if viper.GetString("server") == "" {
-				return fmt.Errorf(style.Red.Render("server is required"))
+			if viper.GetString("algod-endpoint") == "" {
+				return fmt.Errorf(style.Red.Render("algod-endpoint is required") + explanations.NodeNotFound)
 			}
-			if viper.GetString("token") == "" {
-				return fmt.Errorf(style.Red.Render("token is required"))
+
+			if viper.GetString("algod-token") == "" {
+				return fmt.Errorf(style.Red.Render("algod-token is required"))
 			}
 
 			client, err := getClient()
 			cobra.CheckErr(err)
 
 			ctx := context.Background()
+			v, err := client.GetStatusWithResponse(ctx)
+			if err != nil {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: %s")+explanations.Unreachable,
+					err)
+			} else if v.StatusCode() == 401 {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
+			} else if v.StatusCode() != 200 {
+				return fmt.Errorf(
+					style.Red.Render("failed to get status: error code %d")+explanations.TokenNotAdmin,
+					v.StatusCode())
+			}
+
 			partkeys, err := internal.GetPartKeys(ctx, client)
 			if err != nil {
 				return fmt.Errorf(
-					style.Red.Render("failed to get participation keys: %s"),
+					style.Red.Render("failed to get participation keys: %s")+
+						explanations.TokenNotAdmin,
 					err)
 			}
 			state := internal.StateModel{
@@ -72,8 +89,8 @@ var (
 				Client:  client,
 				Context: ctx,
 			}
-			state.Accounts = internal.AccountsFromState(&state, new(internal.Clock), client)
-
+			state.Accounts, err = internal.AccountsFromState(&state, new(internal.Clock), client)
+			cobra.CheckErr(err)
 			// Fetch current state
 			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
 			cobra.CheckErr(err)
@@ -105,7 +122,6 @@ var (
 
 func check(err interface{}) {
 	if err != nil {
-		log.Fatal(err)
 		panic(err)
 	}
 }
@@ -121,15 +137,20 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVar(&server, "server", "", style.LightBlue("server address"))
-	rootCmd.PersistentFlags().StringVar(&token, "token", "", style.LightBlue("server token"))
-	_ = viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
-	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
+	rootCmd.PersistentFlags().StringVarP(&algod, "algod-endpoint", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
+	rootCmd.PersistentFlags().StringVarP(&token, "algod-token", "t", "", lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		style.LightBlue("algod "),
+		style.BoldUnderline("admin"),
+		style.LightBlue(" token"),
+	))
+	_ = viper.BindPFlag("algod-endpoint", rootCmd.PersistentFlags().Lookup("algod-endpoint"))
+	_ = viper.BindPFlag("algod-token", rootCmd.PersistentFlags().Lookup("algod-token"))
 
 	// Update Long Text
 	rootCmd.Long +=
 		style.Magenta("Configuration: ") + viper.GetViper().ConfigFileUsed() + "\n" +
-			style.LightBlue("Server: ") + viper.GetString("server")
+			style.LightBlue("Algod: ") + viper.GetString("algod-endpoint")
 
 	if viper.GetString("data") != "" {
 		rootCmd.Long +=
@@ -178,15 +199,15 @@ func initConfig() {
 	viper.AutomaticEnv()
 	_ = viper.ReadInConfig()
 
-	// Check for server
-	loadedServer := viper.GetString("server")
-	loadedToken := viper.GetString("token")
+	// Check for algod
+	loadedAlgod := viper.GetString("algod-endpoint")
+	loadedToken := viper.GetString("algod-token")
 
 	// Load ALGORAND_DATA/config.json
 	algorandData, exists := os.LookupEnv("ALGORAND_DATA")
 
 	// Load the Algorand Data Configuration
-	if exists && algorandData != "" && loadedServer == "" {
+	if exists && algorandData != "" && loadedAlgod == "" {
 		// Placeholder for Struct
 		var algodConfig AlgodConfig
 
@@ -237,20 +258,20 @@ func initConfig() {
 			byteValue, err = io.ReadAll(tokenFile)
 			check(err)
 
-			viper.Set("token", strings.Replace(string(byteValue), "\n", "", 1))
+			viper.Set("algod-token", strings.Replace(string(byteValue), "\n", "", 1))
 		}
 
-		// Set the server configuration
-		viper.Set("server", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
+		// Set the algod configuration
+		viper.Set("algod-endpoint", "http://"+strings.Replace(algodConfig.EndpointAddress, "\n", "", 1))
 		viper.Set("data", dataConfigPath)
 	}
 
 }
 
 func getClient() (*api.ClientWithResponses, error) {
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", viper.GetString("token"))
+	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", viper.GetString("algod-token"))
 	if err != nil {
 		return nil, err
 	}
-	return api.NewClientWithResponses(viper.GetString("server"), api.WithRequestEditorFn(apiToken.Intercept))
+	return api.NewClientWithResponses(viper.GetString("algod-endpoint"), api.WithRequestEditorFn(apiToken.Intercept))
 }

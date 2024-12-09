@@ -1,14 +1,14 @@
 package modal
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
-	"github.com/algorandfoundation/hack-tui/ui/app"
-	"github.com/algorandfoundation/hack-tui/ui/modals/confirm"
-	"github.com/algorandfoundation/hack-tui/ui/modals/exception"
-	"github.com/algorandfoundation/hack-tui/ui/modals/generate"
-	"github.com/algorandfoundation/hack-tui/ui/modals/info"
-	"github.com/algorandfoundation/hack-tui/ui/modals/transaction"
+	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/algorun-tui/ui/modals/confirm"
+	"github.com/algorandfoundation/algorun-tui/ui/modals/exception"
+	"github.com/algorandfoundation/algorun-tui/ui/modals/generate"
+	"github.com/algorandfoundation/algorun-tui/ui/modals/info"
+	"github.com/algorandfoundation/algorun-tui/ui/modals/transaction"
 )
 
 type ViewModel struct {

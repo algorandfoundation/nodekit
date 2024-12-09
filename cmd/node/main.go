@@ -1,7 +1,7 @@
 package node
 
 import (
-	"github.com/algorandfoundation/hack-tui/ui/style"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/spf13/cobra"
 )
 

@@ -2,10 +2,10 @@ package ui
 
 import (
 	"bytes"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	"testing"
 	"time"
 
-	"github.com/algorandfoundation/hack-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

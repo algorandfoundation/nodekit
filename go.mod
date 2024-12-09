@@ -1,4 +1,4 @@
-module github.com/algorandfoundation/hack-tui
+module github.com/algorandfoundation/algorun-tui
 
 go 1.22.0
 
