@@ -75,7 +75,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Status.State = "Unknown"
 
 		// Update Status
-		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.CatchpointAcquiredBlocks, status.JSON200.UpgradeNodeVote)
+		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.Catchpoint, status.JSON200.UpgradeNodeVote)
 
 		// Fetch Keys
 		s.UpdateKeys()
