@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/cmd/configure"
 	"github.com/algorandfoundation/algorun-tui/cmd/node"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/ui"
@@ -18,6 +19,7 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -137,15 +139,15 @@ func init() {
 	rootCmd.Version = Version
 
 	// Bindings
-	rootCmd.PersistentFlags().StringVarP(&algod, "algod-endpoint", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
-	rootCmd.PersistentFlags().StringVarP(&token, "algod-token", "t", "", lipgloss.JoinHorizontal(
+	rootCmd.Flags().StringVarP(&algod, "algod-endpoint", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
+	rootCmd.Flags().StringVarP(&token, "algod-token", "t", "", lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		style.LightBlue("algod "),
 		style.BoldUnderline("admin"),
 		style.LightBlue(" token"),
 	))
-	_ = viper.BindPFlag("algod-endpoint", rootCmd.PersistentFlags().Lookup("algod-endpoint"))
-	_ = viper.BindPFlag("algod-token", rootCmd.PersistentFlags().Lookup("algod-token"))
+	_ = viper.BindPFlag("algod-endpoint", rootCmd.Flags().Lookup("algod-endpoint"))
+	_ = viper.BindPFlag("algod-token", rootCmd.Flags().Lookup("algod-token"))
 
 	// Update Long Text
 	rootCmd.Long +=
@@ -159,7 +161,10 @@ func init() {
 
 	// Add Commands
 	rootCmd.AddCommand(statusCmd)
-	rootCmd.AddCommand(node.NodeCmd)
+	if runtime.GOOS != "windows" {
+		rootCmd.AddCommand(node.Cmd)
+		rootCmd.AddCommand(configure.Cmd)
+	}
 }
 
 // Execute executes the root command.

@@ -1,8 +1,11 @@
-package node
+package configure
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/cmd/node"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"os"
 	"os/exec"
 	"runtime"
@@ -12,35 +15,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configureCmd = &cobra.Command{
-	Use:   "configure",
-	Short: "Configure Algod",
-	Long:  "Configure Algod settings",
-	Run: func(cmd *cobra.Command, args []string) {
-		configureNode()
-	},
+var Cmd = &cobra.Command{
+	Use:               "configure",
+	Short:             "Configure Algod",
+	Long:              "Configure Algod settings",
+	SilenceUsage:      true,
+	PersistentPreRunE: node.NeedsToBeStopped,
+	//RunE: func(cmd *cobra.Command, args []string) error {
+	//	return configureNode()
+	//},
 }
 
-// TODO: configure not just data directory but algod path
-func configureNode() {
-	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
-		panic("Unsupported OS: " + runtime.GOOS)
-	}
+func init() {
+	Cmd.AddCommand(serviceCmd)
+}
 
+const ConfigureRunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"
+
+// TODO: configure not just data directory but algod path
+func configureNode() error {
 	var systemServiceConfigure bool
 
-	if !isRunningWithSudo() {
-		fmt.Println("This command must be run with super-user priviledges (sudo).")
-		os.Exit(1)
+	if algod.IsRunning() {
+		return fmt.Errorf(ConfigureRunningErrorMsg)
 	}
 
 	// Check systemctl first
-	if checkAlgorandServiceCreated() {
+	if algod.IsService() {
 		if promptWrapperYes("Algorand is installed as a service. Do you wish to edit the service file to change the data directory? (y/n)") {
-			if checkAlgorandServiceActive() {
-				fmt.Println("Algorand service is currently running. Please stop the service with *node stop* before editing the service file.")
-				os.Exit(1)
-			}
 			// Edit the service file with the user's new data directory
 			systemServiceConfigure = true
 		} else {
@@ -105,7 +107,7 @@ func configureNode() {
 	}
 
 	// Do quick "lazy" check for existing Algorand Data directories
-	paths := lazyCheckAlgorandDataDirs()
+	paths := utils.GetKnownDataPaths()
 
 	if len(paths) != 0 {
 
@@ -169,7 +171,7 @@ func configureNode() {
 	} else {
 		affectALGORAND_DATA(selectedPath)
 	}
-	os.Exit(0)
+	return nil
 }
 
 func editAlgorandServiceFile(dataDirectoryPath string) {
