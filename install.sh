@@ -15,7 +15,7 @@ EOF
   
 os=$(uname -ms)
 release="https://github.com/algorandfoundation/algorun-tui/releases/download"
-version="v1.0.0-beta.1"
+version="v1.0.0-beta.2"
 
 Red=''
 Green=''
