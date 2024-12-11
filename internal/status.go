@@ -29,10 +29,10 @@ type StatusModel struct {
 func (m *StatusModel) String() string {
 	return fmt.Sprintf("\nLastRound: %d\n", m.LastRound)
 }
-func (m *StatusModel) Update(lastRound int, catchupTime int, aquiredBlocks *int, upgradeNodeVote *bool) {
+func (m *StatusModel) Update(lastRound int, catchupTime int, catchpoint *string, upgradeNodeVote *bool) {
 	m.LastRound = uint64(lastRound)
 	if catchupTime > 0 {
-		if aquiredBlocks != nil {
+		if catchpoint != nil && *catchpoint != "" {
 			m.State = FastCatchupState
 		} else {
 			m.State = SyncingState
@@ -77,6 +77,6 @@ func (m *StatusModel) Fetch(ctx context.Context, client api.ClientWithResponsesI
 		return fmt.Errorf("Status code %d: %s", s.StatusCode(), s.Status())
 	}
 
-	m.Update(s.JSON200.LastRound, s.JSON200.CatchupTime, s.JSON200.CatchpointAcquiredBlocks, s.JSON200.UpgradeNodeVote)
+	m.Update(s.JSON200.LastRound, s.JSON200.CatchupTime, s.JSON200.Catchpoint, s.JSON200.UpgradeNodeVote)
 	return nil
 }
