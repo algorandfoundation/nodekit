@@ -36,6 +36,16 @@ var installCmd = &cobra.Command{
 			log.Error(err)
 			os.Exit(1)
 		}
+
+		// If it's not running, start the daemon (can happen)
+		if !algod.IsRunning() {
+			err = algod.Start()
+			if err != nil {
+				log.Error(err)
+				os.Exit(1)
+			}
+		}
+
 		log.Info(style.Green.Render("Algorand installed successfully 🎉"))
 	},
 }
