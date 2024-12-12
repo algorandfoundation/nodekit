@@ -11,8 +11,6 @@
       when: not binpath.stat.exists
     - name: Run installer
       command: algorun node install
-    - name: Run installer twice
-      command: algorun node install
     - name: Run upgrade
       command: algorun node upgrade
     - name: Run stop
