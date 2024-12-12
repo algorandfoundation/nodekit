@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"os"
+	"time"
 )
 
 const InstallMsg = "Installing Algorand"
@@ -36,6 +37,8 @@ var installCmd = &cobra.Command{
 			log.Error(err)
 			os.Exit(1)
 		}
+
+		time.Sleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
 		if !algod.IsRunning() {

@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"os"
+	"time"
 )
 
 const UpgradeMsg = "Upgrading Algod"
@@ -26,6 +27,9 @@ var upgradeCmd = &cobra.Command{
 		if err != nil {
 			log.Error(err)
 		}
+
+		time.Sleep(5 * time.Second)
+
 		// If it's not running, start the daemon (can happen)
 		if !algod.IsRunning() {
 			err = algod.Start()
