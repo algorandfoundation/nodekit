@@ -5,7 +5,6 @@ import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod/linux"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/mac"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
-	"os/exec"
 	"runtime"
 )
 
@@ -14,20 +13,7 @@ const UnsupportedOSError = "unsupported operating system"
 // IsInstalled checks if the Algod software is installed on the system
 // by verifying its presence and service setup.
 func IsInstalled() bool {
-	//If algod is not in the path
-	if !system.CmdExists("algod") {
-		return false
-	}
-	// If the service is listed
-	switch runtime.GOOS {
-	case "linux":
-		return linux.IsService()
-	case "darwin":
-		return mac.IsService()
-	default:
-		fmt.Println("Unsupported operating system.")
-		return false
-	}
+	return system.CmdExists("algod")
 }
 
 // IsRunning checks if the algod is currently running on the host operating system.
@@ -36,9 +22,8 @@ func IsInstalled() bool {
 func IsRunning() bool {
 	switch runtime.GOOS {
 	case "linux", "darwin":
-		fmt.Println("Checking if algod is running...")
-		err := exec.Command("pgrep", "algod").Run()
-		return err == nil
+		return system.IsCmdRunning("algod")
+
 	default:
 		return false
 	}
@@ -83,7 +68,7 @@ func Update() error {
 	case "linux":
 		return linux.Upgrade()
 	case "darwin":
-		return mac.Upgrade()
+		return mac.Upgrade(false)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}
@@ -91,12 +76,12 @@ func Update() error {
 
 // Uninstall removes the Algorand software from the system based
 // on the host operating system using appropriate methods.
-func Uninstall() error {
+func Uninstall(force bool) error {
 	switch runtime.GOOS {
 	case "linux":
 		return linux.Uninstall()
 	case "darwin":
-		return mac.Uninstall()
+		return mac.Uninstall(force)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}
@@ -134,7 +119,7 @@ func Start() error {
 	case "linux":
 		return linux.Start()
 	case "darwin":
-		return mac.Start()
+		return mac.Start(false)
 	default: // Unsupported OS
 		return fmt.Errorf(UnsupportedOSError)
 	}
@@ -147,7 +132,7 @@ func Stop() error {
 	case "linux":
 		return linux.Stop()
 	case "darwin":
-		return mac.Stop()
+		return mac.Stop(false)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}

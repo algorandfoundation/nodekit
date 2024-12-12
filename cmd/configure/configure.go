@@ -16,11 +16,11 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:               "configure",
-	Short:             "Configure Algod",
-	Long:              "Configure Algod settings",
-	SilenceUsage:      true,
-	PersistentPreRunE: node.NeedsToBeStopped,
+	Use:              "configure",
+	Short:            "Configure Algod",
+	Long:             "Configure Algod settings",
+	SilenceUsage:     true,
+	PersistentPreRun: node.NeedsToBeStopped,
 	//RunE: func(cmd *cobra.Command, args []string) error {
 	//	return configureNode()
 	//},

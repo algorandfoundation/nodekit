@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/fallback"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
-	"log"
+	"github.com/charmbracelet/log"
+
 	"os"
 	"os/exec"
 	"strings"
@@ -22,10 +23,10 @@ type Algod struct {
 
 // Install installs Algorand development tools or node software depending on the package manager.
 func Install() error {
-	log.Println("Installing Algod on Linux")
+	log.Info("Installing Algod on Linux")
 	// Based off of https://developer.algorand.org/docs/run-a-node/setup/install/#installation-with-a-package-manager
 	if system.CmdExists("apt-get") { // On some Debian systems we use apt-get
-		log.Printf("Installing with apt-get")
+		log.Info("Installing with apt-get")
 		return system.RunAll(system.CmdsList{
 			{"apt-get", "update"},
 			{"apt-get", "install", "-y", "gnupg2", "curl", "software-properties-common"},
@@ -58,18 +59,18 @@ func Install() error {
 // Uninstall removes the Algorand software using a supported package manager or clears related system files if necessary.
 // Returns an error if a supported package manager is not found or if any command fails during execution.
 func Uninstall() error {
-	fmt.Println("Uninstalling Algorand")
+	log.Info("Uninstalling Algorand")
 	var unInstallCmds system.CmdsList
 	// On Ubuntu and Debian there's the apt package manager
 	if system.CmdExists("apt-get") {
-		fmt.Println("Using apt-get package manager")
+		log.Info("Using apt-get package manager")
 		unInstallCmds = [][]string{
 			{"apt-get", "autoremove", "algorand-devtools", "algorand", "-y"},
 		}
 	}
 	// On Fedora and CentOs8 there's the dnf package manager
 	if system.CmdExists("dnf") {
-		fmt.Println("Using dnf package manager")
+		log.Info("Using dnf package manager")
 		unInstallCmds = [][]string{
 			{"dnf", "remove", "algorand-devtools", "algorand", "-y"},
 		}
@@ -192,7 +193,7 @@ ExecStart={{.AlgodPath}} -d {{.DataDirectoryPath}}`
 		os.Exit(1)
 	}
 
-	fmt.Println("Algorand service file updated successfully.")
+	log.Info("Algorand service file updated successfully.")
 
 	return nil
 }

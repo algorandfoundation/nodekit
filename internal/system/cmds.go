@@ -3,6 +3,7 @@ package system
 import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,8 +11,15 @@ import (
 	"sync"
 )
 
+const CmdFailedErrorMsg = "command failed: %s output: %s error: %v"
+
 func IsSudo() bool {
 	return os.Geteuid() == 0
+}
+
+func IsCmdRunning(name string) bool {
+	err := exec.Command("pgrep", name).Run()
+	return err == nil
 }
 
 // CmdExists checks that a bash cli/cmd tool exists
@@ -43,9 +51,10 @@ func RunAll(list CmdsList) error {
 		cmd := exec.Command(args[0], args[1:]...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("Command failed: %s\nOutput: %s\nError: %v\n", strings.Join(args, " "), output, err)
+			log.Error(fmt.Sprintf("%s: %s", style.Red.Render("Failed"), strings.Join(args, " ")))
+			return fmt.Errorf(CmdFailedErrorMsg, strings.Join(args, " "), output, err)
 		}
-		fmt.Printf("%s: %s\n", style.Green.Render("Running"), strings.Join(args, " "))
+		log.Debug(fmt.Sprintf("%s: %s", style.Green.Render("Running"), strings.Join(args, " ")))
 	}
 	return nil
 }
@@ -85,7 +94,7 @@ func FindPathToFile(startDir string, targetFileName string) []string {
 	// Walk the directory tree and send file paths to the channel
 	err := filepath.Walk(startDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			// Ignore permission errors
+			// Ignore permission msgs
 			if os.IsPermission(err) {
 				return nil
 			}

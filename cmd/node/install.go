@@ -1,23 +1,45 @@
 package node
 
 import (
-	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+	"os"
 )
 
+const InstallMsg = "Installing Algorand"
 const InstallExistsMsg = "algod is already installed"
 
 var installCmd = &cobra.Command{
 	Use:          "install",
-	Short:        "Install Algorand node (Algod)",
-	Long:         "Install Algorand node (Algod) and other binaries on your system",
+	Short:        "Install the algorand daemon",
+	Long:         style.Purple(style.BANNER) + "\n" + style.LightBlue("Install the algorand daemon on your local machine"),
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Checking if Algod is installed...")
-		if algod.IsInstalled() {
-			return fmt.Errorf(InstallExistsMsg)
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: yes flag
+
+		// TODO: get expected version
+		log.Info(style.Green.Render(InstallMsg + " vX.X.X"))
+		// Warn user for prompt
+		log.Warn(style.Yellow.Render(SudoWarningMsg))
+
+		// TODO: compare expected version to existing version
+		if algod.IsInstalled() && !force {
+			log.Error(InstallExistsMsg)
+			os.Exit(1)
 		}
-		return algod.Install()
+
+		// Run the installation
+		err := algod.Install()
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+		log.Info(style.Green.Render("Algorand installed successfully 🎉"))
 	},
+}
+
+func init() {
+	installCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully install the node"))
 }

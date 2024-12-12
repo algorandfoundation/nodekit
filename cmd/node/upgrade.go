@@ -6,11 +6,11 @@ import (
 )
 
 var upgradeCmd = &cobra.Command{
-	Use:               "upgrade",
-	Short:             "Upgrade Algod",
-	Long:              "Upgrade Algod (if installed with package manager).",
-	SilenceUsage:      true,
-	PersistentPreRunE: NeedsToBeStopped,
+	Use:              "upgrade",
+	Short:            "Upgrade Algod",
+	Long:             "Upgrade Algod (if installed with package manager).",
+	SilenceUsage:     true,
+	PersistentPreRun: NeedsToBeStopped,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: Check Version from S3 against the local binary
 		return algod.Update()
