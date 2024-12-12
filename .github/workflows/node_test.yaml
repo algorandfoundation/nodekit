@@ -30,6 +30,7 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui node stop
           ./algorun-tui node upgrade
+          ./algorun-tui node stop
           ./algorun-tui node uninstall
 
   macos:
@@ -51,4 +52,5 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui node stop
           ./algorun-tui node upgrade
+          ./algorun-tui node stop
           ./algorun-tui node uninstall
