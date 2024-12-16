@@ -574,6 +574,12 @@ type GetBlockParams struct {
 // GetBlockParamsFormat defines parameters for GetBlock.
 type GetBlockParamsFormat string
 
+// StartCatchupParams defines parameters for StartCatchup.
+type StartCatchupParams struct {
+	// Min Specify the minimum number of blocks which the ledger must be advanced by in order to start the catchup. This is useful for simplifying tools which support fast catchup, they can run the catchup unconditionally and the node will skip the catchup if it is not needed.
+	Min *int `form:"min,omitempty" json:"min,omitempty"`
+}
+
 // GenerateParticipationKeysParams defines parameters for GenerateParticipationKeys.
 type GenerateParticipationKeysParams struct {
 	// Dilution Key dilution for two-level participation keys (defaults to sqrt of validity window).
@@ -671,6 +677,9 @@ type ClientInterface interface {
 	// GetBlock request
 	GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// StartCatchup request
+	StartCatchup(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetParticipationKeys request
 	GetParticipationKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -737,6 +746,18 @@ func (c *Algod) AccountInformation(ctx context.Context, address string, params *
 
 func (c *Algod) GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBlockRequest(c.Server, round, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) StartCatchup(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartCatchupRequest(c.Server, catchpoint, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1030,6 +1051,62 @@ func NewGetBlockRequest(server string, round int, params *GetBlockParams) (*http
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStartCatchupRequest generates requests for StartCatchup
+func NewStartCatchupRequest(server string, catchpoint string, params *StartCatchupParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "catchpoint", runtime.ParamLocationPath, catchpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/catchup/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Min != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "min", runtime.ParamLocationQuery, *params.Min); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1420,6 +1497,9 @@ type ClientWithResponsesInterface interface {
 	// GetBlockWithResponse request
 	GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error)
 
+	// StartCatchupWithResponse request
+	StartCatchupWithResponse(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*StartCatchupResponse, error)
+
 	// GetParticipationKeysWithResponse request
 	GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error)
 
@@ -1542,6 +1622,39 @@ func (r GetBlockResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetBlockResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type StartCatchupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// CatchupMessage Catchup start response string
+		CatchupMessage string `json:"catchup-message"`
+	}
+	JSON201 *struct {
+		// CatchupMessage Catchup start response string
+		CatchupMessage string `json:"catchup-message"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON408 *ErrorResponse
+	JSON500 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r StartCatchupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartCatchupResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1971,6 +2084,15 @@ func (c *ClientWithResponses) GetBlockWithResponse(ctx context.Context, round in
 	return ParseGetBlockResponse(rsp)
 }
 
+// StartCatchupWithResponse request returning *StartCatchupResponse
+func (c *ClientWithResponses) StartCatchupWithResponse(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*StartCatchupResponse, error) {
+	rsp, err := c.StartCatchup(ctx, catchpoint, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartCatchupResponse(rsp)
+}
+
 // GetParticipationKeysWithResponse request returning *GetParticipationKeysResponse
 func (c *ClientWithResponses) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error) {
 	rsp, err := c.GetParticipationKeys(ctx, reqEditors...)
@@ -2222,6 +2344,73 @@ func ParseGetBlockResponse(rsp *http.Response) (*GetBlockResponse, error) {
 
 	case rsp.StatusCode == 500:
 		// Content-type (application/msgpack) unsupported
+
+	}
+
+	return response, nil
+}
+
+// ParseStartCatchupResponse parses an HTTP response from a StartCatchupWithResponse call
+func ParseStartCatchupResponse(rsp *http.Response) (*StartCatchupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartCatchupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// CatchupMessage Catchup start response string
+			CatchupMessage string `json:"catchup-message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest struct {
+			// CatchupMessage Catchup start response string
+			CatchupMessage string `json:"catchup-message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 408:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON408 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
