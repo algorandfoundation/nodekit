@@ -241,7 +241,7 @@ func (testOnlineShortner) Post(url string, bodyType string, body io.Reader) (res
 	}, nil
 }
 func Test_ToOnlineShortLink(t *testing.T) {
-	link, err := ToOnlineShortLink(new(testOnlineShortner), OnlineShortLinkBody{
+	link, err := GetOnlineShortLink(new(testOnlineShortner), OnlineShortLinkBody{
 		Account:          "JPEGRZ6G4IBZCOC7UV6QZWJ6TENNKRIPENUJTLG5K7PKIKMVTJHUGERARE",
 		VoteKeyB64:       "WWHePYtNZ2T3sHkqdd/38EvoFWrnIKPrTo6xN/4T1l4=",
 		SelectionKeyB64:  "e4kBLu7zXOorjLVzJHOiAn+IhOBsYBCqqHKaJCiCdJs=",
@@ -288,7 +288,7 @@ func (testOfflineShortner) Post(url string, bodyType string, body io.Reader) (re
 	}, nil
 }
 func Test_ToOfflineShortLink(t *testing.T) {
-	link, err := ToOfflineShortLink(new(testOfflineShortner), OfflineShortLinkBody{
+	link, err := GetOfflineShortLink(new(testOfflineShortner), OfflineShortLinkBody{
 		Account: "JPEGRZ6G4IBZCOC7UV6QZWJ6TENNKRIPENUJTLG5K7PKIKMVTJHUGERARE",
 		Network: "mainnet",
 	})

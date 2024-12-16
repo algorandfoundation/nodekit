@@ -26,6 +26,10 @@ type ViewModel struct {
 	// Address defines the string format address of the entity
 	Address string
 
+	// Link represents a reference to a ShortLinkResponse,
+	// typically used for processing or displaying shortened link data.
+	Link *internal.ShortLinkResponse
+
 	// Views
 	infoModal        *info.ViewModel
 	transactionModal *transaction.ViewModel
@@ -54,6 +58,11 @@ func (m *ViewModel) SetActive(active bool) {
 	m.infoModal.UpdateState()
 	m.transactionModal.Active = active
 	m.transactionModal.UpdateState()
+}
+
+func (m *ViewModel) SetShortLink(res internal.ShortLinkResponse) {
+	m.Link = &res
+	m.transactionModal.Link = &res
 }
 
 func (m *ViewModel) SetType(modal app.ModalType) {

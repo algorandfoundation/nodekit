@@ -155,9 +155,9 @@ type OnlineShortLinkBody struct {
 	Network          string `json:"network"`
 }
 
-// ToOnlineShortLink sends a POST request to create an online short link
+// GetOnlineShortLink sends a POST request to create an online short link
 // and returns the response or an error if it occurs.
-func ToOnlineShortLink(http HttpPkgInterface, part OnlineShortLinkBody) (ShortLinkResponse, error) {
+func GetOnlineShortLink(http HttpPkgInterface, part OnlineShortLinkBody) (ShortLinkResponse, error) {
 	var response ShortLinkResponse
 	data, err := json.Marshal(part)
 	if err != nil {
@@ -190,10 +190,10 @@ type OfflineShortLinkBody struct {
 	Network string `json:"network"`
 }
 
-// ToOfflineShortLink sends an OnlineShortLinkBody to create an offline short link and returns the corresponding response.
+// GetOfflineShortLink sends an OnlineShortLinkBody to create an offline short link and returns the corresponding response.
 // Uses the provided HttpPkgInterface for the POST request and handles JSON encoding/decoding of request and response.
 // Returns an OfflineShortLinkResponse on success or an error if the operation fails.
-func ToOfflineShortLink(http HttpPkgInterface, offline OfflineShortLinkBody) (ShortLinkResponse, error) {
+func GetOfflineShortLink(http HttpPkgInterface, offline OfflineShortLinkBody) (ShortLinkResponse, error) {
 	var response ShortLinkResponse
 	data, err := json.Marshal(offline)
 	if err != nil {
@@ -211,4 +211,10 @@ func ToOfflineShortLink(http HttpPkgInterface, offline OfflineShortLinkBody) (Sh
 	}
 
 	return response, nil
+}
+
+// ToShortLink generates a shortened URL string using the unique
+// identifier from the provided ShortLinkResponse.
+func ToShortLink(link ShortLinkResponse) string {
+	return fmt.Sprintf("https://b.nodekit.run/%s", link.Id)
 }

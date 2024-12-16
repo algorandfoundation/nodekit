@@ -24,35 +24,35 @@
                                                                                 
                                                                                 
                                                                                 
-          ╭──Register Offline─────────────────────────────────────────╮         
-          │   Sign this transaction to deregister your account keys:  │         
-          │                                                           │         
-          │            Scan the QR code with Pera or Defly            │         
-          │        (make sure you use the testnet-v1.0 network)       │         
-          │                                                           │         
-          │               █████████████████████████████               │         
-          │               ██ ▄▄▄▄▄ █▀█▄▀█▀█ ▀█ ▄▄▄▄▄ ██               │         
-          │               ██ █   █ ██▀▄▀ █ █ █ █   █ ██               │         
-          │               ██ █▄▄▄█ █▄▀▀▀█▀  ██ █▄▄▄█ ██               │         
-          │               ██▄▄▄▄▄▄▄█▄█▄█▄▀ ▀ █▄▄▄▄▄▄▄██               │         
-          │               ██▄▀ ▀ █▄▀▀  ▄█▄ █▀▀▀▀▄██ ▀██               │         
-          │               ███▀ ▄▀▄▄▀▀█▄█▄▀▀█▀▄▀▀▀▄█ ▄██               │         
-          │               ███▀█  ▀▄ █ ▄▀▄▄█▄█▀  ██▀ ▀██               │         
-          │               ██▄▀█  ▄▄ █▄ █▀  ██▄▀█▄▄█▄▄██               │         
-          │               ██▄███▄█▄▄▀▄▀█  █▀ ▄▄▄  █▀ ██               │         
-          │               ██ ▄▄▄▄▄ ██▄ ▀▀▀▀█ █▄█ ██  ██               │         
-          │               ██ █   █ █▄ ▀█ ▄▀▀ ▄▄  ▀█████               │         
-          │               ██ █▄▄▄█ █▄▀ █▄▀ ▀▄▀▄  ▄▄▀▄██               │         
-          │               ██▄▄▄▄▄▄▄█▄█▄██▄█▄▄▄▄▄███▄▄██               │         
-          │                                                           │         
-          │                            -or-                           │         
-          │                                                           │         
-          │                Click here to sign via Lora.               │         
-          │                                                           │         
-          │  Note: this will take effect after 320 rounds (15 mins.)  │         
-          │ Please keep your node online during this cooldown period. │         
-          ╰────────────────────────────────────────────────( esc )────╯         
-                                                                                
+         ╭──Register Offline──────────────────────────────────────────╮         
+         │ Sign this transaction to register your account as offline: │         
+         │                                                            │         
+         │             Scan the QR code with Pera or Defly            │         
+         │        (make sure you use the testnet-v1.0 network)        │         
+         │                                                            │         
+         │                █████████████████████████████               │         
+         │                ██ ▄▄▄▄▄ █▀█▄▀█▀█ ▀█ ▄▄▄▄▄ ██               │         
+         │                ██ █   █ ██▀▄▀ █ █ █ █   █ ██               │         
+         │                ██ █▄▄▄█ █▄▀▀▀█▀  ██ █▄▄▄█ ██               │         
+         │                ██▄▄▄▄▄▄▄█▄█▄█▄▀ ▀ █▄▄▄▄▄▄▄██               │         
+         │                ██▄▀ ▀ █▄▀▀  ▄█▄ █▀▀▀▀▄██ ▀██               │         
+         │                ███▀ ▄▀▄▄▀▀█▄█▄▀▀█▀▄▀▀▀▄█ ▄██               │         
+         │                ███▀█  ▀▄ █ ▄▀▄▄█▄█▀  ██▀ ▀██               │         
+         │                ██▄▀█  ▄▄ █▄ █▀  ██▄▀█▄▄█▄▄██               │         
+         │                ██▄███▄█▄▄▀▄▀█  █▀ ▄▄▄  █▀ ██               │         
+         │                ██ ▄▄▄▄▄ ██▄ ▀▀▀▀█ █▄█ ██  ██               │         
+         │                ██ █   █ █▄ ▀█ ▄▀▀ ▄▄  ▀█████               │         
+         │                ██ █▄▄▄█ █▄▀ █▄▀ ▀▄▀▄  ▄▄▀▄██               │         
+         │                ██▄▄▄▄▄▄▄█▄█▄██▄█▄▄▄▄▄███▄▄██               │         
+         │                                                            │         
+         │                            -or-                            │         
+         │                                                            │         
+         │               Open this URL in your browser:               │         
+         │                 https://b.nodekit.run/1234                 │         
+         │                                                            │         
+         │   Note: this will take effect after 320 rounds (~15 min.)  │         
+         │ Please keep your node running during this cooldown period. │         
+         ╰─────────────────────────────────────────────────( esc )────╯         
                                                                                 
                                                                                 
                                                                                 

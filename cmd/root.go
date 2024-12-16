@@ -95,12 +95,13 @@ var (
 				ParticipationKeys: partkeys,
 
 				Client:  client,
+				Http:    new(internal.HttpPkg),
 				Context: ctx,
 			}
 			state.Accounts, err = internal.AccountsFromState(&state, new(internal.Clock), client)
 			cobra.CheckErr(err)
 			// Fetch current state
-			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
+			err = state.Status.Fetch(ctx, client, state.Http)
 			cobra.CheckErr(err)
 
 			m, err := ui.NewViewportViewModel(&state, client)
