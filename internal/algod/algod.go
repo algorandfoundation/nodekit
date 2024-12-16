@@ -9,6 +9,8 @@ import (
 )
 
 const UnsupportedOSError = "unsupported operating system"
+const InvalidStatusResponseError = "invalid status response"
+const InvalidVersionResponseError = "invalid version response"
 
 // IsInstalled checks if the Algod software is installed on the system
 // by verifying its presence and service setup.

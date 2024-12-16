@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -83,7 +84,7 @@ func (m StatusViewModel) View() string {
 
 	var end string
 	switch m.Data.Status.State {
-	case internal.StableState:
+	case algod.StableState:
 		end = style.Green.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
 	default:
 		end = style.Yellow.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
@@ -94,7 +95,7 @@ func (m StatusViewModel) View() string {
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
-	if m.Data.Status.State != internal.StableState {
+	if m.Data.Status.State != algod.StableState {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
@@ -104,7 +105,7 @@ func (m StatusViewModel) View() string {
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
-	if m.Data.Status.State != internal.StableState {
+	if m.Data.Status.State != algod.StableState {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps

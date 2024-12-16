@@ -4,19 +4,23 @@ import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"time"
 )
 
 func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 	sm := &internal.StateModel{
-		Status: internal.StatusModel{
-			State:       internal.StableState,
+		Status: algod.Status{
+			State:       algod.StableState,
 			Version:     "v-test",
 			Network:     "v-test-network",
 			Voting:      false,
 			NeedsUpdate: false,
 			LastRound:   0,
+
+			Client:  client,
+			HttpPkg: new(api.HttpPkg),
 		},
 		Metrics: internal.MetricsModel{
 			Enabled:   true,

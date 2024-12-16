@@ -3,7 +3,6 @@ package configure
 import (
 	"bytes"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/cmd/node"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"os"
@@ -16,11 +15,11 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:              "configure",
-	Short:            "Configure Algod",
-	Long:             "Configure Algod settings",
-	SilenceUsage:     true,
-	PersistentPreRun: node.NeedsToBeStopped,
+	Use:          "configure",
+	Short:        "Configure Algod",
+	Long:         "Configure Algod settings",
+	SilenceUsage: true,
+	//PersistentPreRun:
 	//RunE: func(cmd *cobra.Command, args []string) error {
 	//	return configureNode()
 	//},

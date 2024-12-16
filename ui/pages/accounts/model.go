@@ -1,6 +1,7 @@
 package accounts
 
 import (
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"sort"
 	"strconv"
@@ -95,7 +96,7 @@ func (m ViewModel) makeRows() *[]table.Row {
 		}
 
 		// Override the state while syncing
-		if m.Data.Status.State != internal.StableState {
+		if m.Data.Status.State != algod.StableState {
 			expires = "SYNCING"
 		}
 

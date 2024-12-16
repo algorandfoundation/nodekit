@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
 	"time"
@@ -18,10 +19,10 @@ func Test_StateModel(t *testing.T) {
 
 	state := StateModel{
 		Watching: true,
-		Status: StatusModel{
+		Status: algod.Status{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       SyncingState,
+			State:       algod.SyncingState,
 		},
 		Metrics: MetricsModel{
 			RoundTime: 0,

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils"
 	"github.com/spf13/viper"
 	"os"
 	"testing"
@@ -46,7 +47,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		viper.Set("algod-endpoint", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfig")
 
-		initConfig()
+		_ = utils.InitConfig()
 		algod := viper.Get("algod-endpoint")
 		if algod == "" {
 			t.Fatal("Invalid Algod")
@@ -63,7 +64,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		viper.Set("algod-endpoint", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithoutEndpoint")
 
-		initConfig()
+		_ = utils.InitConfig()
 		algod := viper.Get("algod-endpoint")
 		if algod == "" {
 			t.Fatal("Invalid Algod")
@@ -80,7 +81,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		viper.Set("algod-endpoint", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddress")
 
-		initConfig()
+		_ = utils.InitConfig()
 		algod := viper.Get("algod-endpoint")
 		if algod == "" {
 			t.Fatal("Invalid Algod")
@@ -97,7 +98,7 @@ func Test_ExecuteRootCommand(t *testing.T) {
 		viper.Set("algod-endpoint", "")
 		t.Setenv("ALGORAND_DATA", cwd+"/testdata/Test_InitConfigWithAddressAndDefaultPort")
 
-		initConfig()
+		_ = utils.InitConfig()
 		algod := viper.Get("algod-endpoint")
 		if algod == "" {
 			t.Fatal("Invalid Algod")

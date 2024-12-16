@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
@@ -72,13 +73,15 @@ func Test_AccountsFromState(t *testing.T) {
 			RX:        1024,
 			TX:        2048,
 		},
-		Status: StatusModel{
+		Status: algod.Status{
 			State:       "WATCHING",
 			Version:     "v0.0.0-test",
 			Network:     "tuinet",
 			Voting:      false,
 			NeedsUpdate: false,
 			LastRound:   1337,
+			Client:      client,
+			HttpPkg:     new(api.HttpPkg),
 		},
 		ParticipationKeys: &mock.Keys,
 	}

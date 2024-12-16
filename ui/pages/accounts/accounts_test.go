@@ -3,6 +3,7 @@ package accounts
 import (
 	"bytes"
 	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
@@ -42,9 +43,9 @@ func Test_New(t *testing.T) {
 	}
 
 	// Update syncing state
-	m.Data.Status.State = internal.SyncingState
+	m.Data.Status.State = algod.SyncingState
 	m.makeRows()
-	if m.Data.Status.State != internal.SyncingState {
+	if m.Data.Status.State != algod.SyncingState {
 
 	}
 }

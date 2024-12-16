@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -154,7 +155,7 @@ func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponses
 
 	for _, acct := range accounts {
 		// For each account, update the data from the RPC endpoint
-		if state.Status.State != SyncingState {
+		if state.Status.State != algod.SyncingState {
 			rpcAcct, err := GetAccount(client, acct.Address)
 			if err != nil {
 				return nil, err

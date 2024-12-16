@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
@@ -10,7 +11,7 @@ import (
 
 type StateModel struct {
 	// Models
-	Status            StatusModel
+	Status            algod.Status
 	Metrics           MetricsModel
 	Accounts          map[string]Account
 	ParticipationKeys *[]api.ParticipationKey
@@ -41,10 +42,11 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		s.Metrics.Window = 100
 	}
 
-	err := s.Status.Fetch(ctx, client, new(HttpPkg))
+	status, _, err := algod.NewStatus(ctx, client, new(api.HttpPkg))
 	if err != nil {
 		cb(nil, err)
 	}
+	s.Status = status
 
 	lastRound := s.Status.LastRound
 
@@ -53,34 +55,33 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			break
 		}
 
-		if s.Status.State == FastCatchupState {
+		if s.Status.State == algod.FastCatchupState {
 			time.Sleep(time.Second * 10)
-			err := s.Status.Fetch(ctx, client, new(HttpPkg))
+			status, _, err = algod.NewStatus(ctx, client, new(api.HttpPkg))
 			if err != nil {
 				cb(nil, err)
 			}
+			s.Status = status
 			continue
 		}
 
-		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
+		waitForBlockResponse, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
 		s.waitAfterError(err, cb)
 		if err != nil {
 			continue
 		}
-		if status.StatusCode() != 200 {
-			s.waitAfterError(errors.New(status.Status()), cb)
+		if waitForBlockResponse.StatusCode() != 200 {
+			s.waitAfterError(errors.New(waitForBlockResponse.Status()), cb)
 			continue
 		}
 
-		s.Status.State = "Unknown"
-
 		// Update Status
-		s.Status.Update(status.JSON200.LastRound, status.JSON200.CatchupTime, status.JSON200.CatchpointAcquiredBlocks, status.JSON200.UpgradeNodeVote)
+		s.Status = s.Status.Merge(*waitForBlockResponse.JSON200)
 
 		// Fetch Keys
 		s.UpdateKeys()
 
-		if s.Status.State == SyncingState {
+		if s.Status.State == algod.SyncingState {
 			lastRound = s.Status.LastRound
 			cb(s, nil)
 			continue

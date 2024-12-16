@@ -52,5 +52,6 @@ func init() {
 	Cmd.AddCommand(stopCmd)
 	Cmd.AddCommand(uninstallCmd)
 	Cmd.AddCommand(upgradeCmd)
+	Cmd.AddCommand(syncCmd)
 	Cmd.AddCommand(debugCmd)
 }
