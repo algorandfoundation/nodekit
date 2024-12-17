@@ -2,6 +2,8 @@ package app
 
 import (
 	"encoding/base64"
+	"strings"
+
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,10 +13,16 @@ func EmitCreateShortLink(offline bool, part *api.ParticipationKey, state *intern
 	if part == nil || state == nil {
 		return nil
 	}
+
+	var loraNetwork = strings.Replace(strings.Replace(state.Status.Network, "-v1.0", "", 1), "-v1", "", 1)
+	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
+		loraNetwork = "localnet"
+	}
+
 	if offline {
 		res, err := internal.GetOfflineShortLink(state.Http, internal.OfflineShortLinkBody{
 			Account: part.Address,
-			Network: state.Status.Network,
+			Network: loraNetwork,
 		})
 		if err != nil {
 			return func() tea.Msg {
@@ -34,7 +42,7 @@ func EmitCreateShortLink(offline bool, part *api.ParticipationKey, state *intern
 		VoteFirstValid:   part.Key.VoteFirstValid,
 		VoteLastValid:    part.Key.VoteLastValid,
 		KeyDilution:      part.Key.VoteKeyDilution,
-		Network:          state.Status.Network,
+		Network:          loraNetwork,
 	})
 	if err != nil {
 		return func() tea.Msg {
