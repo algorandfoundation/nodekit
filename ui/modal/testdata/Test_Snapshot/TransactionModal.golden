@@ -25,7 +25,7 @@
                                                                                 
                                                                                 
          ╭──Register Offline──────────────────────────────────────────╮         
-         │ Sign this transaction to register your account as offline: │         
+         │ Sign this transaction to register your account as offline  │         
          │                                                            │         
          │             Scan the QR code with Pera or Defly            │         
          │        (make sure you use the testnet-v1.0 network)        │         
@@ -48,6 +48,7 @@
          │                            -or-                            │         
          │                                                            │         
          │               Open this URL in your browser:               │         
+         │                                                            │         
          │                 https://b.nodekit.run/1234                 │         
          │                                                            │         
          │   Note: this will take effect after 320 rounds (~15 min.)  │         

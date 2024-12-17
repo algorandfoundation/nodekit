@@ -28,11 +28,11 @@ func (m ViewModel) View() string {
 	} else {
 		adj = "online"
 	}
-	intro := fmt.Sprintf("Sign this transaction to register your account as %s:", adj)
+	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
 	link := internal.ToShortLink(*m.Link)
 	loraText := lipgloss.JoinVertical(
 		lipgloss.Center,
-		"Open this URL in your browser:",
+		"Open this URL in your browser:\n",
 		style.WithHyperlink(link, link),
 	)
 	if isOffline {
