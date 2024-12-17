@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
-	"github.com/charmbracelet/log"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
@@ -57,9 +56,6 @@ type StateModel struct {
 func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface) (*StateModel, api.ResponseInterface, error) {
 	// Preload the node status
 	status, response, err := NewStatus(ctx, client, httpPkg)
-	if response == nil {
-		log.Fatal("woooop")
-	}
 	if err != nil {
 		return nil, response, err
 	}
