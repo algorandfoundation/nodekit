@@ -34,6 +34,7 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		Admin:             false,
 		Watching:          false,
 		Client:            client,
+		Http:              new(internal.HttpPkg),
 		Context:           context.Background(),
 	}
 	values := make(map[string]internal.Account)

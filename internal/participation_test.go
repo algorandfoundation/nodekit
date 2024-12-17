@@ -1,11 +1,14 @@
 package internal
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
+	"io"
+	"net/http"
 	"testing"
 )
 
@@ -207,4 +210,92 @@ func Test_RemovePartKeyByID(t *testing.T) {
 			t.Fatalf("expected 0 keys, got %d", len(keys))
 		}
 	})
+}
+
+var onlineShortLinkResponseStr = `{
+    "id": "WKIPKTWIFZQJ2"
+  }`
+
+type testOnlineShortner struct {
+	HttpPkgInterface
+}
+
+// TODO: toggle between Unit/Integration tests
+func (testOnlineShortner) Post(url string, bodyType string, body io.Reader) (resp *http.Response, err error) {
+	responseBody := io.NopCloser(bytes.NewReader([]byte(onlineShortLinkResponseStr)))
+	return &http.Response{
+		Status:           "",
+		StatusCode:       0,
+		Proto:            "",
+		ProtoMajor:       0,
+		ProtoMinor:       0,
+		Header:           nil,
+		Body:             responseBody,
+		ContentLength:    0,
+		TransferEncoding: nil,
+		Close:            false,
+		Uncompressed:     false,
+		Trailer:          nil,
+		Request:          nil,
+		TLS:              nil,
+	}, nil
+}
+func Test_ToOnlineShortLink(t *testing.T) {
+	link, err := GetOnlineShortLink(new(testOnlineShortner), OnlineShortLinkBody{
+		Account:          "JPEGRZ6G4IBZCOC7UV6QZWJ6TENNKRIPENUJTLG5K7PKIKMVTJHUGERARE",
+		VoteKeyB64:       "WWHePYtNZ2T3sHkqdd/38EvoFWrnIKPrTo6xN/4T1l4=",
+		SelectionKeyB64:  "e4kBLu7zXOorjLVzJHOiAn+IhOBsYBCqqHKaJCiCdJs=",
+		StateProofKeyB64: "1GdNPOck+t6yXvuXxrDEPKqgi4I2sTaNugV1kd5ksUW2G1U6x1FT0WR3aT3ZSSmbYoDt3cVrB3vIPJA8GkqSYg==",
+		VoteFirstValid:   3118965,
+		VoteLastValid:    3148965,
+		KeyDilution:      995,
+		Network:          "mainnet",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if link.Id != "WKIPKTWIFZQJ2" {
+		t.Error("Link should be a known hash")
+	}
+}
+
+var offlineShortLinkResponseStr = `{
+    "id": "D3O3GEG2UD2GW"
+  }`
+
+type testOfflineShortner struct {
+	HttpPkgInterface
+}
+
+// TODO: toggle between Unit/Integration tests
+func (testOfflineShortner) Post(url string, bodyType string, body io.Reader) (resp *http.Response, err error) {
+	responseBody := io.NopCloser(bytes.NewReader([]byte(offlineShortLinkResponseStr)))
+	return &http.Response{
+		Status:           "",
+		StatusCode:       0,
+		Proto:            "",
+		ProtoMajor:       0,
+		ProtoMinor:       0,
+		Header:           nil,
+		Body:             responseBody,
+		ContentLength:    0,
+		TransferEncoding: nil,
+		Close:            false,
+		Uncompressed:     false,
+		Trailer:          nil,
+		Request:          nil,
+		TLS:              nil,
+	}, nil
+}
+func Test_ToOfflineShortLink(t *testing.T) {
+	link, err := GetOfflineShortLink(new(testOfflineShortner), OfflineShortLinkBody{
+		Account: "JPEGRZ6G4IBZCOC7UV6QZWJ6TENNKRIPENUJTLG5K7PKIKMVTJHUGERARE",
+		Network: "mainnet",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if link.Id != "D3O3GEG2UD2GW" {
+		t.Error("Link should be a known hash")
+	}
 }

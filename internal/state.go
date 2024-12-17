@@ -23,6 +23,7 @@ type StateModel struct {
 
 	// RPC
 	Client  api.ClientWithResponsesInterface
+	Http    HttpPkgInterface
 	Context context.Context
 }
 

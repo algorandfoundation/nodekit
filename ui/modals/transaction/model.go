@@ -19,6 +19,7 @@ type ViewModel struct {
 	// Active Participation Key
 	Participation *api.ParticipationKey
 	Active        bool
+	Link          *internal.ShortLinkResponse
 
 	// Pointer to the State
 	State    *internal.StateModel

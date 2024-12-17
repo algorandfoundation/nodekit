@@ -28,6 +28,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
+	case internal.ShortLinkResponse:
+		m.Open = true
+		m.SetShortLink(msg)
+		m.SetType(app.TransactionModal)
 	case internal.StateModel:
 		m.State = &msg
 		m.transactionModal.State = &msg
