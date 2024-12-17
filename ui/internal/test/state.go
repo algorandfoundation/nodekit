@@ -3,14 +3,13 @@ package test
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"time"
 )
 
-func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
-	sm := &internal.StateModel{
+func GetState(client api.ClientWithResponsesInterface) *algod.StateModel {
+	sm := &algod.StateModel{
 		Status: algod.Status{
 			State:       algod.StableState,
 			Version:     "v-test",
@@ -22,7 +21,7 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 			Client:  client,
 			HttpPkg: new(api.HttpPkg),
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: algod.Metrics{
 			Enabled:   true,
 			Window:    100,
 			RoundTime: time.Second * 2,
@@ -34,14 +33,14 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 			LastTX:    0,
 		},
 		Accounts:          nil,
-		ParticipationKeys: &mock2.Keys,
+		ParticipationKeys: mock2.Keys,
 		Admin:             false,
 		Watching:          false,
 		Client:            client,
 		Context:           context.Background(),
 	}
 	values := make(map[string]algod.Account)
-	for _, key := range *sm.ParticipationKeys {
+	for _, key := range sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
 			values[key.Address] = algod.Account{

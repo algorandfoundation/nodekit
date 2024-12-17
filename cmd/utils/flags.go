@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// WithAlgodFlags enhances a cobra.Command with flags for Algod endpoint and token configuration.
 func WithAlgodFlags(cmd *cobra.Command, algodEndpoint *string, token *string) *cobra.Command {
 	cmd.Flags().StringVarP(algodEndpoint, "algod-endpoint", "a", "", style.LightBlue("algod endpoint address URI, including http[s]"))
 	cmd.Flags().StringVarP(token, "algod-token", "t", "", lipgloss.JoinHorizontal(

@@ -1,9 +1,9 @@
-package internal
+package algod
 
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
 	"time"
@@ -16,19 +16,23 @@ func Test_StateModel(t *testing.T) {
 		t.Fatal(err)
 	}
 	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
-
+	httpPkg := new(api.HttpPkg)
 	state := StateModel{
 		Watching: true,
-		Status: algod.Status{
+		Status: Status{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       algod.SyncingState,
+			State:       SyncingState,
+			Client:      client,
+			HttpPkg:     httpPkg,
 		},
-		Metrics: MetricsModel{
+		Metrics: Metrics{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,
 			TPS:       0,
+			Client:    client,
+			HttpPkg:   httpPkg,
 		},
 		Client:  client,
 		Context: context.Background(),
@@ -40,7 +44,7 @@ func Test_StateModel(t *testing.T) {
 			return
 		}
 		count++
-	}, context.Background(), client)
+	}, context.Background(), new(mock.Clock))
 	time.Sleep(5 * time.Second)
 	// Stop the watcher
 	state.Stop()

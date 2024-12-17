@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// InitConfig initializes and loads the application's configuration from multiple sources,
+// including environment variables and files.
 func InitConfig() error {
 	// Find home directory.
 	home, err := os.UserHomeDir()
@@ -63,6 +65,8 @@ type DaemonConfig struct {
 	Token             string `json:"token"`
 }
 
+// MergeAlgorandData loads and merges Algorand configuration data either from environment settings or provided parameters.
+// It reads the configuration from the `ALGORAND_DATA` directory if available or uses the provided endpoint and token.
 func MergeAlgorandData(endpoint string, token string) (DaemonConfig, error) {
 	result := DaemonConfig{
 		DataDirectoryPath: "",
@@ -149,12 +153,15 @@ func MergeAlgorandData(endpoint string, token string) (DaemonConfig, error) {
 	return result, nil
 }
 
+// replaceEndpointUrl replaces newline characters and wildcard IP addresses in a URL with a specific local address.
 func replaceEndpointUrl(s string) string {
 	s = strings.Replace(s, "\n", "", 1)
 	s = strings.Replace(s, "0.0.0.0", "127.0.0.1", 1)
 	s = strings.Replace(s, "[::]", "127.0.0.1", 1)
 	return s
 }
+
+// hasWildcardEndpointUrl checks if the given string contains wildcard IP addresses ("0.0.0.0" or "::").
 func hasWildcardEndpointUrl(s string) bool {
 	return strings.Contains(s, "0.0.0.0") || strings.Contains(s, "::")
 }

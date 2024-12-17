@@ -7,11 +7,13 @@ import (
 	"time"
 )
 
+// BlockMetrics represents metrics of a blockchain segment, including average block time and transactions per second.
 type BlockMetrics struct {
 	AvgTime time.Duration
 	TPS     float64
 }
 
+// GetBlockMetrics calculates block metrics such as average block time and transactions per second within a specified window.
 func GetBlockMetrics(ctx context.Context, client api.ClientWithResponsesInterface, round uint64, window int) (BlockMetrics, api.ResponseInterface, error) {
 	var avgs = BlockMetrics{
 		AvgTime: 0,

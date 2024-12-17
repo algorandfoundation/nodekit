@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// IsDataDir determines if the specified path is a valid Algorand data directory containing an "algod.token" file.
 func IsDataDir(path string) bool {
 	info, err := os.Stat(path)
 
@@ -26,24 +27,6 @@ func IsDataDir(path string) bool {
 		return true
 	}
 	return false
-}
-
-func GetKnownPaths() []string {
-	// Hardcoded paths known to be common Algorand data directories
-	binPaths := []string{
-		"/opt/homebrew/bin/algod",
-		"/opt/homebrew/bin/algod",
-	}
-
-	var paths []string
-
-	for _, path := range binPaths {
-		if IsDataDir(path) {
-			paths = append(paths, path)
-		}
-	}
-
-	return paths
 }
 
 // GetKnownDataPaths Does a lazy check for Algorand data directories, based off of known common paths

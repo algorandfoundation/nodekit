@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type ViewModel struct {
-	Data *internal.StateModel
+	Data *algod.StateModel
 
 	Title       string
 	Navigation  string
@@ -25,7 +24,7 @@ type ViewModel struct {
 	table table.Model
 }
 
-func New(state *internal.StateModel) ViewModel {
+func New(state *algod.StateModel) ViewModel {
 	m := ViewModel{
 		Title:       "Accounts",
 		Width:       0,

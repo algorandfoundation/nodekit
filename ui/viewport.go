@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modal"
@@ -19,7 +18,7 @@ type ViewportViewModel struct {
 	PageWidth, PageHeight         int
 	TerminalWidth, TerminalHeight int
 
-	Data *internal.StateModel
+	Data *algod.StateModel
 
 	// Header Components
 	status   StatusViewModel
@@ -58,7 +57,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.page = msg
 	// When the state updates
-	case *internal.StateModel:
+	case *algod.StateModel:
 		m.Data = msg
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
@@ -211,7 +210,7 @@ func (m ViewportViewModel) headerView() string {
 }
 
 // NewViewportViewModel handles the construction of the TUI viewport
-func NewViewportViewModel(state *internal.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
+func NewViewportViewModel(state *algod.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 

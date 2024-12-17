@@ -11,9 +11,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+// syncEndpoint is a string variable used to store the algod API endpoint address for communication with the node.
 var syncEndpoint string
+
+// syncToken is a string flag used to store the admin token required for authenticating with the Algod API.
 var syncToken string
+
+// defaultLag represents the default minimum catchup delay in milliseconds for the Fast Catchup process.
 var defaultLag int = 30_000
+
+// syncCmd is a Cobra command used to check the node's sync status and initiate a fast catchup when necessary.
 var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 	Use:              "sync",
 	Short:            "Fast Catchup",
@@ -21,16 +28,18 @@ var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 	SilenceUsage:     true,
 	PersistentPreRun: NeedsToBeRunning,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Load configuration
 		err := utils.InitConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
-		ep := viper.GetString("algod-endpoint")
-		t := viper.GetString("algod-token")
-		if ep == "" {
+
+		endpoint := viper.GetString("algod-endpoint")
+		token := viper.GetString("algod-token")
+		if endpoint == "" {
 			log.Fatal("algod-endpoint is required")
 		}
-		if t == "" {
+		if token == "" {
 			log.Fatal("algod-token is required")
 		}
 		// TODO: Perf testing as a dedicated cmd (node perf catchup with exit 0 or 1)
@@ -38,7 +47,7 @@ var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 		// just allow it to post it's minimum requirements and preform a fast catchup if necessary.
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient(viper.GetString("algod-endpoint"), viper.GetString("algod-token"))
+		client, err := algod.GetClient(endpoint, token)
 		cobra.CheckErr(err)
 
 		status, _, err := algod.NewStatus(ctx, client, httpPkg)

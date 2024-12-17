@@ -7,12 +7,20 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
+// VersionResponse represents information about the system version, including network, version, and channel details.
 type VersionResponse struct {
+
+	// Network is a string representing the identifier of the blockchain or network associated with the system.
 	Network string
+
+	// Version is a string representing the version of the system, typically formatted as major.minor.build-channel.
 	Version string
+
+	// Channel is a string representing the release channel of the system, such as stable, beta, or nightly.
 	Channel string
 }
 
+// GetVersion retrieves system version information from the API client and processes it into a formatted VersionResponse.
 func GetVersion(ctx context.Context, client api.ClientWithResponsesInterface) (VersionResponse, api.ResponseInterface, error) {
 	var release VersionResponse
 	v, err := client.GetVersionWithResponse(ctx)

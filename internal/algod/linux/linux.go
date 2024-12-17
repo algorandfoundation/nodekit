@@ -13,8 +13,11 @@ import (
 	"text/template"
 )
 
+// PackageManagerNotFoundMsg is an error message indicating the absence of a supported package manager for uninstalling Algorand.
 const PackageManagerNotFoundMsg = "could not find a package manager to uninstall Algorand"
 
+// Algod represents an implementation of the system.Interface tailored for managing the Algod service.
+// It includes details about the service's executable path and associated data directory.
 type Algod struct {
 	system.Interface
 	Path              string

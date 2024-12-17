@@ -2,7 +2,6 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
@@ -104,13 +103,13 @@ func Test_ProtocolSnapshot(t *testing.T) {
 
 // Test_ProtocolMessages handles any additional tests like sending messages
 func Test_ProtocolMessages(t *testing.T) {
-	state := internal.StateModel{
+	state := algod.StateModel{
 		Status: algod.Status{
 			LastRound:   1337,
 			NeedsUpdate: true,
 			State:       algod.SyncingState,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: algod.Metrics{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,

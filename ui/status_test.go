@@ -2,7 +2,6 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"testing"
 	"time"
@@ -15,13 +14,13 @@ import (
 
 var statusViewSnapshots = map[string]StatusViewModel{
 	"Syncing": {
-		Data: &internal.StateModel{
+		Data: &algod.StateModel{
 			Status: algod.Status{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       algod.SyncingState,
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: algod.Metrics{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -31,13 +30,13 @@ var statusViewSnapshots = map[string]StatusViewModel{
 		IsVisible:      true,
 	},
 	"Hidden": {
-		Data: &internal.StateModel{
+		Data: &algod.StateModel{
 			Status: algod.Status{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       algod.SyncingState,
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: algod.Metrics{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -47,13 +46,13 @@ var statusViewSnapshots = map[string]StatusViewModel{
 		IsVisible:      false,
 	},
 	"Loading": {
-		Data: &internal.StateModel{
+		Data: &algod.StateModel{
 			Status: algod.Status{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       algod.SyncingState,
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: algod.Metrics{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -74,13 +73,13 @@ func Test_StatusSnapshot(t *testing.T) {
 }
 
 func Test_StatusMessages(t *testing.T) {
-	state := internal.StateModel{
+	state := algod.StateModel{
 		Status: algod.Status{
 			LastRound:   1337,
 			NeedsUpdate: true,
 			State:       algod.SyncingState,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: algod.Metrics{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,

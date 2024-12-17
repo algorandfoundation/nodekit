@@ -8,8 +8,13 @@ import (
 	"runtime"
 )
 
+// UnsupportedOSError indicates that the current operating system is not supported for the requested operation.
 const UnsupportedOSError = "unsupported operating system"
+
+// InvalidStatusResponseError represents an error message indicating an invalid response status was encountered.
 const InvalidStatusResponseError = "invalid status response"
+
+// InvalidVersionResponseError represents an error message for an invalid response from the version endpoint.
 const InvalidVersionResponseError = "invalid version response"
 
 // IsInstalled checks if the Algod software is installed on the system

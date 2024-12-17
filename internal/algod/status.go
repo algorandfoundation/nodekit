@@ -6,29 +6,53 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
+// InvalidStatus indicates an error when a response contains an invalid or unexpected status code.
 const InvalidStatus = "invalid status"
 
+// State represents the operational state of a process or system within the application. It is defined as a string type.
 type State string
 
 const (
+
+	// FastCatchupState represents the state when the system is performing a fast catchup operation to synchronize.
 	FastCatchupState State = "FAST-CATCHUP"
-	SyncingState     State = "SYNCING"
-	StableState      State = "RUNNING"
+
+	// SyncingState represents the state where the system is in the process of synchronizing to the latest data or state.
+	SyncingState State = "SYNCING"
+
+	// StableState indicates the system is in a stable and operational state with no ongoing synchronization or major updates.
+	StableState State = "RUNNING"
 )
 
-// Status represents a status response from algod.Status
+// Status represents the state of a system including metadata like version, network, and operational state.
 type Status struct {
-	State       State
-	Version     string
-	Network     string
-	Voting      bool
-	NeedsUpdate bool
-	LastRound   uint64 // Last recorded round
 
-	Client  api.ClientWithResponsesInterface
+	// State represents the operational state of a process or system, defined as a string.
+	State State
+
+	// Version represents the version identifier of the system, typically used to denote the current software version.
+	Version string
+
+	// Network represents the name of the network the status is associated with.
+	Network string
+
+	// Voting indicates whether a node participated in the current upgrade voting process.
+	Voting bool
+
+	// NeedsUpdate indicates whether the system requires an update based on the current version and available release data.
+	NeedsUpdate bool
+
+	// LastRound represents the most recent round number recorded by the system or client.
+	LastRound uint64
+
+	// Client provides methods for interacting with the API, adhering to ClientWithResponsesInterface specifications.
+	Client api.ClientWithResponsesInterface
+
+	// HttpPkg represents an interface for HTTP package operations, providing methods for making HTTP requests.
 	HttpPkg api.HttpPkgInterface
 }
 
+// Update synchronizes non-identical fields between two Status instances and returns the updated Status.
 func (s Status) Update(status Status) Status {
 	if s.State != status.State {
 		s.State = status.State
@@ -51,6 +75,9 @@ func (s Status) Update(status Status) Status {
 	return s
 }
 
+// Wait waits for the next block round based on the current LastRound and updates the Status with the returned response.
+// It interacts with the client's WaitForBlockWithResponse method and handles any errors or invalid status codes.
+// Returns the updated Status, the response object, or an error if the operation fails.
 func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error) {
 	response, err := s.Client.WaitForBlockWithResponse(ctx, int(s.LastRound))
 	if err != nil {
@@ -62,6 +89,8 @@ func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error)
 
 	return s.Merge(*response.JSON200), response, nil
 }
+
+// Merge updates the current Status with data from a given StatusLike instance and adjusts fields based on defined conditions.
 func (s Status) Merge(res api.StatusLike) Status {
 	s.LastRound = uint64(res.LastRound)
 	catchpoint := res.Catchpoint
@@ -78,6 +107,9 @@ func (s Status) Merge(res api.StatusLike) Status {
 	}
 	return s
 }
+
+// Get retrieves the current system status by invoking the client's GetStatusWithResponse method and merging the result.
+// It returns the updated Status, the API response, or an error if the request fails or the status code is invalid.
 func (s Status) Get(ctx context.Context) (Status, api.ResponseInterface, error) {
 	statusResponse, err := s.Client.GetStatusWithResponse(ctx)
 	if err != nil {
@@ -88,6 +120,9 @@ func (s Status) Get(ctx context.Context) (Status, api.ResponseInterface, error) 
 	}
 	return s.Merge(*statusResponse.JSON200), statusResponse, nil
 }
+
+// NewStatus initializes and returns a Status object based on the provided context, client, and HTTP package interface.
+// The function also checks for system updates and merges the current status with the latest available data.
 func NewStatus(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface) (Status, api.ResponseInterface, error) {
 	var status Status
 	status.Client = client

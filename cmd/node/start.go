@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// startCmd is a Cobra command used to start the Algod service on the system, ensuring necessary checks are performed beforehand.
 var startCmd = &cobra.Command{
 	Use:              "start",
 	Short:            "Start Algod",
@@ -25,6 +26,7 @@ var startCmd = &cobra.Command{
 	},
 }
 
+// init initializes the `force` flag for the `start` command, allowing the node to start forcefully when specified.
 func init() {
 	startCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully start the node"))
 }

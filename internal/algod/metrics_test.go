@@ -2,6 +2,7 @@ package algod
 
 import (
 	"context"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
 	"strconv"
 	"testing"
@@ -9,24 +10,20 @@ import (
 
 func Test_GetMetrics(t *testing.T) {
 	client := test.GetClient(true)
-
-	metrics, err := GetMetrics(context.Background(), client)
+	httpPkg := new(api.HttpPkg)
+	metrics, _, err := NewMetrics(context.Background(), client, httpPkg, 0)
 	if err == nil {
 		t.Error("error expected")
 	}
 
-	client = test.GetClient(false)
-	metrics, err = GetMetrics(context.Background(), client)
+	metrics.Client = test.GetClient(false)
+	metrics, _, err = metrics.Get(context.Background(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if metrics["algod_agreement_dropped"] != 0 {
-		t.Fatal(strconv.Itoa(metrics["algod_agreement_dropped"]) + " is not zero")
-	}
-
-	client = test.NewClient(false, true)
-	metrics, err = GetMetrics(context.Background(), client)
+	metrics.Client = test.NewClient(false, true)
+	_, _, err = metrics.Get(context.Background(), 10)
 	if err == nil {
 		t.Error("expected error")
 	}

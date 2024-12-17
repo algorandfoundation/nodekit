@@ -90,6 +90,8 @@ func ParticipationKeysToAccounts(keys []api.ParticipationKey) map[string]Account
 	return accounts
 }
 
+// Merge updates the Account instance with data from the provided api.Account and returns the updated Account.
+// It updates fields such as Status, Balance, Participation, and IncentiveEligible based on the rpcAccount values.
 func (a Account) Merge(rpcAccount api.Account) Account {
 	a.Status = rpcAccount.Status
 	a.Balance = rpcAccount.Amount / 1000000
@@ -111,6 +113,8 @@ func (a Account) Merge(rpcAccount api.Account) Account {
 	return a
 }
 
+// GetExpiresTime calculates the expiration time of the account's participation key based on round differences and duration.
+// Returns nil if the account has no participation or if the expiration time cannot be determined.
 func (a Account) GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration) *time.Time {
 	if a.Participation == nil {
 		return nil
@@ -118,6 +122,9 @@ func (a Account) GetExpiresTime(t system.Time, lastRound int, roundTime time.Dur
 	return utils.GetExpiresTime(t, lastRound, roundTime, a.Participation.VoteLastValid)
 }
 
+// UpdateExpiredTime updates the account's expiration time and identifies if the account has a non-resident participation key.
+// It checks if the account is offline or if its local participation key matches one of the provided keys.
+// The method recalculates the expiration time based on the last round and round duration.
 func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, lastRound int, roundTime time.Duration) Account {
 	var nonResidentKey = true
 	for _, key := range keys {
@@ -131,6 +138,7 @@ func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, l
 	return a
 }
 
+// ValidateAddress checks the validity of an Algorand address by decoding it. Returns true for valid addresses, false otherwise.
 func ValidateAddress(address string) bool {
 	_, err := types.DecodeAddress(address)
 	if err != nil {

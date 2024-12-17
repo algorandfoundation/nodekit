@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,7 +14,7 @@ import (
 
 // StatusViewModel is extended from the internal.StatusModel
 type StatusViewModel struct {
-	Data           *internal.StateModel
+	Data           *algod.StateModel
 	TerminalWidth  int
 	TerminalHeight int
 	IsVisible      bool
@@ -35,7 +34,7 @@ func (m StatusViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Is it a heartbeat of the latest round?
-	case *internal.StateModel:
+	case *algod.StateModel:
 		m.Data = msg
 	// Is it a resize event?
 	case tea.WindowSizeMsg:
@@ -125,7 +124,7 @@ func (m StatusViewModel) View() string {
 }
 
 // MakeStatusViewModel constructs the model to be used in a tea.Program
-func MakeStatusViewModel(state *internal.StateModel) StatusViewModel {
+func MakeStatusViewModel(state *algod.StateModel) StatusViewModel {
 	// Create the Model
 	m := StatusViewModel{
 		Data:          state,

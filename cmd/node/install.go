@@ -9,9 +9,13 @@ import (
 	"time"
 )
 
+// InstallMsg is a constant string used to indicate the start of the Algorand installation process with a specific message.
 const InstallMsg = "Installing Algorand"
+
+// InstallExistsMsg is a constant string used to indicate that the Algod is already installed on the system.
 const InstallExistsMsg = "algod is already installed"
 
+// installCmd is a Cobra command that installs the Algorand daemon on the local machine, ensuring the service is operational.
 var installCmd = &cobra.Command{
 	Use:          "install",
 	Short:        "Install the algorand daemon",

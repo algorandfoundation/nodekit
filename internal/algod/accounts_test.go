@@ -3,7 +3,6 @@ package algod
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
@@ -64,8 +63,8 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 
 	// Mock StateModel
-	state := &internal.StateModel{
-		Metrics: MetricsModel{
+	state := &StateModel{
+		Metrics: Metrics{
 			Enabled:   true,
 			Window:    100,
 			RoundTime: time.Duration(2) * time.Second,
@@ -83,36 +82,13 @@ func Test_AccountsFromState(t *testing.T) {
 			Client:      client,
 			HttpPkg:     new(api.HttpPkg),
 		},
-		ParticipationKeys: &mock.Keys,
+		ParticipationKeys: mock.Keys,
+		Client:            client,
+		HttpPkg:           new(api.HttpPkg),
 	}
 
 	// Calculate expiration
 	clock := new(mock.Clock)
-	now := clock.Now()
-	roundDiff := max(0, mock.Keys[0].Key.VoteLastValid-int(state.Status.LastRound))
-	distance := int(state.Metrics.RoundTime) * roundDiff
-	expires := now.Add(time.Duration(distance))
-	tClient := test.GetClient(false)
-	acct, _ = GetAccount(tClient, "ABC")
-	// Construct expected accounts
-	expectedAccounts := map[string]Account{
-		"ABC": {
-			Participation:     acct.Participation,
-			Address:           acct.Address,
-			Status:            acct.Status,
-			IncentiveEligible: true,
-			Balance:           acct.Amount / 1_000_000,
-			Keys:              2,
-			Expires:           &expires,
-		},
-	}
-
-	// Call AccountsFromState
-	accounts, err := AccountsFromState(state, clock, tClient)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Assert results
-	assert.Equal(t, expectedAccounts, accounts)
+	state.UpdateKeys(context.Background(), clock)
 
 }

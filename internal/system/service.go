@@ -1,5 +1,6 @@
 package system
 
+// Interface defines methods for managing and interacting with a system service.
 type Interface interface {
 	IsInstalled() bool
 	IsRunning() bool

@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -20,7 +20,7 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// When the State changes
-	case *internal.StateModel:
+	case *algod.StateModel:
 		m.Data = msg.ParticipationKeys
 		m.table.SetRows(*m.makeRows(m.Data))
 		m.Participation = msg.Accounts[m.Address].Participation

@@ -2,7 +2,7 @@ package confirm
 
 import (
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -10,16 +10,20 @@ import (
 )
 
 type ViewModel struct {
-	Width       int
+
+	// Width defines the horizontal dimension of the ViewModel, typically measured in units such as characters or pixels.
+	Width int
+
+	// Height defines the vertical dimension of the ViewModel, commonly measured in units such as characters or pixels.
 	Height      int
 	Title       string
 	Controls    string
 	BorderColor string
 	ActiveKey   *api.ParticipationKey
-	Data        *internal.StateModel
+	Data        *algod.StateModel
 }
 
-func New(state *internal.StateModel) *ViewModel {
+func New(state *algod.StateModel) *ViewModel {
 	return &ViewModel{
 		Width:       0,
 		Height:      0,

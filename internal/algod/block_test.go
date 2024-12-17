@@ -14,7 +14,7 @@ func Test_GetBlockMetrics(t *testing.T) {
 
 	client, err := api.NewClientWithResponses("https://mainnet-api.4160.nodely.dev:443")
 
-	metrics, err := GetBlockMetrics(context.Background(), client, uint64(42000000), window)
+	metrics, _, err := GetBlockMetrics(context.Background(), client, uint64(42000000), window)
 	if err != nil {
 		t.Fatal(err)
 	}

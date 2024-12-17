@@ -13,13 +13,19 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
+// RangeType represents a type of range, such as time-based or round-based, used in participation key generation.
 type RangeType string
 
 const (
-	TimeRange  RangeType = "seconds"
+
+	// TimeRange defines a range type measured in seconds, used for specifying time-based participation key validity.
+	TimeRange RangeType = "seconds"
+
+	// RoundRange represents a range type defined in terms of rounds for participation key validity.
 	RoundRange RangeType = "rounds"
 )
 
+// List represents a collection of api.ParticipationKey elements.
 type List []api.ParticipationKey
 
 // GetList get the participation keys from the node
@@ -113,6 +119,8 @@ func RemovePartKeyByID(slice *List, id string) {
 	}
 }
 
+// FindParticipationIdForVoteKey searches a List for an item's VoteParticipationKey matching the given votekey and returns its ID.
+// It returns a pointer to the ID as a string if a match is found, or nil otherwise.
 func FindParticipationIdForVoteKey(slice List, votekey []byte) *string {
 	for _, item := range slice {
 		if string(item.Key.VoteParticipationKey) == string(votekey) {
@@ -122,6 +130,7 @@ func FindParticipationIdForVoteKey(slice List, votekey []byte) *string {
 	return nil
 }
 
+// ToLoraDeepLink generates a Lora deep link URL for a transaction wizard based on network, offline state, and participation key.
 func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part api.ParticipationKey) (string, error) {
 	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
 	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
@@ -154,6 +163,7 @@ func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part a
 	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
 }
 
+// IsActive checks if the given participation key matches the account's registered participation details and is valid.
 func IsActive(part api.ParticipationKey, account api.AccountParticipation) bool {
 	var equal = false
 	if bytes.Equal(part.Key.VoteParticipationKey, account.VoteParticipationKey) &&

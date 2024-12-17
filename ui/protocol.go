@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -97,7 +96,7 @@ func (m ProtocolViewModel) View() string {
 }
 
 // MakeProtocolViewModel constructs a ProtocolViewModel using a given StatusModel and predefined metrics.
-func MakeProtocolViewModel(state *internal.StateModel) ProtocolViewModel {
+func MakeProtocolViewModel(state *algod.StateModel) ProtocolViewModel {
 	return ProtocolViewModel{
 		Data:           state.Status,
 		TerminalWidth:  0,

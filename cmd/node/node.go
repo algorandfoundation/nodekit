@@ -7,21 +7,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// SudoWarningMsg is a constant string displayed to warn users that they may be prompted for their password during execution.
 const SudoWarningMsg = "(You may be prompted for your password)"
+
+// PermissionErrorMsg is a constant string that indicates a command requires super-user privileges (sudo) to be executed.
 const PermissionErrorMsg = "this command must be run with super-user privileges (sudo)"
+
+// NotInstalledErrorMsg is the error message displayed when the algod software is not installed on the system.
 const NotInstalledErrorMsg = "algod is not installed. please run the *node install* command"
+
+// RunningErrorMsg represents the error message displayed when algod is running and needs to be stopped before proceeding.
 const RunningErrorMsg = "algod is running, please run the *node stop* command"
+
+// NotRunningErrorMsg is the error message displayed when the algod service is not currently running on the system.
 const NotRunningErrorMsg = "algod is not running"
 
-var (
-	force bool = false
-)
+// force indicates whether actions should be performed forcefully, bypassing checks or confirmations.
+var force bool = false
+
+// Cmd represents the root command for managing an Algorand node, providing subcommands for installation, control, and upgrades.
 var Cmd = &cobra.Command{
 	Use:   "node",
 	Short: "Node Management",
 	Long:  style.Purple(style.BANNER) + "\n" + style.LightBlue("Manage your Algorand node"),
 }
 
+// NeedsToBeRunning ensures the Algod software is installed and running before executing the associated Cobra command.
 func NeedsToBeRunning(cmd *cobra.Command, args []string) {
 	if force {
 		return
@@ -34,6 +45,7 @@ func NeedsToBeRunning(cmd *cobra.Command, args []string) {
 	}
 }
 
+// NeedsToBeStopped ensures the operation halts if Algod is not installed or is currently running, unless forced.
 func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 	if force {
 		return
@@ -46,6 +58,7 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 	}
 }
 
+// init initializes the root command by adding subcommands for managing the Algorand node, such as install, start, stop, etc.
 func init() {
 	Cmd.AddCommand(installCmd)
 	Cmd.AddCommand(startCmd)
