@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui"
@@ -28,36 +30,37 @@ var statusCmd = utils.WithAlgodFlags(&cobra.Command{
 		if viper.GetString("algod-endpoint") == "" {
 			return errors.New(style.Magenta("algod-endpoint is required"))
 		}
-
+		ctx := context.Background()
+		httpPkg := new(api.HttpPkg)
 		// Get Algod from configuration
 		client, err := algod.GetClient(viper.GetString("algod-endpoint"), viper.GetString("algod-token"))
 		cobra.CheckErr(err)
-		state := internal.StateModel{
-			Status: algod.Status{
-				State:       "SYNCING",
-				Version:     "N/A",
-				Network:     "N/A",
-				Voting:      false,
-				NeedsUpdate: true,
-				LastRound:   0,
-			},
-			Metrics: internal.MetricsModel{
-				RoundTime: 0,
-				TPS:       0,
-				RX:        0,
-				TX:        0,
-			},
-			ParticipationKeys: nil,
+
+		// Fetch the state and handle any creation errors
+		state, stateResponse, err := internal.NewStateModel(ctx, client, httpPkg)
+		if stateResponse.StatusCode() == 401 {
+			return fmt.Errorf(
+				style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
 		}
-		//_, err = state.Status.Fetch(context.Background(), client, new(internal.HttpPkg))
-		//cobra.CheckErr(err)
+		if stateResponse.StatusCode() > 300 {
+			return fmt.Errorf(
+				style.Red.Render("failed to get status: error code %d")+explanations.TokenNotAdmin,
+				stateResponse.StatusCode())
+		}
+		cobra.CheckErr(err)
+
 		// Create the TUI
-		view := ui.MakeStatusViewModel(&state)
+		view := ui.MakeStatusViewModel(state)
 
 		p := tea.NewProgram(view, tea.WithAltScreen())
 		go func() {
+			// Watch for State Changes
 			state.Watch(func(status *internal.StateModel, err error) {
+				if err != nil {
+					state.Stop()
+				}
 				cobra.CheckErr(err)
+				// Send the state to the TUI
 				p.Send(state)
 			}, context.Background(), client)
 		}()

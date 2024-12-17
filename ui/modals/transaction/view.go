@@ -1,7 +1,7 @@
 package transaction
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
@@ -29,7 +29,7 @@ func (m ViewModel) View() string {
 	}
 	intro := "Sign this transaction to " + verb + " your account keys:"
 
-	link, _ := internal.ToLoraDeepLink(m.State.Status.Network, m.Active, m.Account().IncentiveEligible, *m.Participation)
+	link, _ := participation.ToLoraDeepLink(m.State.Status.Network, m.Active, m.Account().IncentiveEligible, *m.Participation)
 	loraText := lipgloss.JoinHorizontal(
 		lipgloss.Bottom,
 		style.WithHyperlink("Click here", link),

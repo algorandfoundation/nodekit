@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"sort"
 
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -127,7 +127,7 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
 
 	var activeId *string
 	if m.Participation != nil {
-		activeId = internal.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
+		activeId = participation.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
 	}
 	for _, key := range *keys {
 		if key.Address == m.Address {

@@ -6,6 +6,8 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
+const InvalidStatus = "invalid status"
+
 type State string
 
 const (
@@ -49,13 +51,13 @@ func (s Status) Update(status Status) Status {
 	return s
 }
 
-func (s Status) WaitForStatus(ctx context.Context) (Status, api.ResponseInterface, error) {
+func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error) {
 	response, err := s.Client.WaitForBlockWithResponse(ctx, int(s.LastRound))
 	if err != nil {
 		return s, response, err
 	}
 	if response.StatusCode() >= 300 {
-		return s, response, errors.New("status error")
+		return s, response, errors.New(InvalidStatus)
 	}
 
 	return s.Merge(*response.JSON200), response, nil
@@ -82,7 +84,7 @@ func (s Status) Get(ctx context.Context) (Status, api.ResponseInterface, error) 
 		return s, statusResponse, err
 	}
 	if statusResponse.StatusCode() >= 300 {
-		return s, statusResponse, errors.New("status error")
+		return s, statusResponse, errors.New(InvalidStatus)
 	}
 	return s.Merge(*statusResponse.JSON200), statusResponse, nil
 }

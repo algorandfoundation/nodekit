@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils"
 	"github.com/spf13/viper"
 	"os"
@@ -107,14 +106,5 @@ func Test_ExecuteRootCommand(t *testing.T) {
 			t.Fatal("Invalid Algod")
 		}
 		clearViper()
-	})
-
-	t.Run("check error", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-		check(errors.New("test"))
 	})
 }

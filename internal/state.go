@@ -2,31 +2,83 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
+// StateModel represents the state of the application,
+// including status, metrics, accounts, keys, and other configurations.
 type StateModel struct {
-	// Models
-	Status            algod.Status
-	Metrics           MetricsModel
-	Accounts          map[string]Account
+
+	// Status represents the current status of the algod node,
+	// including network state and round information.
+	Status algod.Status
+
+	// Metrics provides runtime statistics including
+	// round time, transactions per second, and data transfer metrics.
+	Metrics algod.Metrics
+
+	// Accounts holds a mapping of account identifiers to their corresponding Account details.
+	// This map is derived from the list of the type api.ParticipationKey
+	Accounts map[string]Account
+
+	// ParticipationKeys is a slice of participation keys used by the node
+	// to interact with the blockchain and consensus protocol.
 	ParticipationKeys *[]api.ParticipationKey
 
-	// Application State
+	// Admin indicates whether the current node has
+	// admin privileges or capabilities enabled.
 	Admin bool
 
-	// TODO: handle contexts instead of adding it to state
+	// Watching indicates whether the StateModel is actively monitoring
+	// changes or processes in a background loop.
+	// TODO: handle contexts instead of adding it to state (skill-issue zero)
 	Watching bool
 
-	// RPC
-	Client  api.ClientWithResponsesInterface
+	// Client provides an interface for interacting with API endpoints,
+	// enabling various node operations and data retrieval.
+	Client api.ClientWithResponsesInterface
+	// HttpPkg provides an interface for making HTTP requests,
+	// enabling communication with external APIs or services.
+	HttpPkg api.HttpPkgInterface
+
+	// Context provides a context for managing cancellation,
+	// deadlines, and request-scoped values in StateModel operations.
+	// TODO: implement more of the context
 	Context context.Context
 }
 
+func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface) (*StateModel, api.ResponseInterface, error) {
+	status, response, err := algod.NewStatus(ctx, client, httpPkg)
+	if err != nil {
+		return nil, response, err
+	}
+	metrics, response, err := algod.NewMetrics(ctx, client, httpPkg, status.LastRound)
+	if err != nil {
+		return nil, response, err
+	}
+
+	partKeys, partkeysResponse, err := participation.GetKeys(ctx, client)
+
+	return &StateModel{
+		Status:            status,
+		Metrics:           metrics,
+		Accounts:          ParticipationKeysToAccounts(partKeys),
+		ParticipationKeys: partKeys,
+
+		Admin:    true,
+		Watching: true,
+
+		Client:  client,
+		HttpPkg: httpPkg,
+		Context: ctx,
+	}, partkeysResponse, nil
+}
+
+// TODO: handle in context loop
 func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err error)) {
 	if err != nil {
 		s.Status.State = "DOWN"
@@ -37,68 +89,61 @@ func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err er
 
 // TODO: allow context to handle loop
 func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client api.ClientWithResponsesInterface) {
+	var err error
+
+	// Setup Defaults
 	s.Watching = true
 	if s.Metrics.Window == 0 {
 		s.Metrics.Window = 100
 	}
 
-	status, _, err := algod.NewStatus(ctx, client, new(api.HttpPkg))
+	// Fetch the latest Status
+	s.Status, _, err = s.Status.Get(ctx)
 	if err != nil {
+		// callback immediately on error
 		cb(nil, err)
 	}
-	s.Status = status
 
-	lastRound := s.Status.LastRound
-
+	// The main Loop
+	// TODO: Refactor to Context
 	for {
 		if !s.Watching {
 			break
 		}
-
+		// Abort on Fast-Catchup
 		if s.Status.State == algod.FastCatchupState {
 			time.Sleep(time.Second * 10)
-			status, _, err = algod.NewStatus(ctx, client, new(api.HttpPkg))
+			s.Status, _, err = s.Status.Get(ctx)
 			if err != nil {
 				cb(nil, err)
 			}
-			s.Status = status
 			continue
 		}
 
-		waitForBlockResponse, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
+		// Wait for the next block
+		s.Status, _, err = s.Status.Wait(ctx)
 		s.waitAfterError(err, cb)
 		if err != nil {
 			continue
 		}
-		if waitForBlockResponse.StatusCode() != 200 {
-			s.waitAfterError(errors.New(waitForBlockResponse.Status()), cb)
-			continue
-		}
-
-		// Update Status
-		s.Status = s.Status.Merge(*waitForBlockResponse.JSON200)
 
 		// Fetch Keys
 		s.UpdateKeys()
 
 		if s.Status.State == algod.SyncingState {
-			lastRound = s.Status.LastRound
 			cb(s, nil)
 			continue
 		}
 		// Run Round Averages and RX/TX every 5 rounds
-		if s.Status.LastRound%5 == 0 || (s.Status.LastRound > 100 && s.Metrics.RoundTime.Seconds() == 0) {
-			bm, err := GetBlockMetrics(ctx, client, s.Status.LastRound, s.Metrics.Window)
+		if s.Status.LastRound%5 == 0 {
+			s.Metrics, _, err = s.Metrics.Get(ctx, s.Status.LastRound)
 			s.waitAfterError(err, cb)
 			if err != nil {
 				continue
 			}
-			s.Metrics.RoundTime = bm.AvgTime
-			s.Metrics.TPS = bm.TPS
-			s.UpdateMetricsFromRPC(ctx, client)
 		}
 
-		lastRound = s.Status.LastRound
+		// Callback the current state to the app
 		cb(s, nil)
 	}
 }
@@ -107,25 +152,6 @@ func (s *StateModel) Stop() {
 	s.Watching = false
 }
 
-func (s *StateModel) UpdateMetricsFromRPC(ctx context.Context, client api.ClientWithResponsesInterface) {
-	// Fetch RX/TX
-	res, err := GetMetrics(ctx, client)
-	if err != nil {
-		s.Metrics.Enabled = false
-	}
-	if err == nil {
-		s.Metrics.Enabled = true
-		now := time.Now()
-		diff := now.Sub(s.Metrics.LastTS)
-
-		s.Metrics.TX = max(0, int(float64(res["algod_network_sent_bytes_total"]-s.Metrics.LastTX)/diff.Seconds()))
-		s.Metrics.RX = max(0, int(float64(res["algod_network_received_bytes_total"]-s.Metrics.LastRX)/diff.Seconds()))
-
-		s.Metrics.LastTS = now
-		s.Metrics.LastTX = res["algod_network_sent_bytes_total"]
-		s.Metrics.LastRX = res["algod_network_received_bytes_total"]
-	}
-}
 func (s *StateModel) UpdateAccounts() error {
 	var err error
 	s.Accounts, err = AccountsFromState(s, new(Clock), s.Client)
@@ -134,7 +160,7 @@ func (s *StateModel) UpdateAccounts() error {
 
 func (s *StateModel) UpdateKeys() {
 	var err error
-	s.ParticipationKeys, err = GetPartKeys(s.Context, s.Client)
+	s.ParticipationKeys, _, err = participation.GetKeys(s.Context, s.Client)
 	if err != nil {
 		s.Admin = false
 	}

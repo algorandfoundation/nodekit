@@ -1,4 +1,4 @@
-package internal
+package participation
 
 import (
 	"context"
@@ -12,32 +12,41 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
-// GetPartKeys get the participation keys from the node
-func GetPartKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]api.ParticipationKey, error) {
-	parts, err := client.GetParticipationKeysWithResponse(ctx)
+type RangeType string
+
+const (
+	TimeRange  RangeType = "seconds"
+	RoundRange RangeType = "rounds"
+)
+
+// GetKeys get the participation keys from the node
+func GetKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]api.ParticipationKey, api.ResponseInterface, error) {
+	partKeysResponse, err := client.GetParticipationKeysWithResponse(ctx)
 	if err != nil {
-		return nil, err
+		return nil, partKeysResponse, err
 	}
-	if parts.StatusCode() != 200 {
-		return nil, errors.New(parts.Status())
+	if partKeysResponse.StatusCode() != 200 {
+		return nil, partKeysResponse, errors.New(partKeysResponse.Status())
 	}
-	return parts.JSON200, err
+	return partKeysResponse.JSON200, partKeysResponse, err
 }
 
-// ReadPartKey get a specific participation key by id
-func ReadPartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) (*api.ParticipationKey, error) {
-	key, err := client.GetParticipationKeyByIDWithResponse(ctx, participationId)
+// GetKey get a specific participation key by id
+func GetKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) (*api.ParticipationKey, api.ResponseInterface, error) {
+	keyResponse, err := client.GetParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
-		return nil, err
+		return nil, keyResponse, err
 	}
-	if key.StatusCode() != 200 {
-		return nil, errors.New(key.Status())
+	if keyResponse.StatusCode() != 200 {
+		return nil, keyResponse, errors.New(keyResponse.Status())
 	}
-	return key.JSON200, err
+	return keyResponse.JSON200, keyResponse, err
 }
 
-// GenerateKeyPair creates a keypair and finds the result
-func GenerateKeyPair(
+// GenerateKeys creates a participation keypair for the specified address and validity period parameters.
+// It ensures the key creation on the node is complete and verifies the key's properties before returning it.
+// If the key creation fails, or the operation is interrupted/timed out, it returns an appropriate error.
+func GenerateKeys(
 	ctx context.Context,
 	client api.ClientWithResponsesInterface,
 	address string,
@@ -55,12 +64,14 @@ func GenerateKeyPair(
 		}
 		return nil, errors.New("something went wrong")
 	}
+
+	// 😠 - Zero 2024
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, context.Canceled
 		case <-time.After(2 * time.Second):
-			partKeys, err := GetPartKeys(ctx, client)
+			partKeys, _, err := GetKeys(ctx, client)
 			if partKeys == nil || err != nil {
 				return nil, errors.New("failed to get participation keys")
 			}
@@ -77,8 +88,8 @@ func GenerateKeyPair(
 	}
 }
 
-// DeletePartKey remove a key from the node
-func DeletePartKey(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) error {
+// Delete remove a key from the node
+func Delete(ctx context.Context, client api.ClientWithResponsesInterface, participationId string) error {
 	deletion, err := client.DeleteParticipationKeyByIDWithResponse(ctx, participationId)
 	if err != nil {
 		return err
@@ -89,7 +100,7 @@ func DeletePartKey(ctx context.Context, client api.ClientWithResponsesInterface,
 	return nil
 }
 
-// Removes a participation key from the list of keys
+// RemovePartKeyByID Removes a participation key from the list of keys
 func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
 	for i, item := range *slice {
 		if item.Id == id {

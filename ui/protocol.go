@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// ProtocolViewModel includes the internal.StatusModel and internal.MetricsModel
+// ProtocolViewModel includes the internal.StatusModel and internal.Model
 type ProtocolViewModel struct {
 	Data           algod.Status
 	TerminalWidth  int

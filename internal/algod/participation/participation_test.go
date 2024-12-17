@@ -1,4 +1,4 @@
-package internal
+package participation
 
 import (
 	"context"
@@ -53,7 +53,7 @@ func Test_ListParticipationKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = GetPartKeys(ctx, client)
+	_, err = GetKeys(ctx, client)
 
 	// Expect unauthorized for Urtho servers
 	if err == nil {
@@ -63,7 +63,7 @@ func Test_ListParticipationKeys(t *testing.T) {
 	// Setup elevated client
 	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, tClient)
+	keys, err := GetKeys(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ReadPartKey(ctx, client, "unknown")
+	_, err = GetKey(ctx, client, "unknown")
 
 	// Expect unauthorized for Urtho servers
 	if err == nil {
@@ -87,7 +87,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 
 	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, tClient)
+	keys, err := GetKeys(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ReadPartKey(ctx, tClient, (*keys)[0].Id)
+	_, err = GetKey(ctx, tClient, (*keys)[0].Id)
 
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +112,7 @@ func Test_GenerateParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Generate error
-	_, err = GenerateKeyPair(ctx, client, "", nil)
+	_, err = GenerateKeys(ctx, client, "", nil)
 	if err == nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func Test_GenerateParticipationKey(t *testing.T) {
 	}
 
 	// This returns nothing and sucks
-	key, err := GenerateKeyPair(ctx, tClient, "ABC", &params)
+	key, err := GenerateKeys(ctx, tClient, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,12 +143,12 @@ func Test_DeleteParticipationKey(t *testing.T) {
 		First:    0,
 		Last:     30000,
 	}
-	key, err := GenerateKeyPair(ctx, client, "ABC", &params)
+	key, err := GenerateKeys(ctx, client, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = DeletePartKey(ctx, client, key.Id)
+	err = Delete(ctx, client, key.Id)
 	if err != nil {
 		t.Fatal(err)
 	}

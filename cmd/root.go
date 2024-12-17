@@ -7,10 +7,10 @@ import (
 	"github.com/algorandfoundation/algorun-tui/cmd/configure"
 	"github.com/algorandfoundation/algorun-tui/cmd/node"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui"
-	"github.com/algorandfoundation/algorun-tui/ui/explanations"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
@@ -38,66 +38,49 @@ var (
 				return err
 			}
 
-			if viper.GetString("algod-endpoint") == "" {
+			endpoint := viper.GetString("algod-endpoint")
+			token := viper.GetString("algod-token")
+
+			if endpoint == "" {
 				return fmt.Errorf(style.Red.Render("algod-endpoint is required") + explanations.NodeNotFound)
 			}
 
-			if viper.GetString("algod-token") == "" {
+			if token == "" {
 				return fmt.Errorf(style.Red.Render("algod-token is required"))
 			}
-			ctx := context.Background()
-			client, err := algod.GetClient(viper.GetString("algod-endpoint"), viper.GetString("algod-token"))
-			cobra.CheckErr(err)
 
+			// Create the dependencies
+			ctx := context.Background()
+			client, err := algod.GetClient(endpoint, token)
+			cobra.CheckErr(err)
 			httpPkg := new(api.HttpPkg)
-			algodStatus, v, err := algod.NewStatus(ctx, client, httpPkg)
-			if err != nil {
-				return fmt.Errorf(
-					style.Red.Render("failed to get status: %s")+explanations.Unreachable,
-					err)
-			} else if v.StatusCode() == 401 {
+
+			// Fetch the state and handle any creation errors
+			state, stateResponse, err := internal.NewStateModel(ctx, client, httpPkg)
+			if stateResponse.StatusCode() == 401 {
 				return fmt.Errorf(
 					style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
-			} else if v.StatusCode() != 200 {
+			}
+			if stateResponse.StatusCode() > 300 {
 				return fmt.Errorf(
 					style.Red.Render("failed to get status: error code %d")+explanations.TokenNotAdmin,
-					v.StatusCode())
+					stateResponse.StatusCode())
 			}
-
-			partkeys, err := internal.GetPartKeys(ctx, client)
-			if err != nil {
-				return fmt.Errorf(
-					style.Red.Render("failed to get participation keys: %s")+
-						explanations.TokenNotAdmin,
-					err)
-			}
-			state := internal.StateModel{
-				Status: algodStatus,
-				Metrics: internal.MetricsModel{
-					RoundTime: 0,
-					TPS:       0,
-					RX:        0,
-					TX:        0,
-				},
-				ParticipationKeys: partkeys,
-
-				Client:  client,
-				Context: ctx,
-			}
-			state.Accounts, err = internal.AccountsFromState(&state, new(internal.Clock), client)
-			cobra.CheckErr(err)
-			// Fetch current state
-			//_, err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
-			//cobra.CheckErr(err)
-
-			m, err := ui.NewViewportViewModel(&state, client)
 			cobra.CheckErr(err)
 
+			// Construct the TUI Model from the State
+			m, err := ui.NewViewportViewModel(state, client)
+			cobra.CheckErr(err)
+
+			// Construct the TUI Application
 			p := tea.NewProgram(
 				m,
 				tea.WithAltScreen(),
 				tea.WithFPS(120),
 			)
+
+			// Watch for State Updates on a separate thread
+			// TODO: refactor into context aware watcher without callbacks
 			go func() {
 				state.Watch(func(status *internal.StateModel, err error) {
 					if err == nil {
@@ -109,17 +92,13 @@ var (
 					}
 				}, ctx, client)
 			}()
+
+			// Execute the TUI Application
 			_, err = p.Run()
 			return err
 		},
 	}, &algodEndpoint, &algodToken)
 )
-
-func check(err interface{}) {
-	if err != nil {
-		panic(err)
-	}
-}
 
 // Handle global flags and set usage templates
 func init() {

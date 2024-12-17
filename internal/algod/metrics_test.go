@@ -1,4 +1,4 @@
-package internal
+package algod
 
 import (
 	"context"
