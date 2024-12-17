@@ -1,6 +1,7 @@
 package participation
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -19,8 +20,10 @@ const (
 	RoundRange RangeType = "rounds"
 )
 
-// GetKeys get the participation keys from the node
-func GetKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]api.ParticipationKey, api.ResponseInterface, error) {
+type List []api.ParticipationKey
+
+// GetList get the participation keys from the node
+func GetList(ctx context.Context, client api.ClientWithResponsesInterface) (List, api.ResponseInterface, error) {
 	partKeysResponse, err := client.GetParticipationKeysWithResponse(ctx)
 	if err != nil {
 		return nil, partKeysResponse, err
@@ -28,7 +31,7 @@ func GetKeys(ctx context.Context, client api.ClientWithResponsesInterface) (*[]a
 	if partKeysResponse.StatusCode() != 200 {
 		return nil, partKeysResponse, errors.New(partKeysResponse.Status())
 	}
-	return partKeysResponse.JSON200, partKeysResponse, err
+	return *partKeysResponse.JSON200, partKeysResponse, err
 }
 
 // GetKey get a specific participation key by id
@@ -71,11 +74,11 @@ func GenerateKeys(
 		case <-ctx.Done():
 			return nil, context.Canceled
 		case <-time.After(2 * time.Second):
-			partKeys, _, err := GetKeys(ctx, client)
+			partKeys, _, err := GetList(ctx, client)
 			if partKeys == nil || err != nil {
 				return nil, errors.New("failed to get participation keys")
 			}
-			for _, k := range *partKeys {
+			for _, k := range partKeys {
 				if k.Address == address &&
 					k.Key.VoteFirstValid == params.First &&
 					k.Key.VoteLastValid == params.Last {
@@ -101,7 +104,7 @@ func Delete(ctx context.Context, client api.ClientWithResponsesInterface, partic
 }
 
 // RemovePartKeyByID Removes a participation key from the list of keys
-func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
+func RemovePartKeyByID(slice *List, id string) {
 	for i, item := range *slice {
 		if item.Id == id {
 			*slice = append((*slice)[:i], (*slice)[i+1:]...)
@@ -110,8 +113,8 @@ func RemovePartKeyByID(slice *[]api.ParticipationKey, id string) {
 	}
 }
 
-func FindParticipationIdForVoteKey(slice *[]api.ParticipationKey, votekey []byte) *string {
-	for _, item := range *slice {
+func FindParticipationIdForVoteKey(slice List, votekey []byte) *string {
+	for _, item := range slice {
 		if string(item.Key.VoteParticipationKey) == string(votekey) {
 			return &item.Id
 		}
@@ -149,4 +152,14 @@ func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part a
 		}
 	}
 	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
+}
+
+func IsActive(part api.ParticipationKey, account api.AccountParticipation) bool {
+	var equal = false
+	if bytes.Equal(part.Key.VoteParticipationKey, account.VoteParticipationKey) &&
+		part.Key.VoteLastValid == account.VoteLastValid &&
+		part.Key.VoteFirstValid == account.VoteFirstValid {
+		equal = true
+	}
+	return equal
 }

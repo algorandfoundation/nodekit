@@ -18,8 +18,8 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
-	case internal.StateModel:
-		m.Data = &msg
+	case *internal.StateModel:
+		m.Data = msg
 		m.table.SetRows(*m.makeRows())
 	case tea.KeyMsg:
 		switch msg.String() {

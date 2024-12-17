@@ -40,11 +40,11 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		Client:            client,
 		Context:           context.Background(),
 	}
-	values := make(map[string]internal.Account)
+	values := make(map[string]algod.Account)
 	for _, key := range *sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
-			values[key.Address] = internal.Account{
+			values[key.Address] = algod.Account{
 				Address:           key.Address,
 				Status:            "Offline",
 				Balance:           0,

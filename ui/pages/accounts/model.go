@@ -55,8 +55,8 @@ func New(state *internal.StateModel) ViewModel {
 	return m
 }
 
-func (m ViewModel) SelectedAccount() *internal.Account {
-	var account *internal.Account
+func (m ViewModel) SelectedAccount() *algod.Account {
+	var account *algod.Account
 	var selectedRow = m.table.SelectedRow()
 	if selectedRow != nil {
 		selectedAccount := m.Data.Accounts[selectedRow[0]]

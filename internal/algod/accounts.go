@@ -1,11 +1,12 @@
-package internal
+package algod
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
+	"github.com/algorandfoundation/algorun-tui/internal/system"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -55,27 +56,11 @@ func GetAccount(client api.ClientWithResponsesInterface, address string) (api.Ac
 	return *r.JSON200, nil
 }
 
-// GetExpiresTime calculates and returns the expiration time for a participation key based on the current account state.
-func GetExpiresTime(t Time, lastRound int, roundTime time.Duration, account Account) *time.Time {
-	now := t.Now()
-	var expires time.Time
-	if account.Status == "Online" &&
-		account.Participation != nil &&
-		lastRound != 0 &&
-		roundTime != 0 {
-		roundDiff := max(0, account.Participation.VoteLastValid-int(lastRound))
-		distance := int(roundTime) * roundDiff
-		expires = now.Add(time.Duration(distance))
-		return &expires
-	}
-	return nil
-}
-
 // ParticipationKeysToAccounts converts a slice of ParticipationKey objects into a map of Account objects.
 // The keys parameter is a slice of pointers to ParticipationKey instances.
 // The prev parameter is an optional map that allows merging of existing accounts with new ones.
 // Returns a map where each key is an address from a ParticipationKey, and the value is a corresponding Account.
-func ParticipationKeysToAccounts(keys *[]api.ParticipationKey) map[string]Account {
+func ParticipationKeysToAccounts(keys []api.ParticipationKey) map[string]Account {
 	// Allow merging of existing accounts
 	var accounts = make(map[string]Account)
 
@@ -85,7 +70,7 @@ func ParticipationKeysToAccounts(keys *[]api.ParticipationKey) map[string]Accoun
 	}
 
 	// Add missing Accounts
-	for _, key := range *keys {
+	for _, key := range keys {
 		if _, ok := accounts[key.Address]; !ok {
 			accounts[key.Address] = Account{
 				Participation:     nil,
@@ -105,10 +90,10 @@ func ParticipationKeysToAccounts(keys *[]api.ParticipationKey) map[string]Accoun
 	return accounts
 }
 
-func UpdateAccountFromRPC(account Account, rpcAccount api.Account) Account {
-	account.Status = rpcAccount.Status
-	account.Balance = rpcAccount.Amount / 1000000
-	account.Participation = rpcAccount.Participation
+func (a Account) Merge(rpcAccount api.Account) Account {
+	a.Status = rpcAccount.Status
+	a.Balance = rpcAccount.Amount / 1000000
+	a.Participation = rpcAccount.Participation
 
 	var incentiveEligible = false
 	if rpcAccount.IncentiveEligible == nil {
@@ -117,55 +102,33 @@ func UpdateAccountFromRPC(account Account, rpcAccount api.Account) Account {
 		incentiveEligible = *rpcAccount.IncentiveEligible
 	}
 
-	account.IncentiveEligible = incentiveEligible
+	a.IncentiveEligible = incentiveEligible
 
-	return account
-}
-
-func IsParticipationKeyActive(part api.ParticipationKey, account api.AccountParticipation) bool {
-	var equal = false
-	if bytes.Equal(part.Key.VoteParticipationKey, account.VoteParticipationKey) &&
-		part.Key.VoteLastValid == account.VoteLastValid &&
-		part.Key.VoteFirstValid == account.VoteFirstValid {
-		equal = true
+	if rpcAccount.Participation != nil {
+		a.Participation = rpcAccount.Participation
 	}
-	return equal
+
+	return a
 }
 
-func UpdateAccountExpiredTime(t Time, account Account, state *StateModel) Account {
+func (a Account) GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration) *time.Time {
+	if a.Participation == nil {
+		return nil
+	}
+	return utils.GetExpiresTime(t, lastRound, roundTime, a.Participation.VoteLastValid)
+}
+
+func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, lastRound int, roundTime time.Duration) Account {
 	var nonResidentKey = true
-	for _, key := range *state.ParticipationKeys {
+	for _, key := range keys {
 		// We have the key locally, update the residency
-		if account.Status == "Offline" || (key.Address == account.Address && account.Participation != nil && IsParticipationKeyActive(key, *account.Participation)) {
+		if a.Status == "Offline" || (key.Address == a.Address && a.Participation != nil && participation.IsActive(key, *a.Participation)) {
 			nonResidentKey = false
 		}
 	}
-	account.NonResidentKey = nonResidentKey
-	account.Expires = GetExpiresTime(t, int(state.Status.LastRound), state.Metrics.RoundTime, account)
-	return account
-}
-
-// AccountsFromState maps an array of api.ParticipationKey to a keyed map of Account
-func AccountsFromState(state *StateModel, t Time, client api.ClientWithResponsesInterface) (map[string]Account, error) {
-	if state == nil {
-		return make(map[string]Account), nil
-	}
-
-	accounts := ParticipationKeysToAccounts(state.ParticipationKeys)
-
-	for _, acct := range accounts {
-		// For each account, update the data from the RPC endpoint
-		if state.Status.State != algod.SyncingState {
-			rpcAcct, err := GetAccount(client, acct.Address)
-			if err != nil {
-				return nil, err
-			}
-			accounts[acct.Address] = UpdateAccountFromRPC(acct, rpcAcct)
-			accounts[acct.Address] = UpdateAccountExpiredTime(t, accounts[acct.Address], state)
-		}
-	}
-
-	return accounts, nil
+	a.NonResidentKey = nonResidentKey
+	a.Expires = a.GetExpiresTime(t, lastRound, roundTime)
+	return a
 }
 
 func ValidateAddress(address string) bool {

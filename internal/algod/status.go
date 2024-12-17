@@ -95,7 +95,7 @@ func NewStatus(ctx context.Context, client api.ClientWithResponsesInterface, htt
 
 	v, versionResponse, err := GetVersion(ctx, client)
 	if err != nil {
-		return status, versionResponse, err
+		return status, versionResponse.(api.ResponseInterface), err
 	}
 	status.Network = v.Network
 	status.Version = v.Version

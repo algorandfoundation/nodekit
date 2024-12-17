@@ -1,9 +1,9 @@
-package internal
+package algod
 
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
@@ -64,7 +64,7 @@ func Test_AccountsFromState(t *testing.T) {
 	}
 
 	// Mock StateModel
-	state := &StateModel{
+	state := &internal.StateModel{
 		Metrics: MetricsModel{
 			Enabled:   true,
 			Window:    100,
@@ -73,7 +73,7 @@ func Test_AccountsFromState(t *testing.T) {
 			RX:        1024,
 			TX:        2048,
 		},
-		Status: algod.Status{
+		Status: Status{
 			State:       "WATCHING",
 			Version:     "v0.0.0-test",
 			Network:     "tuinet",

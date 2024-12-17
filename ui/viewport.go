@@ -58,8 +58,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.page = msg
 	// When the state updates
-	case internal.StateModel:
-		m.Data = &msg
+	case *internal.StateModel:
+		m.Data = msg
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
 		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
@@ -117,8 +117,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return m, nil
-		case "ctrl+c":
-		case "q":
+		case "q", "ctrl+c":
 			// Close the app when anything other than generate modal is visible
 			if !m.modal.Open || (m.modal.Open && m.modal.Type != app.GenerateModal) {
 				return m, tea.Quit

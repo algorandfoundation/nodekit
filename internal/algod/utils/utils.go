@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func IsDataDir(path string) bool {
@@ -66,4 +67,20 @@ func GetKnownDataPaths() []string {
 	}
 
 	return paths
+}
+
+// GetExpiresTime calculates and returns the expiration time of a vote based on rounds and time duration information.
+// If the lastRound and roundTime are not zero, it computes the expiration using round difference and duration.
+// Returns nil if the expiration time cannot be determined.
+func GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration, voteLastValid int) *time.Time {
+	now := t.Now()
+	var expires time.Time
+	if lastRound != 0 &&
+		roundTime != 0 {
+		roundDiff := max(0, voteLastValid-lastRound)
+		distance := int(roundTime) * roundDiff
+		expires = now.Add(time.Duration(distance))
+		return &expires
+	}
+	return nil
 }

@@ -16,8 +16,11 @@ type VersionResponse struct {
 func GetVersion(ctx context.Context, client api.ClientWithResponsesInterface) (VersionResponse, api.ResponseInterface, error) {
 	var release VersionResponse
 	v, err := client.GetVersionWithResponse(ctx)
+	if v == nil {
+		return release, v, errors.New(InvalidVersionResponseError)
+	}
 	if err != nil {
-		return release, v, err
+		return release, *v, err
 	}
 	if v.StatusCode() != 200 {
 		return release, v, errors.New(InvalidVersionResponseError)

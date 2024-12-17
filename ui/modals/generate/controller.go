@@ -1,11 +1,11 @@
 package generate
 
 import (
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -77,7 +77,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			switch m.Step {
 			case AddressStep:
 				addr := m.Input.Value()
-				if !internal.ValidateAddress(addr) {
+				if !algod.ValidateAddress(addr) {
 					m.InputError = "Error: invalid address"
 					return &m, nil
 				}

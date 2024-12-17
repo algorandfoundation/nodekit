@@ -28,10 +28,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
-	case internal.StateModel:
-		m.State = &msg
-		m.transactionModal.State = &msg
-		m.infoModal.State = &msg
+	case *internal.StateModel:
+		m.State = msg
+		m.transactionModal.State = msg
+		m.infoModal.State = msg
 
 		// When the state changes, and we are displaying a valid QR Code/Transaction Modal
 		if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {

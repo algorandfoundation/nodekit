@@ -35,8 +35,8 @@ func (m StatusViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Is it a heartbeat of the latest round?
-	case internal.StateModel:
-		m.Data = &msg
+	case *internal.StateModel:
+		m.Data = msg
 	// Is it a resize event?
 	case tea.WindowSizeMsg:
 		m.TerminalWidth = msg.Width

@@ -10,6 +10,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/system"
 	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -54,9 +55,12 @@ var (
 			client, err := algod.GetClient(endpoint, token)
 			cobra.CheckErr(err)
 			httpPkg := new(api.HttpPkg)
-
+			t := new(system.Clock)
 			// Fetch the state and handle any creation errors
 			state, stateResponse, err := internal.NewStateModel(ctx, client, httpPkg)
+			if err != nil && err.Error() == algod.InvalidVersionResponseError {
+				return fmt.Errorf(style.Red.Render("node not found") + explanations.NodeNotFound)
+			}
 			if stateResponse.StatusCode() == 401 {
 				return fmt.Errorf(
 					style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
@@ -90,7 +94,7 @@ var (
 						p.Send(state)
 						p.Send(err)
 					}
-				}, ctx, client)
+				}, ctx, t)
 			}()
 
 			// Execute the TUI Application

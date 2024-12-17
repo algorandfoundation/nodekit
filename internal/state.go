@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/charmbracelet/log"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
@@ -23,11 +25,11 @@ type StateModel struct {
 
 	// Accounts holds a mapping of account identifiers to their corresponding Account details.
 	// This map is derived from the list of the type api.ParticipationKey
-	Accounts map[string]Account
+	Accounts map[string]algod.Account
 
 	// ParticipationKeys is a slice of participation keys used by the node
 	// to interact with the blockchain and consensus protocol.
-	ParticipationKeys *[]api.ParticipationKey
+	ParticipationKeys participation.List
 
 	// Admin indicates whether the current node has
 	// admin privileges or capabilities enabled.
@@ -51,22 +53,29 @@ type StateModel struct {
 	Context context.Context
 }
 
+// NewStateModel initializes and returns a new StateModel instance
+// along with an API response and potential error.
 func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface) (*StateModel, api.ResponseInterface, error) {
+	// Preload the node status
 	status, response, err := algod.NewStatus(ctx, client, httpPkg)
+	if response == nil {
+		log.Fatal("woooop")
+	}
 	if err != nil {
 		return nil, response, err
 	}
+	// Try to fetch the latest metrics
 	metrics, response, err := algod.NewMetrics(ctx, client, httpPkg, status.LastRound)
 	if err != nil {
 		return nil, response, err
 	}
 
-	partKeys, partkeysResponse, err := participation.GetKeys(ctx, client)
+	partKeys, partkeysResponse, err := participation.GetList(ctx, client)
 
 	return &StateModel{
 		Status:            status,
 		Metrics:           metrics,
-		Accounts:          ParticipationKeysToAccounts(partKeys),
+		Accounts:          algod.ParticipationKeysToAccounts(partKeys),
 		ParticipationKeys: partKeys,
 
 		Admin:    true,
@@ -88,7 +97,7 @@ func (s *StateModel) waitAfterError(err error, cb func(model *StateModel, err er
 }
 
 // TODO: allow context to handle loop
-func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client api.ClientWithResponsesInterface) {
+func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, t system.Time) {
 	var err error
 
 	// Setup Defaults
@@ -128,7 +137,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		}
 
 		// Fetch Keys
-		s.UpdateKeys()
+		s.UpdateKeys(t)
 
 		if s.Status.State == algod.SyncingState {
 			cb(s, nil)
@@ -152,23 +161,27 @@ func (s *StateModel) Stop() {
 	s.Watching = false
 }
 
-func (s *StateModel) UpdateAccounts() error {
+func (s *StateModel) UpdateKeys(t system.Time) {
 	var err error
-	s.Accounts, err = AccountsFromState(s, new(Clock), s.Client)
-	return err
-}
-
-func (s *StateModel) UpdateKeys() {
-	var err error
-	s.ParticipationKeys, _, err = participation.GetKeys(s.Context, s.Client)
+	s.ParticipationKeys, _, err = participation.GetList(s.Context, s.Client)
 	if err != nil {
 		s.Admin = false
 	}
 	if err == nil {
 		s.Admin = true
-		err = s.UpdateAccounts()
-		if err != nil {
-			// TODO: Handle error
+		s.Accounts = algod.ParticipationKeysToAccounts(s.ParticipationKeys)
+		for _, acct := range s.Accounts {
+			// For each account, update the data from the RPC endpoint
+			if s.Status.State == algod.StableState {
+				// Skip eon errors
+				rpcAcct, err := algod.GetAccount(s.Client, acct.Address)
+				if err != nil {
+					continue
+				}
+
+				s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
+				s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
+			}
 		}
 	}
 }
