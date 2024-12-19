@@ -3,8 +3,11 @@ package configure
 import (
 	"bytes"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
+	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"os"
 	"os/exec"
 	"runtime"
@@ -14,29 +17,37 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var short = "Configure the Algorand daemon."
+var long = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(short),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Tool for inspecting and updating the Algorand daemon's config.json and service files",
+	"",
+	style.Yellow.Render(explanations.ExperimentalWarning),
+)
+
 var Cmd = &cobra.Command{
-	Use:          "configure",
-	Short:        "Configure Algod",
-	Long:         "Configure Algod settings",
-	SilenceUsage: true,
-	//PersistentPreRun:
-	//RunE: func(cmd *cobra.Command, args []string) error {
-	//	return configureNode()
-	//},
+	Use:   "configure",
+	Short: short,
+	Long:  long,
 }
 
 func init() {
 	Cmd.AddCommand(serviceCmd)
 }
 
-const ConfigureRunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"
+const RunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"
 
 // TODO: configure not just data directory but algod path
 func configureNode() error {
 	var systemServiceConfigure bool
 
 	if algod.IsRunning() {
-		return fmt.Errorf(ConfigureRunningErrorMsg)
+		return fmt.Errorf(RunningErrorMsg)
 	}
 
 	// Check systemctl first

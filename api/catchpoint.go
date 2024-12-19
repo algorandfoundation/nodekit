@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"io"
+	"net/http"
 	"strings"
 )
 
@@ -15,7 +16,10 @@ const (
 	MainNet CatchPointUrl = "https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/mainnet/latest.catchpoint"
 )
 
+const InvalidNetworkParamMsg = "invalid network"
+
 type LatestCatchpointResponse struct {
+	HTTPResponse   *http.Response
 	ResponseCode   int
 	ResponseStatus string
 	JSON200        string
@@ -42,8 +46,11 @@ func GetLatestCatchpointWithResponse(http HttpPkgInterface, network string) (Lat
 	case "mainnet-v1.0", "mainnet":
 		url = MainNet
 	}
-
+	if url == "" {
+		return response, errors.New(InvalidNetworkParamMsg)
+	}
 	res, err := http.Get(string(url))
+	response.HTTPResponse = res
 	if err != nil {
 		return response, err
 	}

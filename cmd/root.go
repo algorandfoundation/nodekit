@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/cmd/configure"
 	"github.com/algorandfoundation/algorun-tui/cmd/node"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
@@ -12,6 +11,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,11 +30,24 @@ var (
 	// Version represents the application version string, which is set during build or defaults to "unknown".
 	Version = ""
 
+	short = "Manage Algorand nodes from the command line"
+	long  = lipgloss.JoinVertical(
+		lipgloss.Left,
+		style.Purple(style.BANNER),
+		"",
+		style.Bold(short),
+		"",
+		style.BoldUnderline("Overview:"),
+		"Welcome to Algorun, a TUI for managing Algorand nodes.",
+		"A one stop shop for managing Algorand nodes, including node creation, configuration, and management.",
+		"",
+		style.Yellow.Render(explanations.ExperimentalWarning),
+	)
 	// rootCmd is the primary command for managing Algorand nodes, providing CLI functionality and TUI for interaction.
 	rootCmd = utils.WithAlgodFlags(&cobra.Command{
 		Use:   "algorun",
-		Short: "Manage Algorand nodes",
-		Long:  style.Purple(style.BANNER) + "\n",
+		Short: short,
+		Long:  long,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -64,18 +77,7 @@ var (
 			t := new(system.Clock)
 			// Fetch the state and handle any creation errors
 			state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
-			if err != nil && err.Error() == algod.InvalidVersionResponseError {
-				log.Fatal(style.Red.Render("node not found") + explanations.NodeNotFound)
-			}
-			if stateResponse.StatusCode() == 401 {
-				log.Fatal(
-					style.Red.Render("failed to get status: Unauthorized") + explanations.TokenInvalid)
-			}
-			if stateResponse.StatusCode() > 300 {
-				log.Fatal(
-					style.Red.Render("failed to get status: error code %d")+explanations.TokenNotAdmin,
-					stateResponse.StatusCode())
-			}
+			utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
 			cobra.CheckErr(err)
 
 			// Construct the TUI Model from the State
@@ -125,7 +127,6 @@ func init() {
 	// Add Commands
 	if runtime.GOOS != "windows" {
 		rootCmd.AddCommand(node.Cmd)
-		rootCmd.AddCommand(configure.Cmd)
 	}
 }
 

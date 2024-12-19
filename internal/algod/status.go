@@ -28,28 +28,31 @@ const (
 type Status struct {
 
 	// State represents the operational state of a process or system, defined as a string.
-	State State
+	State State `json:"state"`
 
 	// Version represents the version identifier of the system, typically used to denote the current software version.
-	Version string
+	Version string `json:"version"`
 
 	// Network represents the name of the network the status is associated with.
-	Network string
+	Network string `json:"network"`
 
 	// Voting indicates whether a node participated in the current upgrade voting process.
-	Voting bool
+	Voting bool `json:"voting"`
 
 	// NeedsUpdate indicates whether the system requires an update based on the current version and available release data.
-	NeedsUpdate bool
+	NeedsUpdate bool `json:"needsUpdate"`
 
 	// LastRound represents the most recent round number recorded by the system or client.
-	LastRound uint64
+	LastRound uint64 `json:"lastRound"`
+
+	// Catchpoint is a pointer to a string that identifies the current catchpoint for node synchronization or fast catchup.
+	Catchpoint *string `json:"catchpoint"`
 
 	// Client provides methods for interacting with the API, adhering to ClientWithResponsesInterface specifications.
-	Client api.ClientWithResponsesInterface
+	Client api.ClientWithResponsesInterface `json:"-"`
 
 	// HttpPkg represents an interface for HTTP package operations, providing methods for making HTTP requests.
-	HttpPkg api.HttpPkgInterface
+	HttpPkg api.HttpPkgInterface `json:"-"`
 }
 
 // Update synchronizes non-identical fields between two Status instances and returns the updated Status.
@@ -96,6 +99,7 @@ func (s Status) Merge(res api.StatusLike) Status {
 	catchpoint := res.Catchpoint
 	if catchpoint != nil && *catchpoint != "" {
 		s.State = FastCatchupState
+		s.Catchpoint = catchpoint
 	} else if res.CatchupTime > 0 {
 		s.State = SyncingState
 	} else {

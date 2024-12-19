@@ -1,8 +1,12 @@
 package node
 
 import (
+	"github.com/algorandfoundation/algorun-tui/cmd/node/catchup"
+	"github.com/algorandfoundation/algorun-tui/cmd/node/configure"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
@@ -25,11 +29,24 @@ const NotRunningErrorMsg = "algod is not running"
 // force indicates whether actions should be performed forcefully, bypassing checks or confirmations.
 var force bool = false
 
+var short = "Manage your Algorand node using the CLI."
+var long = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(short),
+	"",
+	style.BoldUnderline("Overview:"),
+	"A collection of commands for installing, configuring, starting, stopping, and upgrading your node.",
+	"",
+	style.Yellow.Render(explanations.ExperimentalWarning),
+)
+
 // Cmd represents the root command for managing an Algorand node, providing subcommands for installation, control, and upgrades.
 var Cmd = &cobra.Command{
 	Use:   "node",
-	Short: "Node Management",
-	Long:  style.Purple(style.BANNER) + "\n" + style.LightBlue("Manage your Algorand node"),
+	Short: short,
+	Long:  long,
 }
 
 // NeedsToBeRunning ensures the Algod software is installed and running before executing the associated Cobra command.
@@ -67,4 +84,6 @@ func init() {
 	Cmd.AddCommand(upgradeCmd)
 	Cmd.AddCommand(syncCmd)
 	Cmd.AddCommand(debugCmd)
+	Cmd.AddCommand(catchup.Cmd)
+	Cmd.AddCommand(configure.Cmd)
 }

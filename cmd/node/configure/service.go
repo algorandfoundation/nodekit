@@ -2,16 +2,30 @@ package configure
 
 import (
 	"errors"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
+var serviceShort = "Install service files for the Algorand daemon."
+var serviceLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(serviceShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Ensuring that the Algorand daemon is installed and running as a service.",
+	"",
+	style.Yellow.Render(explanations.ExperimentalWarning),
+)
 var serviceCmd = &cobra.Command{
 	Use:   "service",
-	Short: "Configure the node service",
-	Long:  style.Purple(style.BANNER) + "\n" + style.LightBlue("Configure the service that runs the node."),
+	Short: serviceShort,
+	Long:  serviceLong,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if !system.IsSudo() {
 			return errors.New(

@@ -1,4 +1,4 @@
-package node
+package catchup
 
 import (
 	"context"
@@ -12,36 +12,31 @@ import (
 	"github.com/spf13/viper"
 )
 
-// syncEndpoint is a string variable used to store the algod API endpoint address for communication with the node.
-var syncEndpoint string
-
-// syncToken is a string flag used to store the admin token required for authenticating with the Algod API.
-var syncToken string
-
-// defaultLag represents the default minimum catchup delay in milliseconds for the Fast Catchup process.
-var defaultLag int = 30_000
-
-var syncCmdShortTxt = "Quickly catch up your node to the latest block."
-var syncCmdLongTxt = lipgloss.JoinVertical(
+var startCmdLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
 	"",
-	style.Bold(syncCmdShortTxt),
+	style.Bold("Catchup the node to the latest catchpoint."),
 	"",
 	style.BoldUnderline("Overview:"),
-	"Fetch the latest catchpoint and use Fast-Catchup to check if the node is caught up to the latest block.",
+	"Starting a catchup will sync the node to the latest catchpoint.",
+	"Actual sync times may vary depending on the number of accounts, number of blocks and the network.",
 	"",
 	style.Yellow.Render("Note: Not all networks support Fast-Catchup."),
 )
 
-// syncCmd is a Cobra command used to check the node's sync status and initiate a fast catchup when necessary.
-var syncCmd = utils.WithAlgodFlags(&cobra.Command{
-	Use:          "sync",
-	Short:        syncCmdShortTxt,
-	Long:         syncCmdLongTxt,
+// startCmd is a Cobra command used to check the node's sync status and initiate a fast catchup when necessary.
+var startCmd = utils.WithAlgodFlags(&cobra.Command{
+	Use:          "start",
+	Short:        "Get the latest catchpoint and start catching up.",
+	Long:         startCmdLong,
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Load the configuration
+		err := utils.InitConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		endpoint := viper.GetString("algod-endpoint")
 		token := viper.GetString("algod-token")
 		if endpoint == "" {
@@ -51,32 +46,36 @@ var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 			log.Fatal("algod-token is required")
 		}
 
-		// Create Clients
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
 		client, err := algod.GetClient(endpoint, token)
 		cobra.CheckErr(err)
 
-		// Fetch Status from Node
 		status, response, err := algod.NewStatus(ctx, client, httpPkg)
 		utils.WithInvalidResponsesExplanations(err, response, cmd.UsageString())
+
 		if status.State == algod.FastCatchupState {
 			log.Fatal(style.Red.Render("Node is currently catching up. Use --abort to cancel."))
 		}
 
-		// Get the Latest Catchpoint
+		// Get the latest catchpoint
 		catchpoint, _, err := algod.GetLatestCatchpoint(httpPkg, status.Network)
-		if err != nil {
-			log.Fatal(err)
+		if err != nil && err.Error() == api.InvalidNetworkParamMsg {
+			log.Fatal("This network does not support fast-catchup.")
+		} else {
+			log.Info(style.Green.Render("Latest Catchpoint: " + catchpoint))
 		}
-		log.Info(style.Green.Render("Latest Catchpoint: " + catchpoint))
 
-		// Submit the Catchpoint to the Algod Node, using the StartCatchupParams to skip
-		res, _, err := algod.StartCatchup(ctx, client, catchpoint, &api.StartCatchupParams{Min: &defaultLag})
+		// Start catchup
+		res, _, err := algod.StartCatchup(ctx, client, catchpoint, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		log.Info(style.Green.Render(res))
 	},
-}, &syncEndpoint, &syncToken)
+}, &endpoint, &token)
+
+func init() {
+	startCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully catchup the node"))
+}

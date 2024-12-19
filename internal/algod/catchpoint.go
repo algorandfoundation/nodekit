@@ -6,11 +6,24 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
-// PostCatchpoint sends a request to start a catchup operation on a specific catchpoint and returns the catchup message.
+// StartCatchup sends a request to start a catchup operation on a specific catchpoint and returns the catchup message.
 // It uses the provided API client, catchpoint string, and optional parameters for catchup configuration.
 // Returns the catchup message, the raw API response, and an error if any occurred.
-func PostCatchpoint(ctx context.Context, client api.ClientWithResponsesInterface, catchpoint string, params *api.StartCatchupParams) (string, api.ResponseInterface, error) {
+func StartCatchup(ctx context.Context, client api.ClientWithResponsesInterface, catchpoint string, params *api.StartCatchupParams) (string, api.ResponseInterface, error) {
 	response, err := client.StartCatchupWithResponse(ctx, catchpoint, params)
+	if err != nil {
+		return "", response, err
+	}
+	if response.StatusCode() != 200 {
+		return "", response, errors.New(response.Status())
+	}
+
+	return response.JSON200.CatchupMessage, response, nil
+}
+
+// AbortCatchup aborts a ledger catchup process for the specified catchpoint using the provided client interface.
+func AbortCatchup(ctx context.Context, client api.ClientWithResponsesInterface, catchpoint string) (string, api.ResponseInterface, error) {
+	response, err := client.AbortCatchupWithResponse(ctx, catchpoint)
 	if err != nil {
 		return "", response, err
 	}

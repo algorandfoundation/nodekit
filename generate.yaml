@@ -21,3 +21,4 @@ output-options:
     - AccountInformation
     - GetGenesis
     - StartCatchup
+    - AbortCatchup

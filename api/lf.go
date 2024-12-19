@@ -677,6 +677,9 @@ type ClientInterface interface {
 	// GetBlock request
 	GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// AbortCatchup request
+	AbortCatchup(ctx context.Context, catchpoint string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// StartCatchup request
 	StartCatchup(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -746,6 +749,18 @@ func (c *Algod) AccountInformation(ctx context.Context, address string, params *
 
 func (c *Algod) GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBlockRequest(c.Server, round, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) AbortCatchup(ctx context.Context, catchpoint string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAbortCatchupRequest(c.Server, catchpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -1051,6 +1066,40 @@ func NewGetBlockRequest(server string, round int, params *GetBlockParams) (*http
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAbortCatchupRequest generates requests for AbortCatchup
+func NewAbortCatchupRequest(server string, catchpoint string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "catchpoint", runtime.ParamLocationPath, catchpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/catchup/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1497,6 +1546,9 @@ type ClientWithResponsesInterface interface {
 	// GetBlockWithResponse request
 	GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error)
 
+	// AbortCatchupWithResponse request
+	AbortCatchupWithResponse(ctx context.Context, catchpoint string, reqEditors ...RequestEditorFn) (*AbortCatchupResponse, error)
+
 	// StartCatchupWithResponse request
 	StartCatchupWithResponse(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*StartCatchupResponse, error)
 
@@ -1622,6 +1674,34 @@ func (r GetBlockResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetBlockResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AbortCatchupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// CatchupMessage Catchup abort response string
+		CatchupMessage string `json:"catchup-message"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON500 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AbortCatchupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AbortCatchupResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -2084,6 +2164,15 @@ func (c *ClientWithResponses) GetBlockWithResponse(ctx context.Context, round in
 	return ParseGetBlockResponse(rsp)
 }
 
+// AbortCatchupWithResponse request returning *AbortCatchupResponse
+func (c *ClientWithResponses) AbortCatchupWithResponse(ctx context.Context, catchpoint string, reqEditors ...RequestEditorFn) (*AbortCatchupResponse, error) {
+	rsp, err := c.AbortCatchup(ctx, catchpoint, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAbortCatchupResponse(rsp)
+}
+
 // StartCatchupWithResponse request returning *StartCatchupResponse
 func (c *ClientWithResponses) StartCatchupWithResponse(ctx context.Context, catchpoint string, params *StartCatchupParams, reqEditors ...RequestEditorFn) (*StartCatchupResponse, error) {
 	rsp, err := c.StartCatchup(ctx, catchpoint, params, reqEditors...)
@@ -2344,6 +2433,56 @@ func ParseGetBlockResponse(rsp *http.Response) (*GetBlockResponse, error) {
 
 	case rsp.StatusCode == 500:
 		// Content-type (application/msgpack) unsupported
+
+	}
+
+	return response, nil
+}
+
+// ParseAbortCatchupResponse parses an HTTP response from a AbortCatchupWithResponse call
+func ParseAbortCatchupResponse(rsp *http.Response) (*AbortCatchupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AbortCatchupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// CatchupMessage Catchup abort response string
+			CatchupMessage string `json:"catchup-message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 

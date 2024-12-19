@@ -3,12 +3,14 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"strings"
 )
 
 const ChannelNotFoundMsg = "channel not found"
 
 type GithubVersionResponse struct {
+	HTTPResponse   *http.Response
 	ResponseCode   int
 	ResponseStatus string
 	JSON200        string
@@ -24,6 +26,7 @@ func (r GithubVersionResponse) Status() string {
 func GetGoAlgorandReleaseWithResponse(http HttpPkgInterface, channel string) (*GithubVersionResponse, error) {
 	var versions GithubVersionResponse
 	resp, err := http.Get("https://api.github.com/repos/algorand/go-algorand/releases")
+	versions.HTTPResponse = resp
 	if resp == nil || err != nil {
 		return nil, err
 	}
