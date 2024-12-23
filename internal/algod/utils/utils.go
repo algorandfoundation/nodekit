@@ -67,3 +67,11 @@ func GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration, voteL
 	}
 	return nil
 }
+
+func GetTokenFromDataDir(path string) string {
+	paths := system.FindPathToFile(path, "algod.token")
+	if len(paths) == 1 {
+
+	}
+	return ""
+}

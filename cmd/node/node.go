@@ -84,6 +84,7 @@ func init() {
 	Cmd.AddCommand(upgradeCmd)
 	Cmd.AddCommand(syncCmd)
 	Cmd.AddCommand(debugCmd)
+	Cmd.AddCommand(bootstrapCmd)
 	Cmd.AddCommand(catchup.Cmd)
 	Cmd.AddCommand(configure.Cmd)
 }
