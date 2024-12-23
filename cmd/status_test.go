@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"context"
-	"github.com/spf13/viper"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 func Test_ExecuteInvalidStatusCommand(t *testing.T) {

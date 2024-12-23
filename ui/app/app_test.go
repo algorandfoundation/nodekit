@@ -46,7 +46,7 @@ func Test_EmitDeleteKey(t *testing.T) {
 		t.Error("Expected ABC")
 	}
 	if evt.Err != nil {
-		t.Error("Expected no errors")
+		t.Error("Expected no msgs")
 	}
 
 	client = test.GetClient(true)
@@ -60,7 +60,7 @@ func Test_EmitDeleteKey(t *testing.T) {
 		t.Error("Expected no response")
 	}
 	if evt.Err == nil {
-		t.Error("Expected errors")
+		t.Error("Expected msgs")
 	}
 
 }

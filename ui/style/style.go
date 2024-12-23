@@ -178,3 +178,12 @@ func TruncateLeft(line string, padding int) string {
 
 	return ansiStyle + strings.Join(wrapped[1:], "")
 }
+
+const BANNER = `
+   _____  .__                __________              
+  /  _  \ |  |    ____   ____\______   \__ __  ____  
+ /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \ 
+/    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
+\____|__  /____/\___  / \____/|____|_  /____/|___|  /
+        \/     /_____/               \/           \/ 
+`

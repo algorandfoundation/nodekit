@@ -17,7 +17,7 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get the node status",
-	Long:  style.Purple(BANNER) + "\n" + style.LightBlue("View the node status"),
+	Long:  style.Purple(style.BANNER) + "\n" + style.LightBlue("View the node status"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		initConfig()
 		if viper.GetString("algod-endpoint") == "" {

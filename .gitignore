@@ -1,4 +1,5 @@
 algorun-tui
+coverage
 bin
 .data
 
@@ -14,6 +15,9 @@ bin
 
 # Test binary, built with `go test -c`
 *.test
+
+# coverage.txt, in case you run tests locally
+coverage.txt
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
