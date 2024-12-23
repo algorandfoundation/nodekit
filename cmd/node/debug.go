@@ -33,6 +33,8 @@ type DebugInfo struct {
 
 	// Data contains a list of string entries providing additional paths or diagnostic information about the `algod` service.
 	Data []string `json:"data"`
+
+	DataFolder utils.DataFolderConfig
 }
 
 // debugCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
@@ -49,6 +51,9 @@ var debugCmd = &cobra.Command{
 
 		paths := utils.GetKnownDataPaths()
 		path, _ := exec.LookPath("algod")
+
+		folderDebug, err := utils.ToDataFolderConfig("/var/lib/algorand")
+
 		info := DebugInfo{
 			InPath:      system.CmdExists("algod"),
 			IsRunning:   algod.IsRunning(),
@@ -56,6 +61,7 @@ var debugCmd = &cobra.Command{
 			IsInstalled: algod.IsInstalled(),
 			Algod:       path,
 			Data:        paths,
+			DataFolder:  folderDebug,
 		}
 		data, err := json.MarshalIndent(info, "", " ")
 		if err != nil {

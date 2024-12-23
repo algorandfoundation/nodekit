@@ -8,7 +8,6 @@ import (
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // stopCmd is a Cobra command used to check the node's sync status and initiate a fast catchup when necessary.
@@ -18,23 +17,9 @@ var stopCmd = utils.WithAlgodFlags(&cobra.Command{
 	Long:         "Checks if the node is caught up and if not, starts catching up.",
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Load configuration
-		err := utils.InitConfig()
-		if err != nil {
-			log.Fatal(err)
-		}
-		endpoint := viper.GetString("algod-endpoint")
-		token := viper.GetString("algod-token")
-		if endpoint == "" {
-			log.Fatal("algod-endpoint is required")
-		}
-		if token == "" {
-			log.Fatal("algod-token is required")
-		}
-
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient(endpoint, token)
+		client, err := algod.GetClient("/var/lib/algorand")
 		cobra.CheckErr(err)
 
 		status, response, err := algod.NewStatus(ctx, client, httpPkg)
@@ -50,7 +35,7 @@ var stopCmd = utils.WithAlgodFlags(&cobra.Command{
 		log.Info(style.Green.Render("Latest Catchpoint: " + msg))
 
 	},
-}, &endpoint, &token)
+}, &dataDir)
 
 func init() {
 	stopCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully catchup the node"))

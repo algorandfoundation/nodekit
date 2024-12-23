@@ -8,11 +8,8 @@ import (
 )
 
 var (
-	// endpoint is a string variable used to store the algod API endpoint address for communication with the node.
-	endpoint string = ""
-
-	// token is a string flag used to store the admin token required for authenticating with the Algod API.
-	token string = ""
+	// dataDir path to the algorand data folder
+	dataDir string = ""
 
 	// force indicates whether to bypass certain checks or enforcement logic within a function or command execution flow.
 	force bool = false
@@ -36,7 +33,7 @@ var (
 		Use:   "catchup",
 		Short: "Manage Fast-Catchup for your node",
 		Long:  cmdLong,
-	}, &endpoint, &token)
+	}, &dataDir)
 )
 
 func init() {

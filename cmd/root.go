@@ -14,18 +14,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"runtime"
-	"strings"
 )
 
 var (
 
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
-	algodEndpoint string
-
-	// algodToken is a placeholder string representing an Algod client token, typically used for node authentication.
-	algodToken = strings.Repeat("a", 64)
+	algodData string
 
 	// Version represents the application version string, which is set during build or defaults to "unknown".
 	Version = ""
@@ -53,25 +48,9 @@ var (
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			log.SetOutput(cmd.OutOrStdout())
-			err := utils.InitConfig()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			endpoint := viper.GetString("algod-endpoint")
-			token := viper.GetString("algod-token")
-
-			if endpoint == "" {
-				log.Fatal(style.Red.Render("algod-endpoint is required") + explanations.NodeNotFound)
-			}
-
-			if token == "" {
-				log.Fatal(style.Red.Render("algod-token is required"))
-			}
-
 			// Create the dependencies
 			ctx := context.Background()
-			client, err := algod.GetClient(endpoint, token)
+			client, err := algod.GetClient("/var/lib/algorand")
 			cobra.CheckErr(err)
 			httpPkg := new(api.HttpPkg)
 			t := new(system.Clock)
@@ -111,7 +90,7 @@ var (
 				log.Fatal(err)
 			}
 		},
-	}, &algodEndpoint, &algodToken)
+	}, &algodData)
 )
 
 // init initializes the application, setting up logging, commands, and version information.

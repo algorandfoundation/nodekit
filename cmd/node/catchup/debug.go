@@ -11,7 +11,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type Catchpoint struct {
@@ -54,23 +53,9 @@ var debugCmd = utils.WithAlgodFlags(&cobra.Command{
 	Long:         debugCmdLong,
 	SilenceUsage: false,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := utils.InitConfig()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		endpoint := viper.GetString("algod-endpoint")
-		token := viper.GetString("algod-token")
-		if endpoint == "" {
-			log.Fatal("algod-endpoint is required")
-		}
-		if token == "" {
-			log.Fatal("algod-token is required")
-		}
-
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient(endpoint, token)
+		client, err := algod.GetClient("/var/lib/algorand")
 		cobra.CheckErr(err)
 
 		status, response, err := algod.NewStatus(ctx, client, httpPkg)
@@ -103,4 +88,4 @@ var debugCmd = utils.WithAlgodFlags(&cobra.Command{
 		fmt.Println(style.Bold(string(data)))
 
 	},
-}, &endpoint, &token)
+}, &dataDir)

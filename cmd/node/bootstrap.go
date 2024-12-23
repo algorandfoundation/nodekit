@@ -1,8 +1,14 @@
 package node
 
 import (
+	"context"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/api"
+	cmdutils "github.com/algorandfoundation/algorun-tui/cmd/utils"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
+	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/bootstrap"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -28,6 +34,9 @@ var bootstrapCmd = &cobra.Command{
 	Long:         "Text",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := context.Background()
+		httpPkg := new(api.HttpPkg)
+
 		fmt.Print(style.Purple(style.BANNER))
 		out, err := glamour.Render(in, "dark")
 		if err != nil {
@@ -70,27 +79,70 @@ var bootstrapCmd = &cobra.Command{
 		if !algod.IsRunning() {
 			log.Fatal("algod is not running")
 		}
+		// Create the client
+		client, err := algod.GetClient("/var/lib/algorand")
+		if err != nil {
+			return err
+		}
 
-		//if msg.Catchup {
-		//	ctx := context.Background()
-		//	httpPkg := new(api.HttpPkg)
-		//	client, err := algod.GetClient(endpoint, token)
-		//
-		//	// Get the latest catchpoint
-		//	catchpoint, _, err := algod.GetLatestCatchpoint(httpPkg, status.Network)
-		//	if err != nil && err.Error() == api.InvalidNetworkParamMsg {
-		//		log.Fatal("This network does not support fast-catchup.")
-		//	} else {
-		//		log.Info(style.Green.Render("Latest Catchpoint: " + catchpoint))
-		//	}
-		//
-		//	// Start catchup
-		//	res, _, err := algod.StartCatchup(ctx, client, catchpoint, nil)
-		//	if err != nil {
-		//		log.Fatal(err)
-		//	}
-		//
-		//}
+		if msg.Catchup {
+			network, err := utils.GetNetworkFromDataDir("/var/lib/algorand")
+			if err != nil {
+				return err
+			}
+			// Get the latest catchpoint
+			catchpoint, _, err := algod.GetLatestCatchpoint(httpPkg, network)
+			if err != nil && err.Error() == api.InvalidNetworkParamMsg {
+				log.Fatal("This network does not support fast-catchup.")
+			} else {
+				log.Info(style.Green.Render("Latest Catchpoint: " + catchpoint))
+			}
+
+			// Start catchup
+			res, _, err := algod.StartCatchup(ctx, client, catchpoint, nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Info(style.Green.Render(res))
+
+		}
+
+		t := new(system.Clock)
+		// Fetch the state and handle any creation errors
+		state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
+		cmdutils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
+		cobra.CheckErr(err)
+
+		// Construct the TUI Model from the State
+		m, err := ui.NewViewportViewModel(state, client)
+		cobra.CheckErr(err)
+
+		// Construct the TUI Application
+		p = tea.NewProgram(
+			m,
+			tea.WithAltScreen(),
+			tea.WithFPS(120),
+		)
+
+		// Watch for State Updates on a separate thread
+		// TODO: refactor into context aware watcher without callbacks
+		go func() {
+			state.Watch(func(status *algod.StateModel, err error) {
+				if err == nil {
+					p.Send(state)
+				}
+				if err != nil {
+					p.Send(state)
+					p.Send(err)
+				}
+			}, ctx, t)
+		}()
+
+		// Execute the TUI Application
+		_, err = p.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 		return nil
 	},
 }

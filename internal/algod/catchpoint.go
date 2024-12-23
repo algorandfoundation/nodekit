@@ -27,7 +27,7 @@ func AbortCatchup(ctx context.Context, client api.ClientWithResponsesInterface, 
 	if err != nil {
 		return "", response, err
 	}
-	if response.StatusCode() != 200 {
+	if response.StatusCode() >= 300 {
 		return "", response, errors.New(response.Status())
 	}
 

@@ -9,14 +9,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-// syncEndpoint is a string variable used to store the algod API endpoint address for communication with the node.
-var syncEndpoint string
-
-// syncToken is a string flag used to store the admin token required for authenticating with the Algod API.
-var syncToken string
+// dataDir path to the algorand data folder
+var dataDir string = ""
 
 // defaultLag represents the default minimum catchup delay in milliseconds for the Fast Catchup process.
 var defaultLag int = 30_000
@@ -41,20 +37,10 @@ var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 	Long:         syncCmdLongTxt,
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Load the configuration
-		endpoint := viper.GetString("algod-endpoint")
-		token := viper.GetString("algod-token")
-		if endpoint == "" {
-			log.Fatal("algod-endpoint is required")
-		}
-		if token == "" {
-			log.Fatal("algod-token is required")
-		}
-
 		// Create Clients
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient(endpoint, token)
+		client, err := algod.GetClient(dataDir)
 		cobra.CheckErr(err)
 
 		// Fetch Status from Node
@@ -79,4 +65,4 @@ var syncCmd = utils.WithAlgodFlags(&cobra.Command{
 
 		log.Info(style.Green.Render(res))
 	},
-}, &syncEndpoint, &syncToken)
+}, &dataDir)

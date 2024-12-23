@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var startCmdLong = lipgloss.JoinVertical(
@@ -32,23 +31,9 @@ var startCmd = utils.WithAlgodFlags(&cobra.Command{
 	Long:         startCmdLong,
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := utils.InitConfig()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		endpoint := viper.GetString("algod-endpoint")
-		token := viper.GetString("algod-token")
-		if endpoint == "" {
-			log.Fatal("algod-endpoint is required")
-		}
-		if token == "" {
-			log.Fatal("algod-token is required")
-		}
-
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient(endpoint, token)
+		client, err := algod.GetClient("/var/lib/algorand")
 		cobra.CheckErr(err)
 
 		status, response, err := algod.NewStatus(ctx, client, httpPkg)
@@ -74,7 +59,7 @@ var startCmd = utils.WithAlgodFlags(&cobra.Command{
 
 		log.Info(style.Green.Render(res))
 	},
-}, &endpoint, &token)
+}, &dataDir)
 
 func init() {
 	startCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully catchup the node"))
