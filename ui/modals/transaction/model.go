@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/algorandfoundation/algourl/encoder"
 )
@@ -19,6 +20,7 @@ type ViewModel struct {
 	// Active Participation Key
 	Participation *api.ParticipationKey
 	Active        bool
+	Link          *participation.ShortLinkResponse
 
 	// Pointer to the State
 	State    *algod.StateModel

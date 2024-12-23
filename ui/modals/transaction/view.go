@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
@@ -11,7 +12,7 @@ func (m ViewModel) View() string {
 	if m.Participation == nil {
 		return "No key selected"
 	}
-	if m.ATxn == nil {
+	if m.ATxn == nil || m.Link == nil {
 		return "Loading..."
 	}
 	// TODO: Refactor ATxn to Interface
@@ -20,28 +21,27 @@ func (m ViewModel) View() string {
 		return "Something went wrong"
 	}
 
-	var verb string
+	var adj string
 	isOffline := m.ATxn.AUrlTxnKeyreg.VotePK == nil
 	if isOffline {
-		verb = "deregister"
+		adj = "offline"
 	} else {
-		verb = "register"
+		adj = "online"
 	}
-	intro := "Sign this transaction to " + verb + " your account keys:"
-
-	link, _ := participation.ToLoraDeepLink(m.State.Status.Network, m.Active, m.Account().IncentiveEligible, *m.Participation)
-	loraText := lipgloss.JoinHorizontal(
-		lipgloss.Bottom,
-		style.WithHyperlink("Click here", link),
-		" to sign via Lora.",
+	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
+	link := participation.ToShortLink(*m.Link)
+	loraText := lipgloss.JoinVertical(
+		lipgloss.Center,
+		"Open this URL in your browser:\n",
+		style.WithHyperlink(link, link),
 	)
 	if isOffline {
 		loraText = lipgloss.JoinVertical(
 			lipgloss.Center,
 			loraText,
 			"",
-			"Note: this will take effect after 320 rounds (15 mins.)",
-			"Please keep your node online during this cooldown period.",
+			"Note: this will take effect after 320 rounds (~15 min.)",
+			"Please keep your node running during this cooldown period.",
 		)
 	}
 
