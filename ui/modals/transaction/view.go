@@ -46,7 +46,7 @@ func (m ViewModel) View() string {
 	}
 
 	var render string
-	if m.State.Status.Network == "testnet-v1.0" || m.State.Status.Network == "mainnet-v1.0" {
+	if m.State.Status.Network == "testnet-v1.0" {
 		render = lipgloss.JoinVertical(
 			lipgloss.Center,
 			intro,

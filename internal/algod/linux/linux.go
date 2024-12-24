@@ -57,7 +57,7 @@ func Install() error {
 			{"sh", "-c", "curl -o - https://releases.algorand.com/key.pub | sudo tee /etc/apt/trusted.gpg.d/algorand.asc"},
 			{"sudo", "add-apt-repository", "-y", fmt.Sprintf("deb [arch=%s] https://releases.algorand.com/deb/ stable main", runtime.GOARCH)},
 			{"sudo", "apt-get", "update"},
-			{"sudo", "apt-get", "install", "-y", "algorand-devtools"},
+			{"sudo", "apt-get", "install", "-y", "algorand"},
 		}...))
 	}
 
@@ -68,7 +68,7 @@ func Install() error {
 			{"sudo", "rpmkeys", "--import", "rpm_algorand.pub"},
 			{"sudo", "dnf", "install", "-y", "dnf-command(config-manager)"},
 			{"sudo", "dnf", "config-manager", "--add-repo=https://releases.algorand.com/rpm/stable/algorand.repo"},
-			{"sudo", "dnf", "install", "-y", "algorand-devtools"},
+			{"sudo", "dnf", "install", "-y", "algorand"},
 			{"sudo", "systemctl", "enable", "algorand.service"},
 			{"sudo", "systemctl", "start", "algorand.service"},
 			{"rm", "-f", "rpm_algorand.pub"},
@@ -89,14 +89,14 @@ func Uninstall() error {
 	if system.CmdExists("apt-get") {
 		log.Info("Using apt-get package manager")
 		unInstallCmds = [][]string{
-			{"sudo", "apt-get", "autoremove", "algorand-devtools", "algorand", "-y"},
+			{"sudo", "apt-get", "autoremove", "algorand", "-y"},
 		}
 	}
 	// On Fedora and CentOs8 there's the dnf package manager
 	if system.CmdExists("dnf") {
 		log.Info("Using dnf package manager")
 		unInstallCmds = [][]string{
-			{"sudo", "dnf", "remove", "algorand-devtools", "algorand", "-y"},
+			{"sudo", "dnf", "remove", "algorand", "-y"},
 		}
 	}
 	// Error on unsupported package managers
@@ -117,12 +117,12 @@ func Upgrade() error {
 	if system.CmdExists("apt-get") {
 		return system.RunAll(system.CmdsList{
 			{"sudo", "apt-get", "update"},
-			{"sudo", "apt-get", "install", "--only-upgrade", "-y", "algorand-devtools", "algorand"},
+			{"sudo", "apt-get", "install", "--only-upgrade", "-y", "algorand"},
 		})
 	}
 	if system.CmdExists("dnf") {
 		return system.RunAll(system.CmdsList{
-			{"sudo", "dnf", "update", "-y", "--refresh", "algorand-devtools", "algorand"},
+			{"sudo", "dnf", "update", "-y", "--refresh", "algorand"},
 		})
 	}
 	return fmt.Errorf("the *node upgrade* command is currently only available for installations done with an approved package manager. Please use a different method to upgrade")
