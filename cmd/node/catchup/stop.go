@@ -61,7 +61,7 @@ var stopCmd = utils.WithAlgodFlags(&cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Info(style.Green.Render("Latest Catchpoint: " + msg))
+		log.Info(style.Green.Render("Catchpoint Message: " + msg))
 
 	},
 }, &endpoint, &token)
