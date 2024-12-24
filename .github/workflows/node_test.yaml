@@ -23,7 +23,9 @@ jobs:
           go-version: 1.22
       - name: Run Ubuntu commands
         run: |
-          go build .
+          export GOCOVERDIR=$(pwd)/coverage
+          mkdir -p $GOCOVERDIR
+          go build -cover .
           ./algorun-tui install
           systemctl status algorand.service
           export TOKEN=$(cat /var/lib/algorand/algod.admin.token)
@@ -32,6 +34,12 @@ jobs:
           ./algorun-tui upgrade
           ./algorun-tui stop
           ./algorun-tui uninstall
+          go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
+          
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   macos:
     runs-on: macos-latest
@@ -44,7 +52,9 @@ jobs:
 
       - name: Run MacOs commands
         run: |
-          go build .
+          export GOCOVERDIR=$(pwd)/coverage
+          mkdir -p $GOCOVERDIR
+          go build -cover .
           ./algorun-tui install
           sudo launchctl print system/com.algorand.algod
           sleep 5
@@ -54,3 +64,9 @@ jobs:
           ./algorun-tui upgrade
           ./algorun-tui stop
           ./algorun-tui uninstall
+          go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
+          
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

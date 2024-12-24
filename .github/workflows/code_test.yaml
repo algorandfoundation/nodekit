@@ -43,29 +43,8 @@ jobs:
       - name: Build
         run: go build -o bin/algorun *.go
 
-      - name: Install Algod
-        run: ./bin/algorun install
-      
-      - name: Wait for the server to start
-        run: npx wait-on tcp:8080
-
       - name: Unit Tests
-        run: make unit
-
-      - name: Kill docker
-        run: docker compose down
-
-      - name: Start Integration
-        run: docker compose -f docker-compose.integration.yaml up -d
-        
-      - name: Wait for mount
-        run: npx wait-on ./coverage/int/fedora/40 ./coverage/int/ubuntu/24.04/
-        
-      - name: Integration tests
-        run: make integration
-
-      - name: Combine coverage
-        run: make combine-coverage
+        run: make test
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
