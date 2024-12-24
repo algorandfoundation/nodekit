@@ -3,6 +3,7 @@ package modal
 import (
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/confirm"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/exception"
@@ -25,6 +26,10 @@ type ViewModel struct {
 	State *algod.StateModel
 	// Address defines the string format address of the entity
 	Address string
+
+	// Link represents a reference to a ShortLinkResponse,
+	// typically used for processing or displaying shortened link data.
+	Link *participation.ShortLinkResponse
 
 	// Views
 	infoModal        *info.ViewModel
@@ -59,6 +64,11 @@ func (m *ViewModel) SetActive(active bool) {
 	m.infoModal.UpdateState()
 	m.transactionModal.Active = active
 	m.transactionModal.UpdateState()
+}
+
+func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
+	m.Link = &res
+	m.transactionModal.Link = &res
 }
 
 // SetType updates the modal type of the ViewModel and configures its title, controls, and border color accordingly.

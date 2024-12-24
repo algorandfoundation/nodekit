@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"bytes"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
@@ -25,6 +26,9 @@ func Test_New(t *testing.T) {
 func Test_Snapshot(t *testing.T) {
 	t.Run("NotVisible", func(t *testing.T) {
 		model := New(test.GetState(nil))
+		model.Link = &participation.ShortLinkResponse{
+			Id: "1234",
+		}
 		model.Participation = &mock.Keys[0]
 		model.UpdateState()
 		got := ansi.Strip(model.View())
@@ -32,6 +36,9 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Offline", func(t *testing.T) {
 		model := New(test.GetState(nil))
+		model.Link = &participation.ShortLinkResponse{
+			Id: "1234",
+		}
 		model.Participation = &mock.Keys[0]
 		model.State.Status.Network = "testnet-v1.0"
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
@@ -45,6 +52,9 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Online", func(t *testing.T) {
 		model := New(test.GetState(nil))
+		model.Link = &participation.ShortLinkResponse{
+			Id: "1234",
+		}
 		model.Participation = &mock.Keys[0]
 		model.State.Status.Network = "testnet-v1.0"
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
@@ -57,6 +67,9 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Unsupported", func(t *testing.T) {
 		model := New(test.GetState(nil))
+		model.Link = &participation.ShortLinkResponse{
+			Id: "1234",
+		}
 		model.Participation = &mock.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
@@ -82,6 +95,9 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 	// Create the Model
 	m := New(test.GetState(nil))
+	m.Link = &participation.ShortLinkResponse{
+		Id: "1234",
+	}
 	m.Participation = &mock.Keys[0]
 	m.State.Status.Network = "testnet-v1.0"
 	tm := teatest.NewTestModel(

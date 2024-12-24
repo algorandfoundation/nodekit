@@ -21,7 +21,7 @@ var upgradeCmd = &cobra.Command{
 	PersistentPreRun: NeedsToBeStopped,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: get expected version and check if update is required
-		log.Info(style.Green.Render(UpgradeMsg + " vX.X.X"))
+		log.Info(style.Green.Render(UpgradeMsg))
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(SudoWarningMsg))
 		// TODO: Check Version from S3 against the local binary

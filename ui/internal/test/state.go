@@ -37,6 +37,7 @@ func GetState(client api.ClientWithResponsesInterface) *algod.StateModel {
 		Admin:             false,
 		Watching:          false,
 		Client:            client,
+		HttpPkg:           new(api.HttpPkg),
 		Context:           context.Background(),
 	}
 	values := make(map[string]algod.Account)

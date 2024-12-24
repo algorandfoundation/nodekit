@@ -25,7 +25,7 @@ var installCmd = &cobra.Command{
 		// TODO: yes flag
 
 		// TODO: get expected version
-		log.Info(style.Green.Render(InstallMsg + " vX.X.X"))
+		log.Info(style.Green.Render(InstallMsg))
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(SudoWarningMsg))
 

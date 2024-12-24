@@ -2,6 +2,7 @@ package modal
 
 import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/generate"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -31,6 +32,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
+	case participation.ShortLinkResponse:
+		m.Open = true
+		m.SetShortLink(msg)
+		m.SetType(app.TransactionModal)
 	case *algod.StateModel:
 		m.State = msg
 		m.transactionModal.State = msg

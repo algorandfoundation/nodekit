@@ -54,7 +54,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				return &m, app.EmitShowModal(app.ConfirmModal)
 			}
 		case "o":
-			return &m, app.EmitShowModal(app.TransactionModal)
+			return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
@@ -97,8 +97,8 @@ func (m ViewModel) View() string {
 		account,
 		id,
 		"",
-		selection,
 		vote,
+		selection,
 		stateProof,
 		"",
 		voteFirstValid,
