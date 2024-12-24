@@ -16,18 +16,6 @@ jobs:
         with:
           go-version: 1.22
 
-      - name: setup .algorun.yaml
-        run: |
-          touch .algorun.yaml
-          echo 'server: http://localhost:8080' >> .algorun.yaml
-          echo 'token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' >> .algorun.yaml
-
-      - name: Start Docker Compose
-        run: docker compose up -d
-
-      - name: Wait for the server to start
-        run: npx wait-on tcp:8080
-
       - name: Install dependencies
         run: go get .
 
@@ -54,6 +42,12 @@ jobs:
 
       - name: Build
         run: go build -o bin/algorun *.go
+
+      - name: Install Algod
+        run: ./bin/algorun install
+      
+      - name: Wait for the server to start
+        run: npx wait-on tcp:8080
 
       - name: Unit Tests
         run: make unit
