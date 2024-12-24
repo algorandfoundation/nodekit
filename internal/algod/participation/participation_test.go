@@ -6,48 +6,10 @@ import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/internal/test"
-	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"io"
 	"net/http"
 	"testing"
 )
-
-func Test_ToLoraDeeplink(t *testing.T) {
-	link, err := ToLoraDeepLink("tuinet-v1", true, true, api.ParticipationKey{
-		Address:             "ABC",
-		EffectiveFirstValid: nil,
-		EffectiveLastValid:  nil,
-		Id:                  "",
-		Key:                 api.AccountParticipation{},
-		LastBlockProposal:   nil,
-		LastStateProof:      nil,
-		LastVote:            nil,
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&sender%5B0%5D=ABC" {
-		t.Error("Link should be a known deeplink")
-	}
-
-	// TODO put back
-	// link, err = ToLoraDeepLink("tuinet-v1", false, true, mock.Keys[0])
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-	// if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&sender%5B0%5D=ABC&selkey%5B0%5D=VEVTVEtFWQ&sprfkey%5B0%5D=VEVTVEtFWQ&votekey%5B0%5D=VEVTVEtFWQ&votefst%5B0%5D=0&votelst%5B0%5D=30000&votekd%5B0%5D=100&fee%5B0%5D=2000000" {
-	// 	t.Error("Link should be a known deeplink fee")
-	// }
-
-	link, err = ToLoraDeepLink("tuinet-v1", false, false, mock.Keys[0])
-	if err != nil {
-		t.Error(err)
-	}
-	if link != "https://lora.algokit.io/localnet/transaction-wizard?type%5B0%5D=keyreg&sender%5B0%5D=ABC&selkey%5B0%5D=VEVTVEtFWQ&sprfkey%5B0%5D=VEVTVEtFWQ&votekey%5B0%5D=VEVTVEtFWQ&votefst%5B0%5D=0&votelst%5B0%5D=30000&votekd%5B0%5D=100" {
-		t.Error("Link should be a known deeplink fee")
-	}
-
-}
 
 func Test_ListParticipationKeys(t *testing.T) {
 	ctx := context.Background()

@@ -3,12 +3,9 @@ package participation
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
@@ -129,39 +126,6 @@ func FindParticipationIdForVoteKey(slice List, votekey []byte) *string {
 		}
 	}
 	return nil
-}
-
-// ToLoraDeepLink generates a Lora deep link URL for a transaction wizard based on network, offline state, and participation key.
-func ToLoraDeepLink(network string, offline bool, incentiveEligible bool, part api.ParticipationKey) (string, error) {
-	var loraNetwork = strings.Replace(strings.Replace(network, "-v1.0", "", 1), "-v1", "", 1)
-	if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
-		loraNetwork = "localnet"
-	}
-
-	var query = ""
-	encodedIndex := url.QueryEscape("[0]")
-	if offline {
-		query = fmt.Sprintf(
-			"type[0]=keyreg&sender[0]=%s",
-			part.Address,
-		)
-	} else {
-		query = fmt.Sprintf(
-			"type[0]=keyreg&sender[0]=%s&selkey[0]=%s&sprfkey[0]=%s&votekey[0]=%s&votefst[0]=%d&votelst[0]=%d&votekd[0]=%d",
-			part.Address,
-			base64.RawURLEncoding.EncodeToString(part.Key.SelectionParticipationKey),
-			base64.RawURLEncoding.EncodeToString(*part.Key.StateProofKey),
-			base64.RawURLEncoding.EncodeToString(part.Key.VoteParticipationKey),
-			part.Key.VoteFirstValid,
-			part.Key.VoteLastValid,
-			part.Key.VoteKeyDilution,
-		)
-		if incentiveEligible {
-			// TODO: enable fee with either feature flag or config flag
-			// query += fmt.Sprintf("&fee[0]=%d", 2000000)
-		}
-	}
-	return fmt.Sprintf("https://lora.algokit.io/%s/transaction-wizard?%s", loraNetwork, strings.Replace(query, "[0]", encodedIndex, -1)), nil
 }
 
 // IsActive checks if the given participation key matches the account's registered participation details and is valid.
