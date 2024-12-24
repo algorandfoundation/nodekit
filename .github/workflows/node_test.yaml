@@ -32,6 +32,8 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui stop
           ./algorun-tui upgrade
+          ./algorun-tui catchup
+          ./algorun-tui catchup stop
           ./algorun-tui stop
           ./algorun-tui uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
@@ -62,6 +64,8 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui stop
           ./algorun-tui upgrade
+          ./algorun-tui catchup
+          ./algorun-tui catchup stop
           ./algorun-tui stop
           ./algorun-tui uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
