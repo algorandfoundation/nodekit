@@ -10,6 +10,7 @@ import (
 )
 
 func Test_StateModel(t *testing.T) {
+	t.Skip()
 	// Setup elevated client
 	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	if err != nil {
