@@ -32,8 +32,10 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui stop
           ./algorun-tui upgrade
+          ./algorun-tui debug
           sleep 10
           ./algorun-tui catchup
+          ./algorun-tui catchup debug
           ./algorun-tui catchup stop
           ./algorun-tui stop
           ./algorun-tui uninstall
@@ -65,8 +67,10 @@ jobs:
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
           ./algorun-tui stop
           ./algorun-tui upgrade
+          ./algorun-tui debug
           sleep 10
           ./algorun-tui catchup
+          ./algorun-tui catchup debug
           ./algorun-tui catchup stop
           ./algorun-tui stop
           ./algorun-tui uninstall
