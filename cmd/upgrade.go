@@ -1,6 +1,7 @@
-package node
+package cmd
 
 import (
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/log"
@@ -23,7 +24,7 @@ var upgradeCmd = &cobra.Command{
 		// TODO: get expected version and check if update is required
 		log.Info(style.Green.Render(UpgradeMsg))
 		// Warn user for prompt
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 		// TODO: Check Version from S3 against the local binary
 		err := algod.Update()
 		if err != nil {

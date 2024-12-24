@@ -1,10 +1,11 @@
-package node
+package cmd
 
 import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
 	cmdutils "github.com/algorandfoundation/algorun-tui/cmd/utils"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
@@ -14,12 +15,29 @@ import (
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"time"
 )
 
-var in = `# Welcome!
+var bootstrapCmdShort = "Initialize a fresh node. Alias for install, catchup, and start."
+
+// cmdLong provides a detailed description of the Fast-Catchup feature, explaining its purpose and expected sync durations.
+var bootstrapCmdLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.BANNER,
+	"",
+	style.Bold(bootstrapCmdShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Get up and running with a fresh Algorand node.",
+	"Uses the local package manager to install Algorand, and then starts the node and preforms a Fast-Catchup.",
+	"",
+	style.Yellow.Render("Note: This command only supports the default data directory, /var/lib/algorand"),
+)
+
+var tutorial = `# Welcome!
 
 This is the beginning of your adventure into running the an Algorand node!
 
@@ -30,15 +48,15 @@ Morbi mauris quam, ornare ac commodo et, posuere id sem. Nulla id condimentum ma
 // bootstrapCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
 var bootstrapCmd = &cobra.Command{
 	Use:          "bootstrap",
-	Short:        "Initialize a fresh node. Alias for install, catchup, and start.",
-	Long:         "Text",
+	Short:        bootstrapCmdShort,
+	Long:         bootstrapCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
 
 		fmt.Print(style.Purple(style.BANNER))
-		out, err := glamour.Render(in, "dark")
+		out, err := glamour.Render(tutorial, "dark")
 		if err != nil {
 			return err
 		}
@@ -65,7 +83,7 @@ var bootstrapCmd = &cobra.Command{
 			return nil
 		}
 
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 		if msg.Install && !algod.IsInstalled() {
 			err := algod.Install()
 			if err != nil {

@@ -40,7 +40,7 @@ var startCmd = utils.WithAlgodFlags(&cobra.Command{
 		utils.WithInvalidResponsesExplanations(err, response, cmd.UsageString())
 
 		if status.State == algod.FastCatchupState {
-			log.Fatal(style.Red.Render("Node is currently catching up. Use --abort to cancel."))
+			log.Fatal(style.Red.Render("Node is currently catching up."))
 		}
 
 		// Get the latest catchpoint

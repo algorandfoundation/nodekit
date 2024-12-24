@@ -14,11 +14,14 @@ func StartCatchup(ctx context.Context, client api.ClientWithResponsesInterface, 
 	if err != nil {
 		return "", response, err
 	}
-	if response.StatusCode() != 200 {
+	if response.StatusCode() >= 300 {
 		return "", response, errors.New(response.Status())
 	}
+	if response.StatusCode() == 200 {
+		return response.JSON200.CatchupMessage, response, nil
+	}
 
-	return response.JSON200.CatchupMessage, response, nil
+	return response.JSON201.CatchupMessage, response, nil
 }
 
 // AbortCatchup aborts a ledger catchup process for the specified catchpoint using the provided client interface.

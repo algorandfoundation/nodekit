@@ -3,7 +3,8 @@ package cmd
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/cmd/node"
+	"github.com/algorandfoundation/algorun-tui/cmd/catchup"
+	"github.com/algorandfoundation/algorun-tui/cmd/configure"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils"
 	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
@@ -25,6 +26,9 @@ var (
 	// Version represents the application version string, which is set during build or defaults to "unknown".
 	Version = ""
 
+	// force indicates whether actions should be performed forcefully, bypassing checks or confirmations.
+	force bool = false
+
 	short = "Manage Algorand nodes from the command line"
 	long  = lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -40,9 +44,10 @@ var (
 	)
 	// rootCmd is the primary command for managing Algorand nodes, providing CLI functionality and TUI for interaction.
 	rootCmd = utils.WithAlgodFlags(&cobra.Command{
-		Use:   "algorun",
-		Short: short,
-		Long:  long,
+		Use:     "algorun",
+		Version: Version,
+		Short:   short,
+		Long:    long,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -50,7 +55,7 @@ var (
 			log.SetOutput(cmd.OutOrStdout())
 			// Create the dependencies
 			ctx := context.Background()
-			client, err := algod.GetClient("/var/lib/algorand")
+			client, err := algod.GetClient(algodData)
 			cobra.CheckErr(err)
 			httpPkg := new(api.HttpPkg)
 			t := new(system.Clock)
@@ -93,19 +98,46 @@ var (
 	}, &algodData)
 )
 
+// NeedsToBeRunning ensures the Algod software is installed and running before executing the associated Cobra command.
+func NeedsToBeRunning(cmd *cobra.Command, args []string) {
+	if force {
+		return
+	}
+	if !algod.IsInstalled() {
+		log.Fatal(explanations.NotInstalledErrorMsg)
+	}
+	if !algod.IsRunning() {
+		log.Fatal(explanations.NotRunningErrorMsg)
+	}
+}
+
+// NeedsToBeStopped ensures the operation halts if Algod is not installed or is currently running, unless forced.
+func NeedsToBeStopped(cmd *cobra.Command, args []string) {
+	if force {
+		return
+	}
+	if !algod.IsInstalled() {
+		log.Fatal(explanations.NotInstalledErrorMsg)
+	}
+	if algod.IsRunning() {
+		log.Fatal(explanations.RunningErrorMsg)
+	}
+}
+
 // init initializes the application, setting up logging, commands, and version information.
 func init() {
 	log.SetReportTimestamp(false)
-
-	// Configure Version
-	if Version == "" {
-		Version = "unknown (built from source)"
-	}
-	rootCmd.Version = Version
-
 	// Add Commands
 	if runtime.GOOS != "windows" {
-		rootCmd.AddCommand(node.Cmd)
+		rootCmd.AddCommand(bootstrapCmd)
+		rootCmd.AddCommand(debugCmd)
+		rootCmd.AddCommand(installCmd)
+		rootCmd.AddCommand(startCmd)
+		rootCmd.AddCommand(stopCmd)
+		rootCmd.AddCommand(uninstallCmd)
+		rootCmd.AddCommand(upgradeCmd)
+		rootCmd.AddCommand(catchup.Cmd)
+		rootCmd.AddCommand(configure.Cmd)
 	}
 }
 

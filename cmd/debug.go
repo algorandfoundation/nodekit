@@ -1,8 +1,9 @@
-package node
+package cmd
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
@@ -47,7 +48,7 @@ var debugCmd = &cobra.Command{
 		log.Info("Collecting debug information...")
 
 		// Warn user for prompt
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 		paths := utils.GetKnownDataPaths()
 		path, _ := exec.LookPath("algod")

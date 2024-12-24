@@ -24,14 +24,14 @@ jobs:
       - name: Run Ubuntu commands
         run: |
           go build .
-          ./algorun-tui node install
+          ./algorun-tui install
           systemctl status algorand.service
           export TOKEN=$(cat /var/lib/algorand/algod.admin.token)
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
-          ./algorun-tui node stop
-          ./algorun-tui node upgrade
-          ./algorun-tui node stop
-          ./algorun-tui node uninstall
+          ./algorun-tui stop
+          ./algorun-tui upgrade
+          ./algorun-tui stop
+          ./algorun-tui uninstall
 
   macos:
     runs-on: macos-latest
@@ -45,12 +45,12 @@ jobs:
       - name: Run MacOs commands
         run: |
           go build .
-          ./algorun-tui node install
+          ./algorun-tui install
           sudo launchctl print system/com.algorand.algod
           sleep 5
           export TOKEN=$(cat ~/.algorand/algod.admin.token)
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
-          ./algorun-tui node stop
-          ./algorun-tui node upgrade
-          ./algorun-tui node stop
-          ./algorun-tui node uninstall
+          ./algorun-tui stop
+          ./algorun-tui upgrade
+          ./algorun-tui stop
+          ./algorun-tui uninstall

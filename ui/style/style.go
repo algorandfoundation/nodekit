@@ -179,11 +179,27 @@ func TruncateLeft(line string, padding int) string {
 	return ansiStyle + strings.Join(wrapped[1:], "")
 }
 
-const BANNER = `
-   _____  .__                __________              
-  /  _  \ |  |    ____   ____\______   \__ __  ____  
- /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \ 
-/    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
-\____|__  /____/\___  / \____/|____|_  /____/|___|  /
-        \/     /_____/               \/           \/ 
-`
+const BANNER_NODE = `
+███    ██  ██████  ██████  ███████ 
+████   ██ ██    ██ ██   ██ ██      
+██ ██  ██ ██    ██ ██   ██ █████   
+██  ██ ██ ██    ██ ██   ██ ██      
+██   ████  ██████  ██████  ███████ `
+const BANNER_KIT = `
+██╗  ██╗██╗████████╗
+██║ ██╔╝██║╚══██╔══╝
+█████╔╝ ██║   ██║   
+██╔═██╗ ██║   ██║   
+██║  ██╗██║   ██║   
+╚═╝  ╚═╝╚═╝   ╚═╝`
+
+var BANNER string
+
+func init() {
+	var res string
+	lines := strings.Split(BANNER_KIT, "\n")
+	for i, line := range strings.Split(BANNER_NODE, "\n") {
+		res += Purple(line) + Red.Render(lines[i]) + "\n"
+	}
+	BANNER = res
+}

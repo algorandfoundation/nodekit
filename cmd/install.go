@@ -1,6 +1,7 @@
-package node
+package cmd
 
 import (
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/log"
@@ -15,6 +16,10 @@ const InstallMsg = "Installing Algorand"
 // InstallExistsMsg is a constant string used to indicate that the Algod is already installed on the system.
 const InstallExistsMsg = "algod is already installed"
 
+var installShort = "Install the algorand daemon"
+
+var installLong = style.Purple(style.BANNER) + "\n" + style.LightBlue("Install the algorand daemon on your local machine")
+
 // installCmd is a Cobra command that installs the Algorand daemon on the local machine, ensuring the service is operational.
 var installCmd = &cobra.Command{
 	Use:          "install",
@@ -27,7 +32,7 @@ var installCmd = &cobra.Command{
 		// TODO: get expected version
 		log.Info(style.Green.Render(InstallMsg))
 		// Warn user for prompt
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 		// TODO: compare expected version to existing version
 		if algod.IsInstalled() && !force {
