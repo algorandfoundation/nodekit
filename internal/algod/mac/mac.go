@@ -64,7 +64,7 @@ func Install() error {
 
 	// Create and load the launchd service
 	// TODO: find a clever way to avoid this or make sudo persist for the second call
-	err = system.RunAll(system.CmdsList{{"sudo", path, "node", "configure", "service"}})
+	err = system.RunAll(system.CmdsList{{"sudo", path, "configure", "service"}})
 	if err != nil {
 		return err
 	}
