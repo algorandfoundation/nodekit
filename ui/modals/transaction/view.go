@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
@@ -29,7 +29,7 @@ func (m ViewModel) View() string {
 		adj = "online"
 	}
 	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
-	link := internal.ToShortLink(*m.Link)
+	link := participation.ToShortLink(*m.Link)
 	loraText := lipgloss.JoinVertical(
 		lipgloss.Center,
 		"Open this URL in your browser:\n",

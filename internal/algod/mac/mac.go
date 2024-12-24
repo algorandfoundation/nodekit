@@ -17,7 +17,10 @@ import (
 	"text/template"
 )
 
+// MustBeServiceMsg is an error message indicating that a service must be installed to manage it.
 const MustBeServiceMsg = "service must be installed to be able to manage it"
+
+// HomeBrewNotFoundMsg is the error message returned when Homebrew is not detected on the system during execution.
 const HomeBrewNotFoundMsg = "homebrew is not installed. please install Homebrew and try again"
 
 // IsService check if Algorand service has been created with launchd (macOS)
@@ -61,7 +64,7 @@ func Install() error {
 
 	// Create and load the launchd service
 	// TODO: find a clever way to avoid this or make sudo persist for the second call
-	err = system.RunAll(system.CmdsList{{"sudo", path, "configure", "service"}})
+	err = system.RunAll(system.CmdsList{{"sudo", path, "node", "configure", "service"}})
 	if err != nil {
 		return err
 	}
@@ -223,6 +226,7 @@ func UpdateService(dataDirectoryPath string) error {
 	return nil
 }
 
+// handleDataDirMac ensures the necessary Algorand data directory and mainnet genesis.json file exist on macOS.
 // TODO move to configure as a generic
 func handleDataDirMac() error {
 	// Ensure the ~/.algorand directory exists
@@ -265,6 +269,9 @@ func handleDataDirMac() error {
 	return nil
 }
 
+// EnsureService ensures the `algod` service is properly configured and running as a background service on macOS.
+// It checks for the existence of the `algod` binary, creates a launchd plist file, and loads it using `launchctl`.
+// Returns an error if the binary is not found, or if any system command fails.
 func EnsureService() error {
 	log.Debug("Ensuring Algorand service is running")
 	path, err := exec.LookPath("algod")

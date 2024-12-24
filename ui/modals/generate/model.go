@@ -1,7 +1,7 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -40,7 +40,7 @@ type ViewModel struct {
 	Controls    string
 	BorderColor string
 
-	State      *internal.StateModel
+	State      *algod.StateModel
 	cursorMode cursor.Mode
 }
 
@@ -53,7 +53,7 @@ var DefaultControls = "( esc to cancel )"
 var DefaultTitle = "Generate Consensus Participation Keys"
 var DefaultBorderColor = "2"
 
-func New(address string, state *internal.StateModel) *ViewModel {
+func New(address string, state *algod.StateModel) *ViewModel {
 	input := textinput.New()
 	input2 := textinput.New()
 

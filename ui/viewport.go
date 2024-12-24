@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modal"
 	"github.com/algorandfoundation/algorun-tui/ui/pages/accounts"
@@ -18,7 +18,7 @@ type ViewportViewModel struct {
 	PageWidth, PageHeight         int
 	TerminalWidth, TerminalHeight int
 
-	Data *internal.StateModel
+	Data *algod.StateModel
 
 	// Header Components
 	status   StatusViewModel
@@ -57,8 +57,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.page = msg
 	// When the state updates
-	case internal.StateModel:
-		m.Data = &msg
+	case *algod.StateModel:
+		m.Data = msg
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
 		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
@@ -75,7 +75,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "g":
 			// Only open modal when it is closed and not syncing
-			if !m.modal.Open && m.Data.Status.State == internal.StableState && m.Data.Metrics.RoundTime > 0 {
+			if !m.modal.Open && m.Data.Status.State == algod.StableState && m.Data.Metrics.RoundTime > 0 {
 				address := ""
 				selected := m.accountsPage.SelectedAccount()
 				if selected != nil {
@@ -86,7 +86,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Address: address,
 					Type:    app.GenerateModal,
 				})
-			} else if m.Data.Status.State != internal.StableState || m.Data.Metrics.RoundTime == 0 {
+			} else if m.Data.Status.State != algod.StableState || m.Data.Metrics.RoundTime == 0 {
 				genErr := errors.New("Please wait for more data to sync before generating a key")
 				m.modal, cmd = m.modal.HandleMessage(genErr)
 				cmds = append(cmds, cmd)
@@ -116,8 +116,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return m, nil
-		case "ctrl+c":
-		case "q":
+		case "q", "ctrl+c":
 			// Close the app when anything other than generate modal is visible
 			if !m.modal.Open || (m.modal.Open && m.modal.Type != app.GenerateModal) {
 				return m, tea.Quit
@@ -211,7 +210,7 @@ func (m ViewportViewModel) headerView() string {
 }
 
 // NewViewportViewModel handles the construction of the TUI viewport
-func NewViewportViewModel(state *internal.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
+func NewViewportViewModel(state *algod.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 

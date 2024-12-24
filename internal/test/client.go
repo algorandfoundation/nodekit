@@ -8,16 +8,25 @@ import (
 	"net/http"
 )
 
+// GetClient creates and returns an implementation of api.ClientWithResponsesInterface, determining behavior based on throws.
+// If throws is true, the resulting client may simulate error scenarios for testing purposes.
 func GetClient(throws bool) api.ClientWithResponsesInterface {
 	return NewClient(throws, false)
 }
 
+// Client represents a client that implements the api.ClientWithResponsesInterface for performing API operations.
+// Errors indicates whether the client should simulate error responses during API calls.
+// Invalid indicates whether the client should simulate invalid responses during API calls.
 type Client struct {
 	api.ClientWithResponsesInterface
 	Errors  bool
 	Invalid bool
 }
 
+// NewClient initializes and returns an instance of api.ClientWithResponsesInterface.
+// The behavior of the client can be configured with the throws and invalid parameters.
+// If throws is true, the client is set to simulate error responses.
+// If invalid is true, the client is set to simulate invalid responses.
 func NewClient(throws bool, invalid bool) api.ClientWithResponsesInterface {
 	client := new(Client)
 	if throws {
@@ -29,6 +38,7 @@ func NewClient(throws bool, invalid bool) api.ClientWithResponsesInterface {
 	return client
 }
 
+// MetricsWithResponse fetches metrics data from the server and returns the response and any error encountered.
 func (c *Client) MetricsWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.MetricsResponse, error) {
 	var res api.MetricsResponse
 	body := `# HELP algod_telemetry_drops_total telemetry messages dropped due to full queues
@@ -67,6 +77,8 @@ algod_crypto_vrf_hash_total 0`
 	}
 	return &res, nil
 }
+
+// GetParticipationKeyByIDWithResponse fetches a participation key by its ID and returns the response or an error.
 func (c *Client) GetParticipationKeyByIDWithResponse(ctx context.Context, participationId string, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeyByIDResponse, error) {
 	var res api.GetParticipationKeyByIDResponse
 	if !c.Invalid {
@@ -99,13 +111,17 @@ func (c *Client) GetParticipationKeyByIDWithResponse(ctx context.Context, partic
 }
 func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...api.RequestEditorFn) (*api.GetParticipationKeysResponse, error) {
 	var res api.GetParticipationKeysResponse
-	clone := mock.Keys
+	clone := &mock.Keys
+	keys := make([]api.ParticipationKey, len(*clone))
+	for k := range *clone {
+		keys = append(keys, (*clone)[k])
+	}
 	if !c.Invalid {
 		httpResponse := http.Response{StatusCode: 200}
 		res = api.GetParticipationKeysResponse{
 			Body:         nil,
 			HTTPResponse: &httpResponse,
-			JSON200:      &clone,
+			JSON200:      &keys,
 			JSON400:      nil,
 			JSON401:      nil,
 			JSON404:      nil,
@@ -116,7 +132,7 @@ func (c *Client) GetParticipationKeysWithResponse(ctx context.Context, reqEditor
 		res = api.GetParticipationKeysResponse{
 			Body:         nil,
 			HTTPResponse: &httpResponse,
-			JSON200:      &clone,
+			JSON200:      &keys,
 			JSON400:      nil,
 			JSON401:      nil,
 			JSON404:      nil,

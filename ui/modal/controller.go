@@ -1,7 +1,8 @@
 package modal
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/generate"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -9,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Init initializes the current ViewModel by batching initialization commands for all associated modal ViewModels.
 func (m ViewModel) Init() tea.Cmd {
 	return tea.Batch(
 		m.infoModal.Init(),
@@ -18,6 +20,8 @@ func (m ViewModel) Init() tea.Cmd {
 		m.generateModal.Init(),
 	)
 }
+
+// HandleMessage processes the given message, updates the ViewModel state, and returns any commands to execute.
 func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -28,14 +32,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
-	case internal.ShortLinkResponse:
+	case participation.ShortLinkResponse:
 		m.Open = true
 		m.SetShortLink(msg)
 		m.SetType(app.TransactionModal)
-	case internal.StateModel:
-		m.State = &msg
-		m.transactionModal.State = &msg
-		m.infoModal.State = &msg
+	case *algod.StateModel:
+		m.State = msg
+		m.transactionModal.State = msg
+		m.infoModal.State = msg
 
 		// When the state changes, and we are displaying a valid QR Code/Transaction Modal
 		if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
@@ -155,6 +159,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 	return &m, tea.Batch(cmds...)
 }
+
+// Update processes the given message, updates the ViewModel state, and returns the updated model and accompanying commands.
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }

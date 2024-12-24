@@ -20,3 +20,5 @@ output-options:
     - GetBlock
     - AccountInformation
     - GetGenesis
+    - StartCatchup
+    - AbortCatchup

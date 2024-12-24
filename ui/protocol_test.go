@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -13,8 +13,8 @@ import (
 
 var protocolViewSnapshots = map[string]ProtocolViewModel{
 	"Hidden": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      true,
@@ -26,8 +26,8 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      false,
 	},
 	"HiddenHeight": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      true,
@@ -39,8 +39,8 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"Visible": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      true,
@@ -52,8 +52,8 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"VisibleSmall": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      true,
@@ -65,8 +65,8 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"NoVoteOrUpgrade": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      false,
@@ -78,8 +78,8 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"NoVoteOrUpgradeSmall": {
-		Data: internal.StatusModel{
-			State:       "SYNCING",
+		Data: algod.Status{
+			State:       algod.SyncingState,
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
 			Voting:      false,
@@ -103,13 +103,13 @@ func Test_ProtocolSnapshot(t *testing.T) {
 
 // Test_ProtocolMessages handles any additional tests like sending messages
 func Test_ProtocolMessages(t *testing.T) {
-	state := internal.StateModel{
-		Status: internal.StatusModel{
+	state := algod.StateModel{
+		Status: algod.Status{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       internal.SyncingState,
+			State:       algod.SyncingState,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: algod.Metrics{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,
@@ -134,7 +134,7 @@ func Test_ProtocolMessages(t *testing.T) {
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
 	)
-	tm.Send(internal.StatusModel{
+	tm.Send(algod.Status{
 		State:       "",
 		Version:     "",
 		Network:     "",

@@ -2,7 +2,7 @@ package info
 
 import (
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/algorandfoundation/algorun-tui/ui/utils"
@@ -19,10 +19,10 @@ type ViewModel struct {
 	BorderColor   string
 	Active        bool
 	Participation *api.ParticipationKey
-	State         *internal.StateModel
+	State         *algod.StateModel
 }
 
-func New(state *internal.StateModel) *ViewModel {
+func New(state *algod.StateModel) *ViewModel {
 	return &ViewModel{
 		Width:       0,
 		Height:      0,

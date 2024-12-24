@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -14,7 +14,7 @@ import (
 
 // StatusViewModel is extended from the internal.StatusModel
 type StatusViewModel struct {
-	Data           *internal.StateModel
+	Data           *algod.StateModel
 	TerminalWidth  int
 	TerminalHeight int
 	IsVisible      bool
@@ -34,8 +34,8 @@ func (m StatusViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Is it a heartbeat of the latest round?
-	case internal.StateModel:
-		m.Data = &msg
+	case *algod.StateModel:
+		m.Data = msg
 	// Is it a resize event?
 	case tea.WindowSizeMsg:
 		m.TerminalWidth = msg.Width
@@ -83,7 +83,7 @@ func (m StatusViewModel) View() string {
 
 	var end string
 	switch m.Data.Status.State {
-	case internal.StableState:
+	case algod.StableState:
 		end = style.Green.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
 	default:
 		end = style.Yellow.Render(strings.ToUpper(string(m.Data.Status.State))) + " "
@@ -94,7 +94,7 @@ func (m StatusViewModel) View() string {
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
-	if m.Data.Status.State != internal.StableState {
+	if m.Data.Status.State != algod.StableState {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
@@ -104,7 +104,7 @@ func (m StatusViewModel) View() string {
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
-	if m.Data.Status.State != internal.StableState {
+	if m.Data.Status.State != algod.StableState {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps
@@ -124,7 +124,7 @@ func (m StatusViewModel) View() string {
 }
 
 // MakeStatusViewModel constructs the model to be used in a tea.Program
-func MakeStatusViewModel(state *internal.StateModel) StatusViewModel {
+func MakeStatusViewModel(state *algod.StateModel) StatusViewModel {
 	// Create the Model
 	m := StatusViewModel{
 		Data:          state,

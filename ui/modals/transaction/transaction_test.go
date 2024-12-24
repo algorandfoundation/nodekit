@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,7 +26,7 @@ func Test_New(t *testing.T) {
 func Test_Snapshot(t *testing.T) {
 	t.Run("NotVisible", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Link = &internal.ShortLinkResponse{
+		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
 		model.Participation = &mock.Keys[0]
@@ -36,7 +36,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Offline", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Link = &internal.ShortLinkResponse{
+		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
 		model.Participation = &mock.Keys[0]
@@ -52,7 +52,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Online", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Link = &internal.ShortLinkResponse{
+		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
 		model.Participation = &mock.Keys[0]
@@ -67,7 +67,7 @@ func Test_Snapshot(t *testing.T) {
 	})
 	t.Run("Unsupported", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Link = &internal.ShortLinkResponse{
+		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
 		model.Participation = &mock.Keys[0]
@@ -95,7 +95,7 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 	// Create the Model
 	m := New(test.GetState(nil))
-	m.Link = &internal.ShortLinkResponse{
+	m.Link = &participation.ShortLinkResponse{
 		Id: "1234",
 	}
 	m.Participation = &mock.Keys[0]

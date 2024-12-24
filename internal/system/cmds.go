@@ -11,12 +11,16 @@ import (
 	"sync"
 )
 
+// CmdFailedErrorMsg is a formatted error message used to detail command failures, including output and the associated error.
 const CmdFailedErrorMsg = "command failed: %s output: %s error: %v"
 
+// IsSudo checks if the process is running with root privileges by verifying the effective user ID is 0.
 func IsSudo() bool {
 	return os.Geteuid() == 0
 }
 
+// IsCmdRunning checks if a command with the specified name is currently running using the `pgrep` command.
+// Returns true if the command is running, otherwise false.
 func IsCmdRunning(name string) bool {
 	err := exec.Command("pgrep", name).Run()
 	return err == nil
@@ -28,8 +32,10 @@ func CmdExists(tool string) bool {
 	return err == nil
 }
 
+// CmdsList represents a list of command sequences where each command is defined as a slice of strings.
 type CmdsList [][]string
 
+// Su updates each command in the CmdsList to prepend "sudo -u <user>" unless it already starts with "sudo".
 func (l CmdsList) Su(user string) CmdsList {
 	for i, args := range l {
 		if !strings.HasPrefix(args[0], "sudo") {
@@ -39,12 +45,15 @@ func (l CmdsList) Su(user string) CmdsList {
 	return l
 }
 
+// Run executes a command with the given arguments and returns its combined output and any resulting error.
 func Run(args []string) (string, error) {
 	cmd := exec.Command(args[0], args[1:]...)
 	output, err := cmd.CombinedOutput()
 	return string(output), err
 }
 
+// RunAll executes each command in the CmdsList sequentially, logging errors or debug messages for each command execution.
+// Returns an error if any command fails, including the command details, output, and error message.
 func RunAll(list CmdsList) error {
 	// Run each installation command
 	for _, args := range list {

@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 	if cmd != nil {
 		t.Errorf("Expected no commands")
 	}
-	m.Data = &mock.Keys
+	m.Data = mock.Keys
 	m, _ = m.HandleMessage(app.AccountSelected{Address: "ABC", Participation: &api.AccountParticipation{
 		SelectionParticipationKey: nil,
 		StateProofKey:             nil,
@@ -54,7 +54,7 @@ func Test_New(t *testing.T) {
 
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
-		model := New("ABC", &mock.Keys)
+		model := New("ABC", mock.Keys)
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
@@ -64,7 +64,7 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 
 	// Create the Model
-	m := New("ABC", &mock.Keys)
+	m := New("ABC", mock.Keys)
 	//m, _ = m.Address = "ABC"
 	tm := teatest.NewTestModel(
 		t, m,

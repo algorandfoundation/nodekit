@@ -5,8 +5,10 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"time"
 )
 
+// IsDataDir determines if the specified path is a valid Algorand data directory containing an "algod.token" file.
 func IsDataDir(path string) bool {
 	info, err := os.Stat(path)
 
@@ -25,24 +27,6 @@ func IsDataDir(path string) bool {
 		return true
 	}
 	return false
-}
-
-func GetKnownPaths() []string {
-	// Hardcoded paths known to be common Algorand data directories
-	binPaths := []string{
-		"/opt/homebrew/bin/algod",
-		"/opt/homebrew/bin/algod",
-	}
-
-	var paths []string
-
-	for _, path := range binPaths {
-		if IsDataDir(path) {
-			paths = append(paths, path)
-		}
-	}
-
-	return paths
 }
 
 // GetKnownDataPaths Does a lazy check for Algorand data directories, based off of known common paths
@@ -66,4 +50,20 @@ func GetKnownDataPaths() []string {
 	}
 
 	return paths
+}
+
+// GetExpiresTime calculates and returns the expiration time of a vote based on rounds and time duration information.
+// If the lastRound and roundTime are not zero, it computes the expiration using round difference and duration.
+// Returns nil if the expiration time cannot be determined.
+func GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration, voteLastValid int) *time.Time {
+	now := t.Now()
+	var expires time.Time
+	if lastRound != 0 &&
+		roundTime != 0 {
+		roundDiff := max(0, voteLastValid-lastRound)
+		distance := int(roundTime) * roundDiff
+		expires = now.Add(time.Duration(distance))
+		return &expires
+	}
+	return nil
 }

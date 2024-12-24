@@ -12,15 +12,30 @@ import (
 	"os/exec"
 )
 
+// DebugInfo represents diagnostic information about
+// the Algod service, path availability, and related metadata.
 type DebugInfo struct {
-	InPath      bool     `json:"inPath"`
-	IsRunning   bool     `json:"isRunning"`
-	IsService   bool     `json:"isService"`
-	IsInstalled bool     `json:"isInstalled"`
-	Algod       string   `json:"algod"`
-	Data        []string `json:"data"`
+
+	// InPath indicates whether the `algod` command-line tool is available in the system's executable path.
+	InPath bool `json:"inPath"`
+
+	// IsRunning indicates whether the `algod` process is currently running on the host system, returning true if active.
+	IsRunning bool `json:"isRunning"`
+
+	// IsService indicates whether the Algorand software is configured as a system service on the current operating system.
+	IsService bool `json:"isService"`
+
+	// IsInstalled indicates whether the Algorand software is installed on the system by checking its presence and configuration.
+	IsInstalled bool `json:"isInstalled"`
+
+	// Algod holds the path to the `algod` executable if found on the system, or an empty string if not found.
+	Algod string `json:"algod"`
+
+	// Data contains a list of string entries providing additional paths or diagnostic information about the `algod` service.
+	Data []string `json:"data"`
 }
 
+// debugCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
 var debugCmd = &cobra.Command{
 	Use:          "debug",
 	Short:        "Display debug information for developers",

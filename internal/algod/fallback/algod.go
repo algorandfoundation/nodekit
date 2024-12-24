@@ -25,6 +25,7 @@ func Install() error {
 
 }
 
+// Start initializes and starts the `algod` process and verifies if the ALGORAND_DATA environment variable is valid.
 func Start() error {
 	path, err := exec.LookPath("algod")
 	log.Debug("Starting algod", "path", path)
@@ -50,6 +51,7 @@ func Start() error {
 	return nil
 }
 
+// Stop gracefully shuts down the algod process by sending a SIGTERM signal to its process ID. It returns an error if any occurs.
 func Stop() error {
 	log.Debug("Manually shutting down algod")
 	// Find the process ID of algod
@@ -72,6 +74,8 @@ func Stop() error {
 	return nil
 }
 
+// findAlgodPID locates the process ID of the running algod instance by executing the "pgrep" command.
+// It returns the process ID as an integer or an error if the process is not found or the command execution fails.
 func findAlgodPID() (int, error) {
 	log.Debug("Scanning for algod process")
 	cmd := exec.Command("pgrep", "algod")

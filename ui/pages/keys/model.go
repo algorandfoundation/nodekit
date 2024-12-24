@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"sort"
 
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -20,7 +20,7 @@ type ViewModel struct {
 	Participation *api.AccountParticipation
 
 	// Data holds a pointer to a slice of ParticipationKey, representing the set of participation keys managed by the ViewModel.
-	Data *[]api.ParticipationKey
+	Data participation.List
 
 	// Title represents the title displayed at the top of the ViewModel's UI.
 	Title string
@@ -40,7 +40,7 @@ type ViewModel struct {
 }
 
 // New initializes and returns a new ViewModel for managing participation keys.
-func New(address string, keys *[]api.ParticipationKey) ViewModel {
+func New(address string, keys participation.List) ViewModel {
 	m := ViewModel{
 		// State
 		Address: address,
@@ -93,7 +93,7 @@ func (m ViewModel) SelectedKey() (*api.ParticipationKey, bool) {
 	var partkey *api.ParticipationKey
 	var active bool
 	selected := m.table.SelectedRow()
-	for _, key := range *m.Data {
+	for _, key := range m.Data {
 		if len(selected) > 0 && key.Id == selected[0] {
 			partkey = &key
 			active = selected[2] == "YES"
@@ -119,7 +119,7 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 
 // makeRows processes a slice of ParticipationKeys and returns a sorted slice of table rows
 // filtered by the ViewModel's address.
-func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
+func (m ViewModel) makeRows(keys participation.List) *[]table.Row {
 	rows := make([]table.Row, 0)
 	if keys == nil || m.Address == "" {
 		return &rows
@@ -127,9 +127,9 @@ func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
 
 	var activeId *string
 	if m.Participation != nil {
-		activeId = internal.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
+		activeId = participation.FindParticipationIdForVoteKey(keys, m.Participation.VoteParticipationKey)
 	}
-	for _, key := range *keys {
+	for _, key := range keys {
 		if key.Address == m.Address {
 			isActive := "N/A"
 			if activeId != nil && *activeId == key.Id {

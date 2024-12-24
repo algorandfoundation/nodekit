@@ -3,7 +3,8 @@ package transaction
 import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/algorandfoundation/algourl/encoder"
 )
@@ -19,10 +20,10 @@ type ViewModel struct {
 	// Active Participation Key
 	Participation *api.ParticipationKey
 	Active        bool
-	Link          *internal.ShortLinkResponse
+	Link          *participation.ShortLinkResponse
 
 	// Pointer to the State
-	State    *internal.StateModel
+	State    *algod.StateModel
 	IsOnline bool
 
 	// Components
@@ -39,7 +40,7 @@ func (m ViewModel) FormatedAddress() string {
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
-func New(state *internal.StateModel) *ViewModel {
+func New(state *algod.StateModel) *ViewModel {
 	return &ViewModel{
 		State:       state,
 		Title:       "Offline Transaction",

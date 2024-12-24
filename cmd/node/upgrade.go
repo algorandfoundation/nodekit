@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
+// UpgradeMsg is a constant string used to indicate the start of the Algod upgrade process.
 const UpgradeMsg = "Upgrading Algod"
 
+// upgradeCmd is a Cobra command used to upgrade Algod, utilizing the OS-specific package manager if applicable.
 var upgradeCmd = &cobra.Command{
 	Use:              "upgrade",
 	Short:            "Upgrade Algod",
