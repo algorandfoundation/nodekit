@@ -10,12 +10,10 @@ var NodeNotFound = lipgloss.JoinHorizontal(lipgloss.Left,
 	style.Cyan.Render("Explanation"),
 	style.Bold(": "),
 ) +
-	"algorun could not find your node automatically.\n\n" +
+	"algorun could not find your node automatically. (ensure the node is running)\n\n" +
 	lipgloss.JoinHorizontal(lipgloss.Left,
 		"Provide ",
-		style.Bold("--algod-endpoint"),
-		" and ",
-		style.Bold("--algod-token"),
+		style.Bold("--datadir"),
 		" or set the goal-compatible ",
 		style.Bold("ALGORAND_DATA"),
 		" environment variable to the algod data directory, ",

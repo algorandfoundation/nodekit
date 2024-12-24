@@ -40,10 +40,7 @@ func ToDataFolderConfig(path string) (DataFolderConfig, error) {
 	if err != nil {
 		return dataFolderConfig, err
 	}
-	dataFolderConfig.PID, err = GetPidFromDataDir(path)
-	if err != nil {
-		return dataFolderConfig, err
-	}
+	dataFolderConfig.PID, _ = GetPidFromDataDir(path)
 
 	return dataFolderConfig, nil
 }

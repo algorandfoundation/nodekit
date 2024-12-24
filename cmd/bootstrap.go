@@ -97,14 +97,20 @@ var bootstrapCmd = &cobra.Command{
 		if !algod.IsRunning() {
 			log.Fatal("algod is not running")
 		}
+
+		dataDir, err := algod.GetDataDir("")
+		if err != nil {
+			return err
+		}
 		// Create the client
-		client, err := algod.GetClient("/var/lib/algorand")
+		client, err := algod.GetClient(dataDir)
 		if err != nil {
 			return err
 		}
 
 		if msg.Catchup {
-			network, err := utils.GetNetworkFromDataDir("/var/lib/algorand")
+
+			network, err := utils.GetNetworkFromDataDir(dataDir)
 			if err != nil {
 				return err
 			}

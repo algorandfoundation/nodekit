@@ -33,7 +33,7 @@ var stopCmd = utils.WithAlgodFlags(&cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-		client, err := algod.GetClient("/var/lib/algorand")
+		client, err := algod.GetClient(dataDir)
 		cobra.CheckErr(err)
 
 		status, response, err := algod.NewStatus(ctx, client, httpPkg)
