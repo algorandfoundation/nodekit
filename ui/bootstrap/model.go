@@ -22,7 +22,9 @@ It looks like you're running this for the first time. Would you like to install 
 
 const CatchupQuestionMsg = `# Catching Up
 
-Would you like to preform a fast-catchup? (Y/n)
+Regular sync with the network usually takes multiple days to weeks. You can optionally perform fast-catchup to sync within minutes instead.
+ 
+Would you like to preform a fast-catchup after installation? (Y/n)
 `
 
 type Model struct {
