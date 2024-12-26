@@ -7,7 +7,7 @@ const SudoWarningMsg = "(You may be prompted for your password)"
 const PermissionErrorMsg = "this command must be run with super-user privileges (sudo)"
 
 // NotInstalledErrorMsg is the error message displayed when the algod software is not installed on the system.
-const NotInstalledErrorMsg = "algod is not installed. please run the *node install* command"
+const NotInstalledErrorMsg = "algod is not installed. please run the *install* command"
 
 // RunningErrorMsg represents the error message displayed when algod is running and needs to be stopped before proceeding.
 const RunningErrorMsg = "algod is running, please run the *node stop* command"
