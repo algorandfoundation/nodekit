@@ -10,7 +10,7 @@ const PermissionErrorMsg = "this command must be run with super-user privileges 
 const NotInstalledErrorMsg = "algod is not installed. please run the *install* command"
 
 // RunningErrorMsg represents the error message displayed when algod is running and needs to be stopped before proceeding.
-const RunningErrorMsg = "algod is running, please run the *node stop* command"
+const RunningErrorMsg = "algod is running, please run the *stop* command"
 
 // NotRunningErrorMsg is the error message displayed when the algod service is not currently running on the system.
 const NotRunningErrorMsg = "algod is not running"
