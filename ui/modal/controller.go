@@ -47,15 +47,16 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			m.Open = true
 			m.SetType(app.ExceptionModal)
 			m.exceptionModal.Message = style.LightBlue(lipgloss.JoinVertical(lipgloss.Top,
-				fmt.Sprintf("Last committed block: %d", m.State.Status.LastRound),
+				"Please wait while your node syncs with the network.",
+				"This process can take up to an hour.",
+				"",
+				fmt.Sprintf("Accounts Processed:   %d / %d", m.State.Status.CatchpointAccountsProcessed, m.State.Status.CatchpointAccountsTotal),
+				fmt.Sprintf("Accounts Verified:    %d / %d", m.State.Status.CatchpointAccountsVerified, m.State.Status.CatchpointAccountsTotal),
+				fmt.Sprintf("Key Values Processed: %d / %d", m.State.Status.CatchpointKeyValueProcessed, m.State.Status.CatchpointKeyValueTotal),
+				fmt.Sprintf("Key Values Verified:  %d / %d", m.State.Status.CatchpointKeyValueVerified, m.State.Status.CatchpointKeyValueTotal),
+				fmt.Sprintf("Downloaded blocks:    %d / %d", m.State.Status.CatchpointBlocksAcquired, m.State.Status.CatchpointBlocksTotal),
+				"",
 				fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int(time.Second)),
-				fmt.Sprintf("Catchpoint: %s", *m.State.Status.Catchpoint),
-				fmt.Sprintf("Total Accounts: %d", m.State.Status.CatchpointAccountsTotal),
-				fmt.Sprintf("Accounts Processed: %d", m.State.Status.CatchpointAccountsProcessed),
-				fmt.Sprintf("Accounts Verified: %d", m.State.Status.CatchpointAccountsVerified),
-				fmt.Sprintf("Total Key Values: %d", m.State.Status.CatchpointKeyValueTotal),
-				fmt.Sprintf("Key Values Processed: %d", m.State.Status.CatchpointKeyValueProcessed),
-				fmt.Sprintf("Key Values Verified: %d", m.State.Status.CatchpointKeyValueVerified),
 			))
 			m.borderColor = "7"
 			m.controls = ""

@@ -53,6 +53,8 @@ type Status struct {
 	CatchpointKeyValueTotal     int     `json:"catchpointKeyValueTotal"`
 	CatchpointKeyValueProcessed int     `json:"catchpointKeyValueProcessed"`
 	CatchpointKeyValueVerified  int     `json:"catchpointKeyValueVerified"`
+	CatchpointBlocksTotal       int     `json:"catchpointTotalBlocks"`
+	CatchpointBlocksAcquired    int     `json:"catchpointAcquiredBlocks"`
 
 	SyncTime int `json:"syncTime"`
 
@@ -115,6 +117,8 @@ func (s Status) Merge(res api.StatusLike) Status {
 		s.CatchpointKeyValueTotal = *res.CatchpointTotalKvs
 		s.CatchpointKeyValueProcessed = *res.CatchpointProcessedKvs
 		s.CatchpointKeyValueVerified = *res.CatchpointVerifiedKvs
+		s.CatchpointBlocksAcquired = *res.CatchpointAcquiredBlocks
+		s.CatchpointBlocksTotal = *res.CatchpointTotalBlocks
 	} else if res.CatchupTime > 0 {
 		s.SyncTime = res.CatchupTime
 		s.State = SyncingState
