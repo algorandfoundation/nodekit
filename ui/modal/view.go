@@ -8,6 +8,10 @@ import (
 
 // View renders the current modal's UI based on its type and state, or returns the parent content if the modal is closed.
 func (m ViewModel) View() string {
+	// Clear prefix for infoModal
+	if !m.infoModal.Active && m.infoModal.Prefix != "" {
+		m.infoModal.Prefix = ""
+	}
 	if !m.Open {
 		return m.Parent
 	}

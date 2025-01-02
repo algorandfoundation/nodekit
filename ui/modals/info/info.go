@@ -18,6 +18,7 @@ type ViewModel struct {
 	Controls      string
 	BorderColor   string
 	Active        bool
+	Prefix        string
 	Participation *api.ParticipationKey
 	State         *algod.StateModel
 }
@@ -92,8 +93,13 @@ func (m ViewModel) View() string {
 	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.Participation.Key.VoteLastValid)
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
 
+	prefix := ""
+	if m.Prefix != "" {
+		prefix = "\n" + m.Prefix
+	}
+
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
-		"",
+		prefix,
 		account,
 		id,
 		"",
