@@ -3,6 +3,7 @@ package algod
 import (
 	"context"
 	"errors"
+
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
@@ -138,18 +139,19 @@ func NewStatus(ctx context.Context, client api.ClientWithResponsesInterface, htt
 	}
 	status.Network = v.Network
 	status.Version = v.Version
+	status.NeedsUpdate = false
 
-	// TODO: last checked
-	releaseResponse, err := api.GetGoAlgorandReleaseWithResponse(httpPkg, v.Channel)
-	// Return the error and response
-	if err != nil {
-		return status, releaseResponse, err
-	}
-	// Update status update field
-	if releaseResponse != nil && status.Version != releaseResponse.JSON200 {
-		status.NeedsUpdate = true
-	} else {
-		status.NeedsUpdate = false
+	if v.Channel == "beta" || v.Channel == "stable" {
+		// TODO: last checked
+		releaseResponse, err := api.GetGoAlgorandReleaseWithResponse(httpPkg, v.Channel)
+		// Return the error and response
+		if err != nil {
+			return status, releaseResponse, err
+		}
+		// Update status update field
+		if releaseResponse != nil && status.Version != releaseResponse.JSON200 {
+			status.NeedsUpdate = true
+		}
 	}
 
 	return status.Get(ctx)
