@@ -29,7 +29,23 @@ func Test_StatusModel(t *testing.T) {
 	}
 
 	catchpoint := "catchpoint"
-	m = m.Merge(api.StatusLike{LastRound: 10, Catchpoint: &catchpoint, CatchupTime: 0})
+	accountsTotal := 1000000
+	processedAccounts := 0
+	verifiedAccounts := 0
+	keyValueTotal := 1000
+	keyValueProcessed := 0
+	keyValueVerified := 0
+	m = m.Merge(api.StatusLike{
+		LastRound:                   10,
+		Catchpoint:                  &catchpoint,
+		CatchupTime:                 0,
+		CatchpointTotalAccounts:     &accountsTotal,
+		CatchpointVerifiedAccounts:  &verifiedAccounts,
+		CatchpointProcessedAccounts: &processedAccounts,
+		CatchpointTotalKvs:          &keyValueTotal,
+		CatchpointProcessedKvs:      &keyValueProcessed,
+		CatchpointVerifiedKvs:       &keyValueVerified,
+	})
 	if m.State != FastCatchupState {
 		t.Errorf("expected State: %s, got %s", FastCatchupState, m.State)
 	}
