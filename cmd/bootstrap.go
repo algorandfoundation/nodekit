@@ -54,9 +54,11 @@ var bootstrapCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
-
+		r, _ := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+		)
 		fmt.Print(style.Purple(style.BANNER))
-		out, err := glamour.Render(tutorial, "dark")
+		out, err := r.Render(tutorial)
 		if err != nil {
 			return err
 		}
