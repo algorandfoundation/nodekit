@@ -46,7 +46,15 @@ type Status struct {
 	LastRound uint64 `json:"lastRound"`
 
 	// Catchpoint is a pointer to a string that identifies the current catchpoint for node synchronization or fast catchup.
-	Catchpoint *string `json:"catchpoint"`
+	Catchpoint                  *string `json:"catchpoint"`
+	CatchpointAccountsTotal     int     `json:"catchpointAccountsTotal"`
+	CatchpointAccountsProcessed int     `json:"catchpointAccountsProcessed"`
+	CatchpointAccountsVerified  int     `json:"catchpointAccountsVerified"`
+	CatchpointKeyValueTotal     int     `json:"catchpointKeyValueTotal"`
+	CatchpointKeyValueProcessed int     `json:"catchpointKeyValueProcessed"`
+	CatchpointKeyValueVerified  int     `json:"catchpointKeyValueVerified"`
+
+	SyncTime int `json:"syncTime"`
 
 	// Client provides methods for interacting with the API, adhering to ClientWithResponsesInterface specifications.
 	Client api.ClientWithResponsesInterface `json:"-"`
@@ -100,7 +108,15 @@ func (s Status) Merge(res api.StatusLike) Status {
 	if catchpoint != nil && *catchpoint != "" {
 		s.State = FastCatchupState
 		s.Catchpoint = catchpoint
+		s.SyncTime = res.CatchupTime
+		s.CatchpointAccountsTotal = *res.CatchpointTotalAccounts
+		s.CatchpointAccountsProcessed = *res.CatchpointProcessedAccounts
+		s.CatchpointAccountsVerified = *res.CatchpointVerifiedAccounts
+		s.CatchpointKeyValueTotal = *res.CatchpointTotalKvs
+		s.CatchpointKeyValueProcessed = *res.CatchpointProcessedKvs
+		s.CatchpointKeyValueVerified = *res.CatchpointVerifiedKvs
 	} else if res.CatchupTime > 0 {
+		s.SyncTime = res.CatchupTime
 		s.State = SyncingState
 	} else {
 		s.State = StableState

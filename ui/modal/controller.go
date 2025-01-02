@@ -1,6 +1,7 @@
 package modal
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
@@ -8,6 +9,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"time"
 )
 
 // Init initializes the current ViewModel by batching initialization commands for all associated modal ViewModels.
@@ -41,8 +43,25 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
 
-		// When the state changes, and we are displaying a valid QR Code/Transaction Modal
-		if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
+		if m.State.Status.State == algod.FastCatchupState {
+			m.Open = true
+			m.SetType(app.ExceptionModal)
+			m.exceptionModal.Message = style.LightBlue(lipgloss.JoinVertical(lipgloss.Top,
+				fmt.Sprintf("Last committed block: %d", m.State.Status.LastRound),
+				fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int(time.Second)),
+				fmt.Sprintf("Catchpoint: %s", *m.State.Status.Catchpoint),
+				fmt.Sprintf("Total Accounts: %d", m.State.Status.CatchpointAccountsTotal),
+				fmt.Sprintf("Accounts Processed: %d", m.State.Status.CatchpointAccountsProcessed),
+				fmt.Sprintf("Accounts Verified: %d", m.State.Status.CatchpointAccountsVerified),
+				fmt.Sprintf("Total Key Values: %d", m.State.Status.CatchpointKeyValueTotal),
+				fmt.Sprintf("Key Values Processed: %d", m.State.Status.CatchpointKeyValueProcessed),
+				fmt.Sprintf("Key Values Verified: %d", m.State.Status.CatchpointKeyValueVerified),
+			))
+			m.borderColor = "7"
+			m.controls = ""
+			m.title = "Fast Catchup"
+
+		} else if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
 			acct, ok := msg.Accounts[m.Address]
 			// If the previous state is not active
 			if ok {
