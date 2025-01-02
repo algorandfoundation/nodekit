@@ -35,10 +35,14 @@ func Test_StatusModel(t *testing.T) {
 	keyValueTotal := 1000
 	keyValueProcessed := 0
 	keyValueVerified := 0
+	acquiredBlocks := 1000000
+	blocksTotal := 10000000
 	m = m.Merge(api.StatusLike{
 		LastRound:                   10,
 		Catchpoint:                  &catchpoint,
 		CatchupTime:                 0,
+		CatchpointAcquiredBlocks:    &acquiredBlocks,
+		CatchpointTotalBlocks:       &blocksTotal,
 		CatchpointTotalAccounts:     &accountsTotal,
 		CatchpointVerifiedAccounts:  &verifiedAccounts,
 		CatchpointProcessedAccounts: &processedAccounts,
