@@ -24,6 +24,9 @@ func (r GithubVersionResponse) Status() string {
 }
 
 func GetGoAlgorandReleaseWithResponse(http HttpPkgInterface, channel string) (*GithubVersionResponse, error) {
+	if channel == "dev" {
+		channel = "beta"
+	}
 	var versions GithubVersionResponse
 	resp, err := http.Get("https://api.github.com/repos/algorand/go-algorand/releases")
 	versions.HTTPResponse = resp
@@ -54,7 +57,6 @@ func GetGoAlgorandReleaseWithResponse(http HttpPkgInterface, channel string) (*G
 			versionResponse = &tn
 			break
 		}
-
 	}
 
 	// If the tag was not found, return an error
