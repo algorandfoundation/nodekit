@@ -1,6 +1,7 @@
 package modal
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
@@ -8,6 +9,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"time"
 )
 
 // Init initializes the current ViewModel by batching initialization commands for all associated modal ViewModels.
@@ -41,8 +43,26 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
 
-		// When the state changes, and we are displaying a valid QR Code/Transaction Modal
-		if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
+		if m.State.Status.State == algod.FastCatchupState {
+			m.Open = true
+			m.SetType(app.ExceptionModal)
+			m.exceptionModal.Message = style.LightBlue(lipgloss.JoinVertical(lipgloss.Top,
+				"Please wait while your node syncs with the network.",
+				"This process can take up to an hour.",
+				"",
+				fmt.Sprintf("Accounts Processed:   %d / %d", m.State.Status.CatchpointAccountsProcessed, m.State.Status.CatchpointAccountsTotal),
+				fmt.Sprintf("Accounts Verified:    %d / %d", m.State.Status.CatchpointAccountsVerified, m.State.Status.CatchpointAccountsTotal),
+				fmt.Sprintf("Key Values Processed: %d / %d", m.State.Status.CatchpointKeyValueProcessed, m.State.Status.CatchpointKeyValueTotal),
+				fmt.Sprintf("Key Values Verified:  %d / %d", m.State.Status.CatchpointKeyValueVerified, m.State.Status.CatchpointKeyValueTotal),
+				fmt.Sprintf("Downloaded blocks:    %d / %d", m.State.Status.CatchpointBlocksAcquired, m.State.Status.CatchpointBlocksTotal),
+				"",
+				fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int(time.Second)),
+			))
+			m.borderColor = "7"
+			m.controls = ""
+			m.title = "Fast Catchup"
+
+		} else if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
 			acct, ok := msg.Accounts[m.Address]
 			// If the previous state is not active
 			if ok {
