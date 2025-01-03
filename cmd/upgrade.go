@@ -4,6 +4,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"os"
@@ -13,11 +14,25 @@ import (
 // UpgradeMsg is a constant string used to indicate the start of the Algod upgrade process.
 const UpgradeMsg = "Upgrading Algod"
 
+var upgradeShort = "Upgrade the node daemon"
+
+var upgradeLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(upgradeShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Upgrade Algorand packages if it was installed with package manager.",
+	"",
+	style.Yellow.Render("This requires the daemon to be installed on your system."),
+)
+
 // upgradeCmd is a Cobra command used to upgrade Algod, utilizing the OS-specific package manager if applicable.
 var upgradeCmd = &cobra.Command{
 	Use:              "upgrade",
-	Short:            "Upgrade Algod",
-	Long:             "Upgrade Algod (if installed with package manager).",
+	Short:            upgradeShort,
+	Long:             upgradeLong,
 	SilenceUsage:     true,
 	PersistentPreRun: NeedsToBeStopped,
 	Run: func(cmd *cobra.Command, args []string) {

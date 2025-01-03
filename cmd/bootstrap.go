@@ -21,9 +21,10 @@ import (
 	"time"
 )
 
-var bootstrapCmdShort = "Initialize a fresh node. Alias for install, catchup, and start."
+// bootstrapCmdShort provides a brief description of the "bootstrap" command to initialize a fresh Algorand node.
+var bootstrapCmdShort = "Initialize a fresh node"
 
-// cmdLong provides a detailed description of the Fast-Catchup feature, explaining its purpose and expected sync durations.
+// bootstrapCmdLong provides a detailed description of the "bootstrap" command, including its purpose and functionality.
 var bootstrapCmdLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.BANNER,
@@ -40,8 +41,6 @@ var bootstrapCmdLong = lipgloss.JoinVertical(
 var tutorial = `# Welcome!
 
 This is the beginning of your adventure into running the an Algorand node!
-
-Morbi mauris quam, ornare ac commodo et, posuere id sem. Nulla id condimentum mauris. In vehicula sit amet libero vitae interdum. Nullam ac massa in erat volutpat sodales. Integer imperdiet enim cursus, ullamcorper tortor vel, imperdiet diam. Maecenas viverra ex iaculis, vehicula ligula quis, cursus lorem. Mauris nec nunc feugiat tortor sollicitudin porta ac quis turpis. Nam auctor hendrerit metus et pharetra.
 
 `
 

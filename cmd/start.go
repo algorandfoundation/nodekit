@@ -4,15 +4,30 @@ import (
 	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+)
+
+var startShort = "Start the node daemon"
+
+var startLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(startShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Start the Algorand daemon on your local machine if it is not already running. Optionally, the daemon can be forcefully started.",
+	"",
+	style.Yellow.Render("This requires the daemon to be installed on your system."),
 )
 
 // startCmd is a Cobra command used to start the Algod service on the system, ensuring necessary checks are performed beforehand.
 var startCmd = &cobra.Command{
 	Use:              "start",
-	Short:            "Start Algod",
-	Long:             "Start Algod on your system (the one on your PATH).",
+	Short:            startShort,
+	Long:             startLong,
 	SilenceUsage:     true,
 	PersistentPreRun: NeedsToBeStopped,
 	Run: func(cmd *cobra.Command, args []string) {
