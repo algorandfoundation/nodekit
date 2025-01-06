@@ -70,9 +70,9 @@ func generateMarkdown() error {
 		if base == cmd.Name {
 			return "/README.md"
 		}
-		return "/docs/" + strings.ToLower(base) + ".md"
+		return "/man/" + strings.ToLower(base) + ".md"
 	}
-	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./docs", filePrepender, linkHandler)
+	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./man", filePrepender, linkHandler)
 }
 
 // replaceBetweenStrings replaces everything between startString and endString with replacementText in the content of the file
@@ -146,14 +146,14 @@ func main() {
 		panic(err)
 	}
 
-	rootCmdDocPath := fmt.Sprintf("./docs/%s.md", cmd.Name)
+	rootCmdDocPath := fmt.Sprintf("./man/%s.md", cmd.Name)
 
-	err = updateBanners("./docs/")
+	err = updateBanners("./man/")
 	if err != nil {
 		panic(err)
 	}
 	// Add Footer
-	footerDocPath := "./docs/footer.md"
+	footerDocPath := "./man/footer.md"
 	footerBytes, err := os.ReadFile(footerDocPath)
 	if err != nil {
 		panic(err)
@@ -162,7 +162,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = copyFile(fmt.Sprintf("./docs/%s.md", cmd.Name), "./README.md", true)
+	err = copyFile(fmt.Sprintf("./man/%s.md", cmd.Name), "./README.md", true)
 	if err != nil {
 		panic(err)
 	}
