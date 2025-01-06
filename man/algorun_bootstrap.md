@@ -5,7 +5,7 @@ Initialize a fresh node
 ### Synopsis
 
                                                                                                          
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">                                                  
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">                                                  
                                                                                                          
                                                                                                          
 Initialize a fresh node                                                                                  

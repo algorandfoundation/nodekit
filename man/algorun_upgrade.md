@@ -5,7 +5,7 @@ Upgrade the node daemon
 ### Synopsis
 
                                                                    
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">            
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">            
                                                                    
                                                                    
 Upgrade the node daemon                                            

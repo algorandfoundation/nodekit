@@ -5,7 +5,7 @@ Manage Fast-Catchup for your node
 ### Synopsis
 
                                                                                                  
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">                                          
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">                                          
                                                                                                  
                                                                                                  
 Fast-Catchup is a feature that allows your node to catch up to the network faster than normal.   

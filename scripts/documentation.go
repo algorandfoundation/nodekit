@@ -108,7 +108,7 @@ func replaceBetweenStrings(filePath, startString, endString, replacementText str
 func updateBanner(filePath string) error {
 	textBanner := ansi.Strip(style.BANNER)
 	textSplit := strings.Split(textBanner, "\n")
-	return replaceBetweenStrings(filePath, textSplit[1], textSplit[len(textSplit)-2], "<img alt=\"Terminal Render\" src=\"/docs/nodekit.png\" width=\"65%\">")
+	return replaceBetweenStrings(filePath, textSplit[1], textSplit[len(textSplit)-2], "<img alt=\"Terminal Render\" src=\"/assets/nodekit.png\" width=\"65%\">")
 }
 func updateBanners(dirPath string) error {
 	// Open the directory
@@ -153,7 +153,7 @@ func main() {
 		panic(err)
 	}
 	// Add Footer
-	footerDocPath := "./man/footer.md"
+	footerDocPath := "./assets/footer.md"
 	footerBytes, err := os.ReadFile(footerDocPath)
 	if err != nil {
 		panic(err)

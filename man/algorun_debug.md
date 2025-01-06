@@ -5,7 +5,7 @@ Display debugging information
 ### Synopsis
 
                                                                                       
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">                               
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">                               
                                                                                       
                                                                                       
 Display debugging information                                                         

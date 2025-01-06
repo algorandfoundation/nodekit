@@ -5,7 +5,7 @@ Display debug information for Fast-Catchup.
 ### Synopsis
 
                                                              
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">      
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">      
                                                              
                                                              
 Display debug information for Fast-Catchup.                  

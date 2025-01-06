@@ -5,7 +5,7 @@ Get the latest catchpoint and start catching up.
 ### Synopsis
 
                                                                                                  
-<img alt="Terminal Render" src="/docs/nodekit.png" width="65%">                                          
+<img alt="Terminal Render" src="/assets/nodekit.png" width="65%">                                          
                                                                                                  
                                                                                                  
 Catchup the node to the latest catchpoint.                                                       
