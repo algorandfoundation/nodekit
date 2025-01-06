@@ -54,8 +54,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			if !m.Active {
 				return &m, app.EmitShowModal(app.ConfirmModal)
 			}
+		case "r":
+			if !m.Active {
+				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			}
 		case "o":
-			return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			if m.Active {
+				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
@@ -77,7 +83,7 @@ func (m *ViewModel) UpdateState() {
 
 	if !m.Active {
 		m.BorderColor = "3"
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | take " + style.Green.Render("(o)nline") + " )"
+		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister") + " online )"
 	}
 }
 func (m ViewModel) View() string {
