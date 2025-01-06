@@ -92,6 +92,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 	case app.ModalEvent:
+		if msg.Type == app.ExceptionModal {
+			m.Open = true
+			m.exceptionModal.Message = msg.Err.Error()
+			m.generateModal.SetStep(generate.AddressStep)
+			m.SetType(app.ExceptionModal)
+		}
+
 		if msg.Type == app.InfoModal {
 			m.generateModal.SetStep(generate.AddressStep)
 		}

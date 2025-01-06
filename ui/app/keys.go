@@ -59,7 +59,7 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 				Key:     nil,
 				Address: "",
 				Active:  false,
-				Err:     &err,
+				Err:     err,
 				Type:    ExceptionModal,
 			}
 		}

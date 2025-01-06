@@ -65,6 +65,10 @@ func GenerateKeys(
 		return nil, err
 	}
 	if key.StatusCode() != 200 {
+		if key.JSON400 != nil {
+			return nil, errors.New(key.JSON400.Message)
+		}
+
 		status := key.Status()
 		if status != "" {
 			return nil, errors.New(status)
