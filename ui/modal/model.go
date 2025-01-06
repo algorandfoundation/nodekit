@@ -27,6 +27,9 @@ type ViewModel struct {
 	// Address defines the string format address of the entity
 	Address string
 
+	// HasPrefix indicates whether a prefix is used or active.
+	HasPrefix bool
+
 	// Link represents a reference to a ShortLinkResponse,
 	// typically used for processing or displaying shortened link data.
 	Link *participation.ShortLinkResponse
@@ -107,8 +110,9 @@ func New(parent string, open bool, state *algod.StateModel) *ViewModel {
 		Width:  0,
 		Height: 0,
 
-		Address: "",
-		State:   state,
+		Address:   "",
+		HasPrefix: false,
+		State:     state,
 
 		infoModal:        info.New(state),
 		transactionModal: transaction.New(state),

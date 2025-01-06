@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/charmbracelet/lipgloss"
 	"time"
 
 	"github.com/algorandfoundation/algorun-tui/api"
@@ -67,9 +68,16 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 		return ModalEvent{
 			Key:     key,
 			Address: key.Address,
-			Active:  false,
-			Err:     nil,
-			Type:    InfoModal,
+			Prefix: lipgloss.JoinVertical(
+				lipgloss.Left,
+				"Participation keys generated.",
+				"Next step: register the participation keys with the network by signing a keyreg online transaction.",
+				"Press the R key to start this process.",
+				"",
+			),
+			Active: false,
+			Err:    nil,
+			Type:   InfoModal,
 		}
 	}
 

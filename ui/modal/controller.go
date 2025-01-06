@@ -74,6 +74,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 						m.SetActive(true)
 						m.infoModal.Active = true
 						m.infoModal.Prefix = "Successfully went online!\n"
+						m.HasPrefix = true
 						m.SetType(app.InfoModal)
 					}
 				} else {
@@ -90,6 +91,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 	case app.ModalEvent:
 		if msg.Type == app.InfoModal {
+			m.infoModal.Prefix = msg.Prefix
 			m.generateModal.SetStep(generate.AddressStep)
 		}
 		// On closing events

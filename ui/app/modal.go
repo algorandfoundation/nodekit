@@ -51,6 +51,9 @@ type ModalEvent struct {
 	// Address represents the address associated with the modal event. It is used to identify the relevant account or key.
 	Address string
 
+	// Prefix adds prefix message to info modal
+	Prefix string
+
 	// Err is a pointer to an error that represents an exceptional condition or failure state for the modal event.
 	Err *error
 
