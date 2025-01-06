@@ -1,4 +1,4 @@
-package node
+package cmd
 
 import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod"

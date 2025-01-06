@@ -1,8 +1,10 @@
-package node
+package cmd
 
 import (
 	"encoding/json"
 	"fmt"
+	cmdutils "github.com/algorandfoundation/algorun-tui/cmd/utils"
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
@@ -31,12 +33,11 @@ type DebugInfo struct {
 	// Algod holds the path to the `algod` executable if found on the system, or an empty string if not found.
 	Algod string `json:"algod"`
 
-	// Data contains a list of string entries providing additional paths or diagnostic information about the `algod` service.
-	Data []string `json:"data"`
+	DataFolder utils.DataFolderConfig `json:"data"`
 }
 
 // debugCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
-var debugCmd = &cobra.Command{
+var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	Use:          "debug",
 	Short:        "Display debug information for developers",
 	Long:         "Prints debug data to be copy and pasted to a bug report.",
@@ -45,17 +46,25 @@ var debugCmd = &cobra.Command{
 		log.Info("Collecting debug information...")
 
 		// Warn user for prompt
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
-		paths := utils.GetKnownDataPaths()
 		path, _ := exec.LookPath("algod")
+
+		dataDir, err := algod.GetDataDir("")
+		if err != nil {
+			return err
+		}
+		folderDebug, err := utils.ToDataFolderConfig(dataDir)
+		if err != nil {
+			return err
+		}
 		info := DebugInfo{
 			InPath:      system.CmdExists("algod"),
 			IsRunning:   algod.IsRunning(),
 			IsService:   algod.IsService(),
 			IsInstalled: algod.IsInstalled(),
 			Algod:       path,
-			Data:        paths,
+			DataFolder:  folderDebug,
 		}
 		data, err := json.MarshalIndent(info, "", " ")
 		if err != nil {
@@ -66,4 +75,4 @@ var debugCmd = &cobra.Command{
 		fmt.Println(style.Bold(string(data)))
 		return nil
 	},
-}
+}, &algodData)

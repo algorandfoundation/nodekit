@@ -1,6 +1,7 @@
-package node
+package cmd
 
 import (
+	"github.com/algorandfoundation/algorun-tui/cmd/utils/explanations"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/log"
@@ -29,7 +30,7 @@ var stopCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info(style.Green.Render(StoppingAlgodMsg))
 		// Warn user for prompt
-		log.Warn(style.Yellow.Render(SudoWarningMsg))
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 		err := algod.Stop()
 		if err != nil {

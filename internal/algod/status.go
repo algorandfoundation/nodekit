@@ -3,6 +3,7 @@ package algod
 import (
 	"context"
 	"errors"
+
 	"github.com/algorandfoundation/algorun-tui/api"
 )
 
@@ -46,7 +47,17 @@ type Status struct {
 	LastRound uint64 `json:"lastRound"`
 
 	// Catchpoint is a pointer to a string that identifies the current catchpoint for node synchronization or fast catchup.
-	Catchpoint *string `json:"catchpoint"`
+	Catchpoint                  *string `json:"catchpoint"`
+	CatchpointAccountsTotal     int     `json:"catchpointAccountsTotal"`
+	CatchpointAccountsProcessed int     `json:"catchpointAccountsProcessed"`
+	CatchpointAccountsVerified  int     `json:"catchpointAccountsVerified"`
+	CatchpointKeyValueTotal     int     `json:"catchpointKeyValueTotal"`
+	CatchpointKeyValueProcessed int     `json:"catchpointKeyValueProcessed"`
+	CatchpointKeyValueVerified  int     `json:"catchpointKeyValueVerified"`
+	CatchpointBlocksTotal       int     `json:"catchpointTotalBlocks"`
+	CatchpointBlocksAcquired    int     `json:"catchpointAcquiredBlocks"`
+
+	SyncTime int `json:"syncTime"`
 
 	// Client provides methods for interacting with the API, adhering to ClientWithResponsesInterface specifications.
 	Client api.ClientWithResponsesInterface `json:"-"`
@@ -100,7 +111,17 @@ func (s Status) Merge(res api.StatusLike) Status {
 	if catchpoint != nil && *catchpoint != "" {
 		s.State = FastCatchupState
 		s.Catchpoint = catchpoint
+		s.SyncTime = res.CatchupTime
+		s.CatchpointAccountsTotal = *res.CatchpointTotalAccounts
+		s.CatchpointAccountsProcessed = *res.CatchpointProcessedAccounts
+		s.CatchpointAccountsVerified = *res.CatchpointVerifiedAccounts
+		s.CatchpointKeyValueTotal = *res.CatchpointTotalKvs
+		s.CatchpointKeyValueProcessed = *res.CatchpointProcessedKvs
+		s.CatchpointKeyValueVerified = *res.CatchpointVerifiedKvs
+		s.CatchpointBlocksAcquired = *res.CatchpointAcquiredBlocks
+		s.CatchpointBlocksTotal = *res.CatchpointTotalBlocks
 	} else if res.CatchupTime > 0 {
+		s.SyncTime = res.CatchupTime
 		s.State = SyncingState
 	} else {
 		s.State = StableState
@@ -138,18 +159,19 @@ func NewStatus(ctx context.Context, client api.ClientWithResponsesInterface, htt
 	}
 	status.Network = v.Network
 	status.Version = v.Version
+	status.NeedsUpdate = false
 
-	// TODO: last checked
-	releaseResponse, err := api.GetGoAlgorandReleaseWithResponse(httpPkg, v.Channel)
-	// Return the error and response
-	if err != nil {
-		return status, releaseResponse, err
-	}
-	// Update status update field
-	if releaseResponse != nil && status.Version != releaseResponse.JSON200 {
-		status.NeedsUpdate = true
-	} else {
-		status.NeedsUpdate = false
+	if v.Channel == "beta" || v.Channel == "stable" {
+		// TODO: last checked
+		releaseResponse, err := api.GetGoAlgorandReleaseWithResponse(httpPkg, v.Channel)
+		// Return the error and response
+		if err != nil {
+			return status, releaseResponse, err
+		}
+		// Update status update field
+		if releaseResponse != nil && status.Version != releaseResponse.JSON200 {
+			status.NeedsUpdate = true
+		}
 	}
 
 	return status.Get(ctx)

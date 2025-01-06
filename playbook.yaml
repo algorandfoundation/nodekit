@@ -10,13 +10,13 @@
         msg: "Must have algorun installed!"
       when: not binpath.stat.exists
     - name: Run installer
-      command: algorun node install
+      command: algorun install
     - name: Run stop
-      command: algorun node stop
+      command: algorun stop
     - name: Run upgrade
-      command: algorun node upgrade
+      command: algorun upgrade
     - name: Run stop
-      command: algorun node stop
+      command: algorun stop
     - name: Run Start
-      command: algorun node start
+      command: algorun start
       # TODO: start a private network, fund TUI account and run TUI integration

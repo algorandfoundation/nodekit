@@ -28,9 +28,10 @@ type ViewportViewModel struct {
 	accountsPage accounts.ViewModel
 	keysPage     keys.ViewModel
 
-	modal  *modal.ViewModel
-	page   app.Page
-	client api.ClientWithResponsesInterface
+	outside app.Outside
+	modal   *modal.ViewModel
+	page    app.Page
+	client  api.ClientWithResponsesInterface
 }
 
 // Init is a no-op
@@ -223,8 +224,8 @@ func NewViewportViewModel(state *algod.StateModel, client api.ClientWithResponse
 		keysPage:     keys.New("", state.ParticipationKeys),
 
 		// Modal
-		modal: modal.New("", false, state),
-
+		modal:   modal.New("", false, state),
+		outside: app.NewOutside(),
 		// Current Page
 		page: app.AccountsPage,
 		// RPC client
