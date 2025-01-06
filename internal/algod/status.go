@@ -128,7 +128,7 @@ func (s Status) Merge(res api.StatusLike) Status {
 	}
 
 	if res.UpgradeNodeVote != nil {
-		s.Voting = *res.UpgradeNodeVote
+		s.Voting = true
 	}
 	return s
 }
