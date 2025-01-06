@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -110,7 +111,7 @@ func updateBanner(filePath string) error {
 	textSplit := strings.Split(textBanner, "\n")
 	return replaceBetweenStrings(filePath, textSplit[1], textSplit[len(textSplit)-2], "<img alt=\"Terminal Render\" src=\"/assets/nodekit.png\" width=\"65%\">")
 }
-func updateBanners(dirPath string) error {
+func updateBanners(dirPath string, starlight bool) error {
 	// Open the directory
 	dir, err := os.Open(dirPath)
 	if err != nil {
@@ -131,15 +132,50 @@ func updateBanners(dirPath string) error {
 			continue
 		}
 		if strings.HasSuffix(file.Name(), ".md") && strings.HasPrefix(file.Name(), cmd.Name) {
-			err = updateBanner(dirPath + file.Name())
-			if err != nil {
-				return err
+			if starlight {
+				err = updateStarlightHeadings(dirPath + file.Name())
+				if err != nil {
+					return err
+				}
+			} else {
+				err = updateBanner(dirPath + file.Name())
+				if err != nil {
+					return err
+				}
 			}
+
 		}
 	}
 
 	return nil
 }
+
+func updateStarlightHeadings(filePath string) error {
+	textBanner := ansi.Strip(style.BANNER)
+	textSplit := strings.Split(textBanner, "\n")
+	return replaceBetweenStrings(filePath, "## algorun", textSplit[len(textSplit)-2], "## Synopsis")
+}
+
+const fmTemplate = `---
+title: "%s"
+slug: "%s"
+---
+`
+
+func generateStarlightMarkdown() error {
+	filePrepender := func(filename string) string {
+		name := filepath.Base(filename)
+		base := strings.TrimSuffix(name, path.Ext(name))
+
+		return fmt.Sprintf(fmTemplate, strings.Replace(base, "_", " ", -1), base)
+	}
+	linkHandler := func(name string) string {
+		base := strings.TrimSuffix(name, path.Ext(name))
+		return "/reference/" + strings.ToLower(base)
+	}
+	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./docs/src/content/docs/reference", filePrepender, linkHandler)
+}
+
 func main() {
 	err := generateMarkdown()
 	if err != nil {
@@ -148,7 +184,7 @@ func main() {
 
 	rootCmdDocPath := fmt.Sprintf("./man/%s.md", cmd.Name)
 
-	err = updateBanners("./man/")
+	err = updateBanners("./man/", false)
 	if err != nil {
 		panic(err)
 	}
@@ -166,4 +202,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = generateStarlightMarkdown()
+	if err != nil {
+		panic(err)
+	}
+
+	err = updateBanners("./docs/src/content/docs/reference/", true)
 }
