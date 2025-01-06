@@ -1,6 +1,6 @@
 ---
 title: "algorun stop"
-slug: "algorun_stop"
+slug: "reference/algorun/stop"
 ---
 ## Synopsis                                           
                                                                                                   

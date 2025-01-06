@@ -1,6 +1,6 @@
 ---
 title: "algorun upgrade"
-slug: "algorun_upgrade"
+slug: "reference/algorun/upgrade"
 ---
 ## Synopsis            
                                                                    

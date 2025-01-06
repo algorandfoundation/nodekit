@@ -1,6 +1,6 @@
 ---
 title: "algorun debug"
-slug: "algorun_debug"
+slug: "reference/algorun/debug"
 ---
 ## Synopsis                               
                                                                                       

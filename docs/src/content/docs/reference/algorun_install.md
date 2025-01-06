@@ -1,6 +1,6 @@
 ---
 title: "algorun install"
-slug: "algorun_install"
+slug: "reference/algorun/install"
 ---
 ## Synopsis                                    
                                                                                            

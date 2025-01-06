@@ -1,6 +1,6 @@
 ---
 title: "algorun uninstall"
-slug: "algorun_uninstall"
+slug: "reference/algorun/uninstall"
 ---
 ## Synopsis                                  
                                                                                          

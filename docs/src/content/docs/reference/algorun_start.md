@@ -1,6 +1,6 @@
 ---
 title: "algorun start"
-slug: "algorun_start"
+slug: "reference/algorun/start"
 ---
 ## Synopsis                                                                        
                                                                                                                                

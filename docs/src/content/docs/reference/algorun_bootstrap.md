@@ -1,6 +1,6 @@
 ---
 title: "algorun bootstrap"
-slug: "algorun_bootstrap"
+slug: "reference/algorun/bootstrap"
 ---
 ## Synopsis                                                  
                                                                                                          
