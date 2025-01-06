@@ -10,9 +10,9 @@ var NodeNotFound = lipgloss.JoinHorizontal(lipgloss.Left,
 	style.Cyan.Render("Explanation"),
 	style.Bold(": "),
 ) +
-	"algorun could not find your node automatically. (ensure the node is running)\n\n" +
+"algorun could not find your node automatically. Ensure the node is installed and running: If you have not installed algod yet, run \"nodekit bootstrap\". If your node is installed, start it with \"nodekit start\". \n\n" +
 	lipgloss.JoinHorizontal(lipgloss.Left,
-		"Provide ",
+		"Otherwise for custom installations, provide ",
 		style.Bold("--datadir"),
 		" or set the goal-compatible ",
 		style.Bold("ALGORAND_DATA"),
