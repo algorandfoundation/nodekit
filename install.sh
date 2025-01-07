@@ -90,7 +90,7 @@ trap - int
 trap - exit
 
 success "Downloaded: ${Bold_Green}nodekit ${version} 🎉${Reset}"
-info "Explore nodekit by starting here:"
+info "Explore all nodekit options with:"
 echo "./nodekit --help"
 echo ""
 info "Starting nodekit bootstrap"
