@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+permissions:
+  contents: write
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux, darwin ]
+        goarch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: go get .
+      - name: Build
+        env: 
+          GOOS: ${{matrix.goos}}
+          GOARCH: ${{matrix.goarch}}
+          CGO_ENABLED: 0
+        run: go build -o bin/algorun-${{matrix.goarch}}-${{matrix.goos}} *.go
+      - uses: actions/upload-artifact@master
+        with:
+          name: algorun-${{matrix.goarch}}-${{matrix.goos}}
+          path: bin/algorun-${{matrix.goarch}}-${{matrix.goos}}
+  release:
+    needs: 
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: algorun*
+          path: ./bin
+      - uses: go-semantic-release/action@v1
+        name: release
+        id: semver
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload v${{steps.semver.outputs.version}} bin/**/*
