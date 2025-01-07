@@ -73,10 +73,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switch m.Question {
 				case InstallQuestion:
 					m.Question = CatchupQuestion
-					m.BootstrapMsg.Install = true
+					m.BootstrapMsg.Install = false
 				case CatchupQuestion:
 					m.Question = WaitingQuestion
-					m.BootstrapMsg.Catchup = true
+					m.BootstrapMsg.Catchup = false
 				case WaitingQuestion:
 					return m, tea.Sequence(m.Outside.Emit(m.BootstrapMsg), tea.Quit)
 				}
