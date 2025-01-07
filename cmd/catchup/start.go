@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// startCmdLong provides a detailed description and overview message for the 'start' command, including notes and caveats.
 var startCmdLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
@@ -60,7 +61,3 @@ var startCmd = utils.WithAlgodFlags(&cobra.Command{
 		log.Info(style.Green.Render(res))
 	},
 }, &dataDir)
-
-func init() {
-	startCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully catchup the node"))
-}

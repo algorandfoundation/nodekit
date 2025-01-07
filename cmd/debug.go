@@ -9,6 +9,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"os/exec"
@@ -36,11 +37,27 @@ type DebugInfo struct {
 	DataFolder utils.DataFolderConfig `json:"data"`
 }
 
+// debugCmdShort provides a brief description of the "debug" command, which displays debugging information.
+var debugCmdShort = "Display debugging information"
+
+// debugCmdLong provides a detailed description of the "debug" command, outlining its purpose and functionality.
+var debugCmdLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.BANNER,
+	"",
+	style.Bold(debugCmdShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Prints the known state of the nodekit",
+	"Checks various paths and configurations to present useful information for bug reports.",
+	"",
+)
+
 // debugCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
 var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	Use:          "debug",
-	Short:        "Display debug information for developers",
-	Long:         "Prints debug data to be copy and pasted to a bug report.",
+	Short:        debugCmdShort,
+	Long:         debugCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info("Collecting debug information...")

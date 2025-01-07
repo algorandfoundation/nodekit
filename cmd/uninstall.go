@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
@@ -10,11 +11,25 @@ import (
 // UninstallWarningMsg provides a warning message to inform users they may be prompted for their password during uninstallation.
 const UninstallWarningMsg = "(You may be prompted for your password to uninstall)"
 
+var uninstallShort = "Uninstall the node daemon"
+
+var uninstallLong = lipgloss.JoinVertical(
+	lipgloss.Left,
+	style.Purple(style.BANNER),
+	"",
+	style.Bold(uninstallShort),
+	"",
+	style.BoldUnderline("Overview:"),
+	"Uninstall Algorand node (Algod) and other binaries on your system installed by this tool.",
+	"",
+	style.Yellow.Render("This requires the daemon to be installed on your system."),
+)
+
 // uninstallCmd defines a Cobra command used to uninstall the Algorand node (Algod) and related binaries from the system.
 var uninstallCmd = &cobra.Command{
 	Use:              "uninstall",
-	Short:            "Uninstall Algorand node (Algod)",
-	Long:             "Uninstall Algorand node (Algod) and other binaries on your system installed by this tool.",
+	Short:            uninstallShort,
+	Long:             uninstallLong,
 	SilenceUsage:     true,
 	PersistentPreRun: NeedsToBeStopped,
 	Run: func(cmd *cobra.Command, args []string) {

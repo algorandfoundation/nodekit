@@ -18,9 +18,6 @@ var (
 	// defaultLag represents the default minimum catchup delay in milliseconds for the Fast Catchup process.
 	defaultLag int = 30_000
 
-	// force indicates whether to bypass certain checks or enforcement logic within a function or command execution flow.
-	force bool = false
-
 	// cmdLong provides a detailed description of the Fast-Catchup feature, explaining its purpose and expected sync durations.
 	cmdLong = lipgloss.JoinVertical(
 		lipgloss.Left,

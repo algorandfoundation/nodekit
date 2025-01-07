@@ -33,7 +33,10 @@ type DebugInfo struct {
 	Catchpoint `json:"catchpoint"`
 }
 
+// debugCmdShort provides a concise description for the debug command, indicating it displays debug information for Fast-Catchup.
 var debugCmdShort = "Display debug information for Fast-Catchup."
+
+// debugCmdLong provides a detailed description for the debug command, focusing on debugging fast-catchup issues.
 var debugCmdLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
