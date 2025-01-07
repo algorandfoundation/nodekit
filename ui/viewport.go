@@ -3,12 +3,12 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
-	"github.com/algorandfoundation/algorun-tui/ui/app"
-	"github.com/algorandfoundation/algorun-tui/ui/modal"
-	"github.com/algorandfoundation/algorun-tui/ui/pages/accounts"
-	"github.com/algorandfoundation/algorun-tui/ui/pages/keys"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/ui/app"
+	"github.com/algorandfoundation/nodekit/ui/modal"
+	"github.com/algorandfoundation/nodekit/ui/pages/accounts"
+	"github.com/algorandfoundation/nodekit/ui/pages/keys"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )

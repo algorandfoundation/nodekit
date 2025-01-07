@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

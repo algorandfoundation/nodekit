@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

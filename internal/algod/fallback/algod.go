@@ -3,9 +3,9 @@ package fallback
 import (
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/msgs"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
-	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/nodekit/internal/algod/msgs"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/charmbracelet/log"
 	"os"
 	"os/exec"

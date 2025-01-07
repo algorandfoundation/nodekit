@@ -2,11 +2,11 @@ package algod
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
-	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // StateModel represents the state of the application,

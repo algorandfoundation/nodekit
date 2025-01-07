@@ -1,4 +1,4 @@
-module github.com/algorandfoundation/algorun-tui
+module github.com/algorandfoundation/nodekit
 
 go 1.22.0
 

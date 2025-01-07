@@ -6,7 +6,7 @@ is largely inspired by it.
 
 # Motivation
 
-**Staking Rewards™️** require additional configuration and monitoring which this **Hacktui** seeks to simplify. 
+**Staking Rewards™️** require additional configuration and monitoring which this **NodeKit** seeks to simplify. 
 
 ## Primary Goals
 

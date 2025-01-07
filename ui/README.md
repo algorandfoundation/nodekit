@@ -15,7 +15,7 @@ Example for `status.go` single file component:
 ```go
 package ui
 
-import "github.com/algorandfoundation/algorun-tui/internal"
+import "github.com/algorandfoundation/nodekit/internal"
 
 type StatusViewModel struct {
 	Data internal.StateModel
@@ -35,7 +35,7 @@ Example refactor for `status.go` to a package:
 
 ```go
 package status
-import "github.com/algorandfoundation/algorun-tui/internal"
+import "github.com/algorandfoundation/nodekit/internal"
 
 type ViewModel struct {
 	Data internal.StateModel

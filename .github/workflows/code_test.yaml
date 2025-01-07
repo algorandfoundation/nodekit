@@ -41,7 +41,7 @@ jobs:
         run: go vet ./...
 
       - name: Build
-        run: go build -o bin/algorun *.go
+        run: go build -o bin/nodekit *.go
 
       - name: Unit Tests
         run: make test

@@ -1,22 +1,22 @@
 - name: Test Instance
   hosts: localhost
   tasks:
-    - name: Ensure algorun exists
+    - name: Ensure nodekit exists
       stat:
-        path: /usr/bin/algorun
+        path: /usr/bin/nodekit
       register: binpath
     - name: Fail missing binary
       fail:
-        msg: "Must have algorun installed!"
+        msg: "Must have nodekit installed!"
       when: not binpath.stat.exists
     - name: Run installer
-      command: algorun install
+      command: nodekit install
     - name: Run stop
-      command: algorun stop
+      command: nodekit stop
     - name: Run upgrade
-      command: algorun upgrade
+      command: nodekit upgrade
     - name: Run stop
-      command: algorun stop
+      command: nodekit stop
     - name: Run Start
-      command: algorun start
+      command: nodekit start
       # TODO: start a private network, fund TUI account and run TUI integration

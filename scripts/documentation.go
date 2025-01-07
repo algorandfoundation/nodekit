@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/cmd"
-	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/algorandfoundation/nodekit/cmd"
+	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/spf13/cobra/doc"
 	"io"
@@ -153,7 +153,7 @@ func updateBanners(dirPath string, starlight bool) error {
 func updateStarlightHeadings(filePath string) error {
 	textBanner := ansi.Strip(style.BANNER)
 	textSplit := strings.Split(textBanner, "\n")
-	return replaceBetweenStrings(filePath, "## algorun", textSplit[len(textSplit)-2], "## Synopsis")
+	return replaceBetweenStrings(filePath, "## nodekit", textSplit[len(textSplit)-2], "## Synopsis")
 }
 
 const fmTemplate = `---

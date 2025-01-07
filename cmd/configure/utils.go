@@ -2,7 +2,7 @@ package configure
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"os"

@@ -3,7 +3,7 @@ package algod
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // StartCatchup sends a request to start a catchup operation on a specific catchpoint and returns the catchup message.

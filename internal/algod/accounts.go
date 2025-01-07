@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
-	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // Account represents a user's account, including address, status, balance, and number of keys.

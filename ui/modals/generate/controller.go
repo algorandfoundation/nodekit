@@ -1,12 +1,12 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"

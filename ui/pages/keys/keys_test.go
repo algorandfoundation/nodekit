@@ -2,10 +2,10 @@ package keys
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
-	"github.com/algorandfoundation/algorun-tui/ui/app"
-	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/test/mock"
+	"github.com/algorandfoundation/nodekit/ui/app"
+	"github.com/algorandfoundation/nodekit/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

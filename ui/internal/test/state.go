@@ -2,9 +2,9 @@ package test
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
-	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	mock2 "github.com/algorandfoundation/nodekit/internal/test/mock"
 	"time"
 )
 
