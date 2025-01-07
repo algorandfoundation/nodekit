@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	Name = "algorun"
 
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
 	algodData string
@@ -42,9 +43,9 @@ var (
 		"",
 		style.Yellow.Render(explanations.ExperimentalWarning),
 	)
-	// rootCmd is the primary command for managing Algorand nodes, providing CLI functionality and TUI for interaction.
-	rootCmd = utils.WithAlgodFlags(&cobra.Command{
-		Use:     "algorun",
+	// RootCmd is the primary command for managing Algorand nodes, providing CLI functionality and TUI for interaction.
+	RootCmd = utils.WithAlgodFlags(&cobra.Command{
+		Use:     Name,
 		Version: Version,
 		Short:   short,
 		Long:    long,
@@ -129,19 +130,19 @@ func init() {
 	log.SetReportTimestamp(false)
 	// Add Commands
 	if runtime.GOOS != "windows" {
-		rootCmd.AddCommand(bootstrapCmd)
-		rootCmd.AddCommand(debugCmd)
-		rootCmd.AddCommand(installCmd)
-		rootCmd.AddCommand(startCmd)
-		rootCmd.AddCommand(stopCmd)
-		rootCmd.AddCommand(uninstallCmd)
-		rootCmd.AddCommand(upgradeCmd)
-		rootCmd.AddCommand(catchup.Cmd)
-		rootCmd.AddCommand(configure.Cmd)
+		RootCmd.AddCommand(bootstrapCmd)
+		RootCmd.AddCommand(debugCmd)
+		RootCmd.AddCommand(installCmd)
+		RootCmd.AddCommand(startCmd)
+		RootCmd.AddCommand(stopCmd)
+		RootCmd.AddCommand(uninstallCmd)
+		RootCmd.AddCommand(upgradeCmd)
+		RootCmd.AddCommand(catchup.Cmd)
+		RootCmd.AddCommand(configure.Cmd)
 	}
 }
 
 // Execute executes the root command.
 func Execute() error {
-	return rootCmd.Execute()
+	return RootCmd.Execute()
 }

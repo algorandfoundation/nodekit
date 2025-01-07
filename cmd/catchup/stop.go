@@ -11,7 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// stopCmdShort provides a concise description of the "stop" command.
 var stopCmdShort = "Stop a fast catchup"
+
+// stopCmdLong provides a detailed description for the "stop" command including its functionality and important notes.
 var stopCmdLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
@@ -50,7 +53,3 @@ var stopCmd = utils.WithAlgodFlags(&cobra.Command{
 
 	},
 }, &dataDir)
-
-func init() {
-	stopCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully catchup the node"))
-}

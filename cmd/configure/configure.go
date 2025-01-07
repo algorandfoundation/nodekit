@@ -17,7 +17,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var short = "Configure the Algorand daemon."
+// short holds a brief description of the system settings configuration command, currently marked as work in progress.
+var short = "Change settings on the system (WIP)"
+
+// long combines styled strings and descriptions for the detailed command overview displayed in the CLI.
 var long = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
