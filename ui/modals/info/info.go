@@ -18,6 +18,7 @@ type ViewModel struct {
 	Controls      string
 	BorderColor   string
 	Active        bool
+	Prefix        string
 	Participation *api.ParticipationKey
 	State         *algod.StateModel
 }
@@ -53,8 +54,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			if !m.Active {
 				return &m, app.EmitShowModal(app.ConfirmModal)
 			}
+		case "r":
+			if !m.Active {
+				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			}
 		case "o":
-			return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			if m.Active {
+				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
@@ -76,7 +83,7 @@ func (m *ViewModel) UpdateState() {
 
 	if !m.Active {
 		m.BorderColor = "3"
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | take " + style.Green.Render("(o)nline") + " )"
+		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister") + " online )"
 	}
 }
 func (m ViewModel) View() string {
@@ -92,8 +99,13 @@ func (m ViewModel) View() string {
 	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.Participation.Key.VoteLastValid)
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
 
+	prefix := ""
+	if m.Prefix != "" {
+		prefix = "\n" + m.Prefix
+	}
+
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
-		"",
+		prefix,
 		account,
 		id,
 		"",

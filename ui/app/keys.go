@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/charmbracelet/lipgloss"
 	"time"
 
 	"github.com/algorandfoundation/nodekit/api"
@@ -59,7 +60,7 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 				Key:     nil,
 				Address: "",
 				Active:  false,
-				Err:     &err,
+				Err:     err,
 				Type:    ExceptionModal,
 			}
 		}
@@ -67,9 +68,17 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 		return ModalEvent{
 			Key:     key,
 			Address: key.Address,
-			Active:  false,
-			Err:     nil,
-			Type:    InfoModal,
+			Prefix: lipgloss.JoinVertical(
+				lipgloss.Left,
+				"Participation keys generated.",
+				"",
+				"Next step: register the participation keys with the network by signing a keyreg online transaction.",
+				"Press the R key to start this process.",
+				"",
+			),
+			Active: false,
+			Err:    nil,
+			Type:   InfoModal,
 		}
 	}
 
