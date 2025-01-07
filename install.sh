@@ -90,5 +90,8 @@ trap - int
 trap - exit
 
 success "Downloaded: ${Bold_Green}algorun ${version} 🎉${Reset}"
-info "Get started by running:"
-echo "./algorun --help"
+info "Starting node installation"
+info "./algorun bootstrap"
+#echo "./algorun --help"
+
+./algorun bootstrap
