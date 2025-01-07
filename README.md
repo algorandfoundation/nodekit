@@ -11,8 +11,8 @@ Manage Algorand nodes from the command line
 Manage Algorand nodes from the command line                                                         
                                                                                                     
 Overview:                                                                                           
-Welcome to Algorun, a TUI for managing Algorand nodes.                                              
-A one stop shop for managing Algorand nodes, including node creation, configuration, and management.
+Welcome to Algorun, a terminal user interface for managing Algorand nodes.                                              
+This is your one stop shop for managing Algorand nodes, including node creation, configuration, and management.
                                                                                                     
 Note: This is still a work in progress. Expect bugs and rough edges.                                
 
