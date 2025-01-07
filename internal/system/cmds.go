@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/log"
 	"os"
 	"os/exec"

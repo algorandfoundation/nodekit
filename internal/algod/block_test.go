@@ -2,7 +2,7 @@ package algod
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 	"testing"
 	"time"
 )

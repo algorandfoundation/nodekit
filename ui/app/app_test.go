@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
-	"github.com/algorandfoundation/algorun-tui/internal/test"
-	uitest "github.com/algorandfoundation/algorun-tui/ui/internal/test"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/test"
+	uitest "github.com/algorandfoundation/nodekit/ui/internal/test"
 	"testing"
 	"time"
 )

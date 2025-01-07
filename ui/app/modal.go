@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

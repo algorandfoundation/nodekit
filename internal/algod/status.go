@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // InvalidStatus indicates an error when a response contains an invalid or unexpected status code.

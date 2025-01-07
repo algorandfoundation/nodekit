@@ -2,9 +2,9 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal/test"
-	"github.com/algorandfoundation/algorun-tui/ui/app"
-	uitest "github.com/algorandfoundation/algorun-tui/ui/internal/test"
+	"github.com/algorandfoundation/nodekit/internal/test"
+	"github.com/algorandfoundation/nodekit/ui/app"
+	uitest "github.com/algorandfoundation/nodekit/ui/internal/test"
 	"testing"
 	"time"
 

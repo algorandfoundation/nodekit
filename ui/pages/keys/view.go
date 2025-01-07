@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/style"
 )
 
 func (m ViewModel) View() string {

@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"github.com/algorandfoundation/algorun-tui/ui/app"
+	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"

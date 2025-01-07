@@ -2,9 +2,9 @@ package transaction
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
-	"github.com/algorandfoundation/algorun-tui/internal/test/mock"
-	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/test/mock"
+	"github.com/algorandfoundation/nodekit/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

@@ -2,8 +2,8 @@ package algod
 
 import (
 	"errors"
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"os"
 	"path/filepath"

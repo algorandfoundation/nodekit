@@ -12,7 +12,7 @@ BANNER='   _____  .__                __________
          \/     /_____/               \/           \/ '
   
 os=$(uname -ms)
-release="https://github.com/algorandfoundation/algorun-tui/releases/download"
+release="https://github.com/algorandfoundation/nodekit/releases/download"
 version="v1.0.0-beta.2"
 
 Red=''
@@ -53,8 +53,8 @@ error() {
     exit 1
 }
 
-if [ -f algorun ]; then
-    error "An algorun file already exists in the current directory. Delete or rename it before installing."
+if [ -f nodekit ]; then
+    error "An nodekit file already exists in the current directory. Delete or rename it before installing."
 fi
 
 
@@ -67,28 +67,28 @@ trap "info Exiting the installation" exit
 
 case $os in
 'Darwin x86_64')
-    target=algorun-amd64-darwin
+    target=nodekit-amd64-darwin
     ;;
 'Darwin arm64')
-    target=algorun-arm64-darwin
+    target=nodekit-arm64-darwin
     ;;
 'Linux aarch64' | 'Linux arm64')
-    target=algorun-arm64-linux
+    target=nodekit-arm64-linux
     ;;
 'Linux x86_64' | *)
-    target=algorun-amd64-linux
+    target=nodekit-amd64-linux
     ;;
 esac
  
 echo -e "${Opaque}Downloading:${Reset}${Bold_White} $target $version${Reset}"
-curl --fail --location --progress-bar --output algorun "$release/$version/$target" ||
+curl --fail --location --progress-bar --output nodekit "$release/$version/$target" ||
   error "Failed to download ${target} from ${release}"
 
-chmod +x algorun
+chmod +x nodekit
 
 trap - int
 trap - exit
 
-success "Downloaded: ${Bold_Green}algorun ${version} 🎉${Reset}"
+success "Downloaded: ${Bold_Green}nodekit ${version} 🎉${Reset}"
 info "Get started by running:"
-echo "./algorun --help"
+echo "./nodekit --help"

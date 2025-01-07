@@ -3,7 +3,7 @@ package algod
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 	"regexp"
 	"strconv"
 	"strings"
