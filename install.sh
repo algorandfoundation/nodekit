@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
-
-
-BANNER='   _____  .__                __________
-   /  _  \ |  |    ____   ____\______   \__ __  ____
-  /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \
- /    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
- \____|__  /____/\___  / \____/|____|_  /____/|___|  /
-         \/     /_____/               \/           \/ '
   
 os=$(uname -ms)
 release="https://github.com/algorandfoundation/nodekit/releases/download"
@@ -33,7 +24,6 @@ if [[ -t 1 ]]; then
     Bold_Green='\033[1;32m'
     Bold_White='\033[1m'
     Opaque='\033[0;2m'
-    echo -e "${Blue} ${BANNER} ${Reset}"
 fi
 
 success() {
