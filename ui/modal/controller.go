@@ -39,6 +39,12 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.SetShortLink(msg)
 		m.SetType(app.TransactionModal)
 	case *algod.StateModel:
+		// Clear the catchup modal
+		if msg.Status.State != algod.FastCatchupState && m.Type == app.ExceptionModal && m.title == "Fast Catchup" {
+			m.Open = false
+			m.SetType(app.InfoModal)
+		}
+
 		m.State = msg
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
@@ -90,6 +96,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 	case app.ModalEvent:
+		if msg.Type == app.ExceptionModal {
+			m.Open = true
+			m.exceptionModal.Message = msg.Err.Error()
+			m.generateModal.SetStep(generate.AddressStep)
+			m.SetType(app.ExceptionModal)
+		}
+
 		if msg.Type == app.InfoModal {
 			m.infoModal.Prefix = msg.Prefix
 			m.generateModal.SetStep(generate.AddressStep)

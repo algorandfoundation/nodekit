@@ -54,8 +54,8 @@ type ModalEvent struct {
 	// Prefix adds prefix message to info modal
 	Prefix string
 
-	// Err is a pointer to an error that represents an exceptional condition or failure state for the modal event.
-	Err *error
+	// Err is an error that represents an exceptional condition or failure state for the modal event.
+	Err error
 
 	// Type represents the specific category or variant of the modal event.
 	Type ModalType
