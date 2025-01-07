@@ -1,19 +1,10 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
-
-
-BANNER='   _____  .__                __________
-   /  _  \ |  |    ____   ____\______   \__ __  ____
-  /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \
- /    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
- \____|__  /____/\___  / \____/|____|_  /____/|___|  /
-         \/     /_____/               \/           \/ '
   
 os=$(uname -ms)
 release="https://github.com/algorandfoundation/nodekit/releases/download"
-version="v1.0.0-beta.2"
+version="v1.0.0-beta.5"
 
 Red=''
 Green=''
@@ -33,7 +24,6 @@ if [[ -t 1 ]]; then
     Bold_Green='\033[1;32m'
     Bold_White='\033[1m'
     Opaque='\033[0;2m'
-    echo -e "${Blue} ${BANNER} ${Reset}"
 fi
 
 success() {
@@ -90,5 +80,10 @@ trap - int
 trap - exit
 
 success "Downloaded: ${Bold_Green}nodekit ${version} 🎉${Reset}"
-info "Get started by running:"
+info "Explore all nodekit options with:"
 echo "./nodekit --help"
+echo ""
+info "Starting nodekit bootstrap"
+echo "./nodekit bootstrap"
+
+./nodekit bootstrap
