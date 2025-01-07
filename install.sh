@@ -13,7 +13,7 @@ BANNER='   _____  .__                __________
   
 os=$(uname -ms)
 release="https://github.com/algorandfoundation/algorun-tui/releases/download"
-version="v1.0.0-beta.2"
+version="v1.0.0-beta.3"
 
 Red=''
 Green=''
