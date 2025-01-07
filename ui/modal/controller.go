@@ -73,7 +73,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 						acct.Participation.VoteFirstValid == m.transactionModal.Participation.Key.VoteFirstValid {
 						m.SetActive(true)
 						m.infoModal.Active = true
-						m.infoModal.Prefix = "Successfully went online!\n"
+						m.infoModal.Prefix = "Successfully registered online!\n"
 						m.HasPrefix = true
 						m.SetType(app.InfoModal)
 					}

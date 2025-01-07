@@ -71,6 +71,7 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 			Prefix: lipgloss.JoinVertical(
 				lipgloss.Left,
 				"Participation keys generated.",
+				"",
 				"Next step: register the participation keys with the network by signing a keyreg online transaction.",
 				"Press the R key to start this process.",
 				"",
