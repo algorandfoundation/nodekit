@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+Add additional Tailwind styles to this file, for example with @layer:
+https://tailwindcss.com/docs/adding-custom-styles#using-css-and-layer
+*/
+/* Dark mode colors. */
+:root {
+    --sl-color-accent-low: #131e4f;
+    --sl-color-accent: #3646ff;
+    --sl-color-accent-high: #b3c7ff;
+    --sl-color-white: #ffffff;
+    --sl-color-gray-1: #e4eff9;
+    --sl-color-gray-2: #b6c4d0;
+    --sl-color-gray-3: #758fa6;
+    --sl-color-gray-4: #435b70;
+    --sl-color-gray-5: #233b4e;
+    --sl-color-gray-6: #192A39;
+    --sl-color-black: #0f1922;
+}
+/* Light mode colors. */
+:root[data-theme='light'] {
+    --sl-color-accent-low: #c7d6ff;
+    --sl-color-accent: #384bff;
+    --sl-color-accent-high: #192676;
+    --sl-color-white: #0f1922;
+    --sl-color-gray-1: #12293b;
+    --sl-color-gray-2: #233b4e;
+    --sl-color-gray-3: #435b70;
+    --sl-color-gray-4: #758fa6;
+    --sl-color-gray-5: #b6c4d0;
+    --sl-color-gray-6: #e4eff9;
+    --sl-color-gray-7: #f1f7fc;
+    --sl-color-black: #ffffff;
+}

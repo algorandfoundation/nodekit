@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -70,9 +71,9 @@ func generateMarkdown() error {
 		if base == cmd.Name {
 			return "/README.md"
 		}
-		return "/docs/" + strings.ToLower(base) + ".md"
+		return "/man/" + strings.ToLower(base) + ".md"
 	}
-	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./docs", filePrepender, linkHandler)
+	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./man", filePrepender, linkHandler)
 }
 
 // replaceBetweenStrings replaces everything between startString and endString with replacementText in the content of the file
@@ -108,9 +109,9 @@ func replaceBetweenStrings(filePath, startString, endString, replacementText str
 func updateBanner(filePath string) error {
 	textBanner := ansi.Strip(style.BANNER)
 	textSplit := strings.Split(textBanner, "\n")
-	return replaceBetweenStrings(filePath, textSplit[1], textSplit[len(textSplit)-2], "<img alt=\"Terminal Render\" src=\"/docs/nodekit.png\" width=\"65%\">")
+	return replaceBetweenStrings(filePath, textSplit[1], textSplit[len(textSplit)-2], "<img alt=\"Terminal Render\" src=\"/assets/nodekit.png\" width=\"65%\">")
 }
-func updateBanners(dirPath string) error {
+func updateBanners(dirPath string, starlight bool) error {
 	// Open the directory
 	dir, err := os.Open(dirPath)
 	if err != nil {
@@ -131,29 +132,64 @@ func updateBanners(dirPath string) error {
 			continue
 		}
 		if strings.HasSuffix(file.Name(), ".md") && strings.HasPrefix(file.Name(), cmd.Name) {
-			err = updateBanner(dirPath + file.Name())
-			if err != nil {
-				return err
+			if starlight {
+				err = updateStarlightHeadings(dirPath + file.Name())
+				if err != nil {
+					return err
+				}
+			} else {
+				err = updateBanner(dirPath + file.Name())
+				if err != nil {
+					return err
+				}
 			}
+
 		}
 	}
 
 	return nil
 }
+
+func updateStarlightHeadings(filePath string) error {
+	textBanner := ansi.Strip(style.BANNER)
+	textSplit := strings.Split(textBanner, "\n")
+	return replaceBetweenStrings(filePath, "## algorun", textSplit[len(textSplit)-2], "## Synopsis")
+}
+
+const fmTemplate = `---
+title: "%s"
+slug: "%s"
+---
+`
+
+func generateStarlightMarkdown() error {
+	filePrepender := func(filename string) string {
+		name := filepath.Base(filename)
+		base := strings.TrimSuffix(name, path.Ext(name))
+
+		return fmt.Sprintf(fmTemplate, strings.Replace(base, "_", " ", -1), fmt.Sprintf("reference/%s", strings.Replace(base, "_", "/", -1)))
+	}
+	linkHandler := func(name string) string {
+		base := strings.TrimSuffix(name, path.Ext(name))
+		return "/reference/" + strings.Replace(base, "_", "/", -1)
+	}
+	return doc.GenMarkdownTreeCustom(cmd.RootCmd, "./docs/src/content/docs/reference", filePrepender, linkHandler)
+}
+
 func main() {
 	err := generateMarkdown()
 	if err != nil {
 		panic(err)
 	}
 
-	rootCmdDocPath := fmt.Sprintf("./docs/%s.md", cmd.Name)
+	rootCmdDocPath := fmt.Sprintf("./man/%s.md", cmd.Name)
 
-	err = updateBanners("./docs/")
+	err = updateBanners("./man/", false)
 	if err != nil {
 		panic(err)
 	}
 	// Add Footer
-	footerDocPath := "./docs/footer.md"
+	footerDocPath := "./assets/footer.md"
 	footerBytes, err := os.ReadFile(footerDocPath)
 	if err != nil {
 		panic(err)
@@ -162,8 +198,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = copyFile(fmt.Sprintf("./docs/%s.md", cmd.Name), "./README.md", true)
+	err = copyFile(fmt.Sprintf("./man/%s.md", cmd.Name), "./README.md", true)
 	if err != nil {
 		panic(err)
 	}
+
+	err = generateStarlightMarkdown()
+	if err != nil {
+		panic(err)
+	}
+
+	err = updateBanners("./docs/src/content/docs/reference/", true)
 }
