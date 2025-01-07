@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // VersionResponse represents information about the system version, including network, version, and channel details.

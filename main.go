@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/algorandfoundation/algorun-tui/cmd"
+	"github.com/algorandfoundation/nodekit/cmd"
 	"github.com/charmbracelet/log"
 	"os"
 	"runtime"

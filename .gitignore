@@ -1,4 +1,4 @@
-algorun-tui
+nodekit
 coverage
 bin
 .data
@@ -36,4 +36,4 @@ go.work.sum
 .env
 
 # user-created file
-.algorun.y*ml
+.nodekit.y*ml

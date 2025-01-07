@@ -1,5 +1,5 @@
 build:
-	CGO_ENABLED=0 go build -o bin/algorun .
+	CGO_ENABLED=0 go build -o bin/nodekit .
 test:
 	go test -coverprofile=coverage.out -coverpkg=./... -covermode=atomic ./...
 generate:

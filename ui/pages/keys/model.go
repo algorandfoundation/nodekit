@@ -1,13 +1,13 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"sort"
 
-	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/style"
 
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/ui/utils"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )

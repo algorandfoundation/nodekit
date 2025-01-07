@@ -2,8 +2,8 @@ package algod
 
 import (
 	"context"
-	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal/test"
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/test"
 	"strconv"
 	"testing"
 )

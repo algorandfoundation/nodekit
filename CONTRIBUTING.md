@@ -7,13 +7,13 @@ A guide on how to contribute to this project.
 Clone the project
 
 ```bash
-git clone git@github.com:algorandfoundation/algorun-tui.git
+git clone git@github.com:algorandfoundation/nodekit.git
 ```
 
 Change to the directory
 
 ```bash
-cd algorun-tui
+cd nodekit
 ```
 
 Build the project
@@ -29,7 +29,7 @@ Optionally, run a sandboxed participation node
 docker compose up
 ```
 
-Create a configuration file for the participation node in the root directory of the project (.algorun.yaml)
+Create a configuration file for the participation node in the root directory of the project (.nodekit.yaml)
 
 ```yaml
 algod-endpoint: http://localhost:8080
@@ -40,13 +40,13 @@ Launch the TUI
 
 
 > [!NOTE]
-> If you skipped the docker container or config file, try running `./bin/algorun` standalone, 
+> If you skipped the docker container or config file, try running `./bin/nodekit` standalone, 
 > which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. 
 > Otherwise, provide the `--algod-endpoint` and `--algod-token` arguments so that it can find your node. 
-> Note that algorun requires the admin algod token.
+> Note that nodekit requires the admin algod token.
 
 ```bash
-./bin/algorun
+./bin/nodekit
 ```
 
 # 📂 Folder Structure
@@ -67,7 +67,7 @@ All submodules and endpoints **SHOULD** align with the command/ui namespaces.
 Example Command:
 
 ```bash
-algorun status
+nodekit status
 ```
 
 Example Structure

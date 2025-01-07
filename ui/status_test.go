@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod"
 	"testing"
 	"time"
 

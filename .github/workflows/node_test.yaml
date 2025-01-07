@@ -26,19 +26,19 @@ jobs:
           export GOCOVERDIR=$(pwd)/coverage
           mkdir -p $GOCOVERDIR
           go build -cover .
-          ./algorun-tui install
+          ./nodekit install
           systemctl status algorand.service
           export TOKEN=$(cat /var/lib/algorand/algod.admin.token)
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
-          ./algorun-tui stop
-          ./algorun-tui upgrade
-          ./algorun-tui debug
+          ./nodekit stop
+          ./nodekit upgrade
+          ./nodekit debug
           sleep 10
-          ./algorun-tui catchup
-          ./algorun-tui catchup debug
-          ./algorun-tui catchup stop
-          ./algorun-tui stop
-          ./algorun-tui uninstall
+          ./nodekit catchup
+          ./nodekit catchup debug
+          ./nodekit catchup stop
+          ./nodekit stop
+          ./nodekit uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
           
       - name: Upload results to Codecov
@@ -60,20 +60,20 @@ jobs:
           export GOCOVERDIR=$(pwd)/coverage
           mkdir -p $GOCOVERDIR
           go build -cover .
-          ./algorun-tui install
+          ./nodekit install
           sudo launchctl print system/com.algorand.algod
           sleep 5
           export TOKEN=$(cat ~/.algorand/algod.admin.token)
           curl http://localhost:8080/v2/participation -H "X-Algo-API-Token: $TOKEN" | grep "null"
-          ./algorun-tui stop
-          ./algorun-tui upgrade
-          ./algorun-tui debug
+          ./nodekit stop
+          ./nodekit upgrade
+          ./nodekit debug
           sleep 10
-          ./algorun-tui catchup
-          ./algorun-tui catchup debug
-          ./algorun-tui catchup stop
-          ./algorun-tui stop
-          ./algorun-tui uninstall
+          ./nodekit catchup
+          ./nodekit catchup debug
+          ./nodekit catchup stop
+          ./nodekit stop
+          ./nodekit uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
           
       - name: Upload results to Codecov

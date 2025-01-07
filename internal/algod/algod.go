@@ -2,9 +2,9 @@ package algod
 
 import (
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/linux"
-	"github.com/algorandfoundation/algorun-tui/internal/algod/mac"
-	"github.com/algorandfoundation/algorun-tui/internal/system"
+	"github.com/algorandfoundation/nodekit/internal/algod/linux"
+	"github.com/algorandfoundation/nodekit/internal/algod/mac"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"runtime"
 )
 

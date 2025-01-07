@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"

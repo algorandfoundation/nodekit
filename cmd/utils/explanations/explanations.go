@@ -1,7 +1,7 @@
 package explanations
 
 import (
-	"github.com/algorandfoundation/algorun-tui/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -10,7 +10,7 @@ var NodeNotFound = lipgloss.JoinHorizontal(lipgloss.Left,
 	style.Cyan.Render("Explanation"),
 	style.Bold(": "),
 ) +
-	"algorun could not find your node automatically. Ensure the node is installed and running: If you have not installed algod yet, run \"nodekit bootstrap\". If your node is installed, start it with \"nodekit start\". \n\n" +
+	"nodekit could not find your node automatically. Ensure the node is installed and running: If you have not installed algod yet, run \"nodekit bootstrap\". If your node is installed, start it with \"nodekit start\". \n\n" +
 	lipgloss.JoinHorizontal(lipgloss.Left,
 		"Otherwise for custom installations, provide ",
 		style.Bold("--datadir"),
@@ -24,7 +24,7 @@ var NodeNotFound = lipgloss.JoinHorizontal(lipgloss.Left,
 var Unreachable = "Explanation: Could not reach algod. Check that algod is running and the provided connection arguments.\n"
 
 // TokenInvalid provides an error message indicating the administrative token for algod is invalid or missing.
-var TokenInvalid = "Explanation: algod token is invalid. Algorun requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
+var TokenInvalid = "Explanation: algod token is invalid. NodeKit requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
 
 // TokenNotAdmin is an explanatory message shown when the provided token lacks admin privileges for the algod node.
-var TokenNotAdmin = "Explanation: algorun requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
+var TokenNotAdmin = "Explanation: nodekit requires the " + style.BoldUnderline("admin token") + " for algod. You can find this in the algod.admin.token file in the algod data directory.\n"
