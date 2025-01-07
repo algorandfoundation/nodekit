@@ -12,7 +12,7 @@ BANNER='   _____  .__                __________
          \/     /_____/               \/           \/ '
   
 os=$(uname -ms)
-release="https://github.com/algorandfoundation/algorun-tui/releases/download"
+release="https://github.com/algorandfoundation/nodekit/releases/download"
 version="v1.0.0-beta.3"
 
 Red=''
@@ -89,11 +89,11 @@ chmod +x nodekit
 trap - int
 trap - exit
 
-success "Downloaded: ${Bold_Green}algorun ${version} 🎉${Reset}"
+success "Downloaded: ${Bold_Green}nodekit ${version} 🎉${Reset}"
 info "Explore nodekit by starting here:"
 echo "./nodekit --help"
 echo ""
 info "Starting nodekit bootstrap"
-echo "./algorun bootstrap"
+echo "./nodekit bootstrap"
 
-./algorun bootstrap
+./nodekit bootstrap
