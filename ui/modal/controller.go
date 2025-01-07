@@ -49,6 +49,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
 
+		// On Fast-Catchup, handle the state as an exception modal
 		if m.State.Status.State == algod.FastCatchupState {
 			m.Open = true
 			m.SetType(app.ExceptionModal)
@@ -69,6 +70,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			m.title = "Fast Catchup"
 
 		} else if m.Type == app.TransactionModal && m.transactionModal.Participation != nil {
+			// Get the existing account from the state
 			acct, ok := msg.Accounts[m.Address]
 			// If the previous state is not active
 			if ok {
@@ -77,6 +79,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 						acct.Participation.VoteFirstValid == m.transactionModal.Participation.Key.VoteFirstValid {
 						m.SetActive(true)
 						m.infoModal.Active = true
+						m.infoModal.Prefix = "Successfully registered online!\n"
+						m.HasPrefix = true
 						m.SetType(app.InfoModal)
 					}
 				} else {
@@ -100,6 +104,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 		if msg.Type == app.InfoModal {
+			m.infoModal.Prefix = msg.Prefix
 			m.generateModal.SetStep(generate.AddressStep)
 		}
 		// On closing events
