@@ -24,11 +24,11 @@ jobs:
           GOOS: ${{matrix.goos}}
           GOARCH: ${{matrix.goarch}}
           CGO_ENABLED: 0
-        run: go build -o bin/algorun-${{matrix.goarch}}-${{matrix.goos}} *.go
+        run: go build -o bin/nodekit-${{matrix.goarch}}-${{matrix.goos}} *.go
       - uses: actions/upload-artifact@master
         with:
-          name: algorun-${{matrix.goarch}}-${{matrix.goos}}
-          path: bin/algorun-${{matrix.goarch}}-${{matrix.goos}}
+          name: nodekit-${{matrix.goarch}}-${{matrix.goos}}
+          path: bin/nodekit-${{matrix.goarch}}-${{matrix.goos}}
   release:
     needs: 
       - build
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: algorun*
+          pattern: nodekit*
           path: ./bin
       - uses: go-semantic-release/action@v1
         name: release

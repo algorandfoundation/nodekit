@@ -55,7 +55,7 @@ func configureNode() error {
 
 	// Check systemctl first
 	if algod.IsService() {
-		if promptWrapperYes("Algorand is installed as a service. Do you wish to edit the service file to change the data directory? (y/n)") {
+		if promptWrapperYes("Algorand is installed as a service. Do you wish to edit the service file to change the data directory? (y/N)") {
 			// Edit the service file with the user's new data directory
 			systemServiceConfigure = true
 		} else {
@@ -84,18 +84,18 @@ func configureNode() error {
 			fmt.Println("Found valid Algorand Data Directory: " + algorandData)
 
 			if systemServiceConfigure {
-				if promptWrapperYes("Would you like to set the ALGORAND_DATA env variable as the data directory for the systemd Algorand service? (y/n)") {
+				if promptWrapperYes("Would you like to set the ALGORAND_DATA env variable as the data directory for the systemd Algorand service? (y/N)") {
 					editAlgorandServiceFile(algorandData)
 					os.Exit(0)
 				}
 			}
 
-			if promptWrapperNo("Do you want to set a completely new data directory? (y/n)") {
+			if promptWrapperNo("Do you want to set a completely new data directory? (y/N)") {
 				fmt.Println("User chose not to set a completely new data directory.")
 				os.Exit(0)
 			}
 
-			if promptWrapperYes("Do you want to manually input the new data directory? (y/n)") {
+			if promptWrapperYes("Do you want to manually input the new data directory? (y/N)") {
 				newPath := promptWrapperInput("Enter the new data directory path")
 
 				if !validateAlgorandDataDir(newPath) {
@@ -130,7 +130,7 @@ func configureNode() error {
 		}
 
 		if len(paths) == 1 {
-			if promptWrapperYes("Do you want to set this directory as the new data directory? (y/n)") {
+			if promptWrapperYes("Do you want to set this directory as the new data directory? (y/N)") {
 				if systemServiceConfigure {
 					// Edit the service file
 					editAlgorandServiceFile(paths[0])
@@ -142,7 +142,7 @@ func configureNode() error {
 
 		} else {
 
-			if promptWrapperYes("Do you want to set one of these directories as the new data directory? (y/n)") {
+			if promptWrapperYes("Do you want to set one of these directories as the new data directory? (y/N)") {
 
 				selectedPath := promptWrapperSelection("Select an Algorand data directory", paths)
 
@@ -158,12 +158,12 @@ func configureNode() error {
 	}
 
 	// Deep search
-	if promptWrapperNo("Do you want NodeKit to do a deep search for pre-existing Algorand Data directories? (y/n)") {
-		fmt.Println("User chose not to search for more pre-existing Algorand Data directories. Exiting...")
+	if promptWrapperNo("Do you want NodeKit to do a deep search for pre-existing Algorand data directories? (y/N)") {
+		fmt.Println("User chose not to search for more pre-existing Algorand data directories. Exiting...")
 		os.Exit(0)
 	}
 
-	fmt.Println("Searching for pre-existing Algorand Data directories in HOME directory...")
+	fmt.Println("Searching for pre-existing Algorand data directories in HOME directory...")
 	paths = deepSearchAlgorandDataDirs()
 
 	if len(paths) == 0 {

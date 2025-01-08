@@ -1,37 +1,138 @@
 ---
-import { Code } from '@astrojs/starlight/components';
-import { Icon } from '@astrojs/starlight/components';
+import { Code } from "@astrojs/starlight/components";
+import { Icon } from "@astrojs/starlight/components";
 
 const base = import.meta.env.BASE_URL;
-export const lang = "en"
+export const lang = "en";
 ---
-<html lang="en" data-mode="dark" class="dark">
 
-<head>
-    <title>NodeKit - Algorand Foundation</title>
-    <meta name="description" content="One stop shop for Algorand node running"/>
-    <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style is:global>
-        html, body {
-            max-height: 100vh;
-            background: #001324;
-            scroll-behavior: smooth;
-            padding: 0;
-            margin: 0;
-        }
-        @media (prefers-reduced-motion: reduce) {
-            html,body {
-                scroll-behavior: auto;
+<html lang="en" data-mode="dark" class="dark">
+    <head>
+        <title>NodeKit - Algorand Foundation</title>
+        <meta
+            name="description"
+            content="One stop shop for Algorand node running"
+        />
+        <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
+        <!-- Facebook Meta Tags -->
+        <meta property="og:url" content="https://nodekit.run" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="nodekit.run" />
+        <meta property="og:description" content="One stop shop for Algorand node running" />
+        <meta property="og:image" content="/nodekit.png" />
+
+        <!-- Twitter Meta Tags -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="nodekit.run" />
+        <meta property="twitter:url" content="https://nodekit.run" />
+        <meta name="twitter:title" content="nodekit.run" />
+        <meta name="twitter:description" content="One stop shop for Algorand node running" />
+        <meta name="twitter:image" content="/nodekit.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style is:global>
+            * {
+                box-sizing: border-box;
             }
-        }
-    </style>
-</head>
-<body>
-    <main class="h-screen w-screen flex flex-col items-center justify-center gap-6">
-        <img src="/nodekit.png" alt="Algo Nodekit logo" />
-        <Code lang="shell" code={`curl -fsSL https://nodekit.run/install.sh | bash`} class="text-gray-200"/>
-        <a class="text-gray-200" href="/reference/nodekit">Follow the white rabbit <Icon name="external"/> </a>
-    </main>
-</body>
+            html,
+            body {
+                max-height: 100svh;
+                width: 100%;
+                background: #001324;
+                scroll-behavior: smooth;
+                padding: 0;
+                margin: 0;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                html,
+                body {
+                    scroll-behavior: auto;
+                }
+            }
+            @keyframes scroll {
+                0% {
+                    transform: translateX(0);
+                }
+                100% {
+                    transform: translateX(-50%);
+                }
+            }
+            .animate-scroll {
+                animation: scroll 120s linear infinite;
+            }
+            .expressive-code .copy button::before {
+                --ec-frm-inlBtnBrd: #bfbff9;
+            }
+            .expressive-code .copy button::after {
+                --ec-frm-inlBtnFg: #bfbff9;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="h-svh w-full max-w-full flex justify-center">
+            <div
+                class="relative w-full xl:max-w-7xl flex flex-col items-center justify-between lg:px-4"
+            >
+                <div class="absolute w-full flex justify-between items-center">
+                    <img
+                        src="/nodekit.png"
+                        alt="Algo Nodekit logo"
+                        width="250"
+                        height="auto"
+                    />
+                    <a
+                        class="mr-10"
+                        target="_blank"
+                        href="https://github.com/algorandfoundation/nodekit"
+                    >
+                        <svg
+                            class="w-8 h-8 fill-white hover:fill-[#BFBFF9]"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 496 512"
+                        >
+                            {
+                                /* <!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--> */
+                            }
+                            <path
+                                d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"
+                            ></path>
+                        </svg>
+                    </a>
+                </div>
+                <div class="w-full h-svh mx-4">
+                    <div
+                        class="w-full h-svh flex gap-4 flex-col items-center justify-center px-6"
+                    >
+                        <Code
+                            lang="shell"
+                            code={`curl -fsSL https://nodekit.run/install.sh | bash`}
+                            class="max-w-full z-10"
+                        />
+                        <a
+                            class="text-white/80 hover:text-[#BFBFF9]"
+                            href="/guides/getting-started/"
+                            >Documentation <Icon name="external" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="absolute bottom-0 w-full mb-2 overflow-hidden whitespace-nowrap"
+            >
+                <div class="inline-flex animate-scroll">
+                    <span class="text-white/10 font-mono">
+                        wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=
+                        SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=
+                        mFgazF+2uRS1tMiL9dsj01hJGySEmPN28B/TjjvpVW0=
+                        kUt08LxeVAAGHnh4JoAoAMM9ql/hBwSoiFtlnKNeOxA=
+                    </span>
+                    <span class="text-white/10 font-mono">
+                        wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=
+                        SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=
+                        mFgazF+2uRS1tMiL9dsj01hJGySEmPN28B/TjjvpVW0=
+                        kUt08LxeVAAGHnh4JoAoAMM9ql/hBwSoiFtlnKNeOxA=
+                    </span>
+                </div>
+            </div>
+        </main>
+    </body>
 </html>
