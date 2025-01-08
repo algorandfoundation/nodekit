@@ -64,6 +64,10 @@ var bootstrapCmd = &cobra.Command{
 		fmt.Println(out)
 
 		model := bootstrap.NewModel()
+		if algod.IsInstalled() {
+			model.BootstrapMsg.Install = false
+			model.Question = bootstrap.CatchupQuestion
+		}
 		p := tea.NewProgram(model)
 		var msg *app.BootstrapMsg
 		go func() {
