@@ -66,7 +66,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.Question = WaitingQuestion
 					return m, app.EmitBootstrapSelection(app.BoostrapSelected(m.BootstrapMsg))
 				}
-
 			}
 		case "n":
 			{
@@ -77,10 +76,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case CatchupQuestion:
 					m.Question = WaitingQuestion
 					m.BootstrapMsg.Catchup = false
-				case WaitingQuestion:
-					return m, tea.Sequence(m.Outside.Emit(m.BootstrapMsg), tea.Quit)
+					return m, app.EmitBootstrapSelection(app.BoostrapSelected(m.BootstrapMsg))
 				}
-
 			}
 
 		case "ctrl+c", "esc", "q":
