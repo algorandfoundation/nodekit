@@ -3,5 +3,5 @@
 │                                                                              │
 │ Network: test-v1                                                             │
 │                                                                              │
-│ Consensus Upgrade Voting: true                                               │
+│ Protocol Upgrade: Voting 50% complete, 75% Yes, will fail                    │
 ╰──────────────────────────────────────────────────────────────────────────────╯

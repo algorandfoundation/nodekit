@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/app"
@@ -66,6 +67,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.modal, cmd = m.modal.HandleMessage(msg)
 		cmds = append(cmds, cmd)
+		m.protocol, cmd = m.protocol.HandleMessage(msg)
+		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	case app.DeleteFinished:
 		if len(m.keysPage.Rows()) <= 1 {
@@ -88,12 +91,11 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Type:    app.GenerateModal,
 				})
 			} else if m.Data.Status.State != algod.StableState || m.Data.Metrics.RoundTime == 0 {
-				genErr := errors.New("Please wait for more data to sync before generating a key")
+				genErr := errors.New("Please wait until your node is fully synced")
 				m.modal, cmd = m.modal.HandleMessage(genErr)
 				cmds = append(cmds, cmd)
 				return m, tea.Batch(cmds...)
 			}
-
 		case "left":
 			// Disable when overlay is active or on Accounts
 			if m.modal.Open || m.page == app.AccountsPage {
