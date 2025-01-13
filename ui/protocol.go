@@ -85,7 +85,7 @@ func (m ProtocolViewModel) View() string {
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, style.Blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
+	rows = append(rows, style.Blue.Render(" Consensus Upgrade Voting: ")+strconv.FormatBool(m.Data.Voting))
 
 	if isCompact && m.Data.NeedsUpdate {
 		rows = append(rows, style.Blue.Render(" Upgrade Available: ")+style.Green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
