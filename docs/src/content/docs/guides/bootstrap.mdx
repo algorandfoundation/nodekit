@@ -5,6 +5,8 @@ sidebar:
   order: 20
 ---
 
+import { Code } from '@astrojs/starlight/components';
+
 ## How to start the process
 
 The bootstrap process is automatically started after following the [NodeKit installation instructions](/guides/getting-started), but it can also be triggered manually by running this command:
@@ -19,19 +21,17 @@ The bootstrap process is automatically started after following the [NodeKit inst
 
 If there is none, it will ask if you want to start a node installation:
 
-> Installing A Node
->
-> It looks like you're running this for the first time. Would you like to install a node? (y/n)
+<Code showLineNumbers="no" wrap="no" code="Installing A Node
 
-You can respond by pressing the `Y` or `N` keys of your keyboard, for `Yes` and `No` respectively.
+It looks like you're running this for the first time. Would you like to install a node? (y/n)" />
 
 ---
 
 It will then ask if you want to perform a "fast-catchup" with the network:
 
-> Regular sync with the network usually takes multiple days to weeks. You can optionally perform fast-catchup to sync in 30-60 minutes instead.
->
-> Would you like to preform a fast-catchup after installation? (y/n)
+<Code showLineNumbers="no" wrap="no" code="Regular sync with the network usually takes multiple days to weeks. You can optionally perform fast-catchup to sync in 30-60 minutes instead.
+
+Would you like to preform a fast-catchup after installation? (y/n)" />
 
 Fast-catchup saves a lot of time, so we recommend responding Yes.
 
@@ -46,7 +46,12 @@ INFO Installing with apt-get
 [sudo] password for user:
 ```
 
-Your operating system requires this to allow NodeKit to install the Algorand node software. Enter your user password and press ENTER to proceed.
+<details>
+  <summary>Why is the installer asking for my password?</summary>
+  The installer will ask for your user password during the node installation process.
+
+  This is required by your operating system in order to install new software.
+</details>
 
 ## Installation
 
@@ -70,7 +75,28 @@ When the process is done, the Fast Catchup status information will disappear and
 
 ![](/assets/nodekit-state-running.png)
 
-:::note
-**Did you encounted any errors?**
-Check out the [Troubleshooting: Installing and bootstrapping the Algorand node](/troubleshooting#bootstrapping-the-algorand-node) section.
-:::
+<details>
+  <summary>Troubleshooting: Fast-catchup</summary>
+  If the fast catchup process does not complete within 1-2 hours, check the following:
+
+  **Your hardware meets the requirements**
+
+  Check that your node meets the [hardware requirements](https://developer.algorand.org/docs/run-a-node/setup/install/#hardware-requirements) for a participation node.
+
+  **Nodekit is in FAST-CATCHUP state**
+
+  The colored status at the top of Nodekit should be in a yellow `FAST-CATCHUP` state:
+
+  ![](/assets/nodekit-state-fast-catchup.png)
+
+  If not, exit nodekit with `Q` and run `./nodekit catchup` to start catching up. Then run `./nodekit` again to enter the user interface.
+
+  After fast-catchup completes successfully, it is normal for a node to be in a `SYNCING` state for a few minutes:
+
+  ![](/assets/nodekit-state-syncing.png)
+
+  During this the `Latest Round` number should be increasing rapidly.
+
+  If there is no progress for a while, or the Latest Round value is smaller than `46000000` (46 million) then you should start fast-catchup again.
+
+</details>

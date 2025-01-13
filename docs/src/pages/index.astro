@@ -1,6 +1,7 @@
 ---
 import { Code } from "@astrojs/starlight/components";
 import { Icon } from "@astrojs/starlight/components";
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 const base = import.meta.env.BASE_URL;
 export const lang = "en";
@@ -101,16 +102,29 @@ export const lang = "en";
                 <div class="w-full h-svh mx-4">
                     <div
                         class="w-full h-svh flex gap-4 flex-col items-center justify-center px-6"
-                    >
-                        <Code
-                            lang="shell"
-                            code={`curl -fsSL https://nodekit.run/install.sh | bash`}
-                            class="max-w-full z-10"
-                        />
+                        >
+                        <div class="mb-4">
+                            <Tabs syncKey="os">
+                                <TabItem label="Linux" icon="linux" style={{margin: 0}}>
+                                <Code
+                                    lang="shell"
+                                    code={`wget -qO- https://nodekit.run/install.sh | bash`}
+                                    class="max-w-full z-10"
+                                    />
+                                </TabItem>
+                                <TabItem label="macOS" icon="apple">
+                                <Code
+                                    lang="shell"
+                                    code={`curl -fsSL https://nodekit.run/install.sh | bash`}
+                                    class="max-w-full z-10"
+                                    />
+                                </TabItem>
+                            </Tabs>
+                        </div>
                         <a
                             class="text-white/80 hover:text-[#BFBFF9]"
                             href="/guides/getting-started/"
-                            >Documentation <Icon name="external" />
+                            >Guides &amp; Documentation <Icon name="external" />
                         </a>
                     </div>
                 </div>

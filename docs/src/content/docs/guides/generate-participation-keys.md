@@ -35,11 +35,26 @@ You can press the `S` key to cycle through duration modes in days / months / rou
 
 The longer your duration, the longer the participation key generation step will take to complete.
 
+We recommend a value between 30 and 90 days.
+
 ## Key generation
 
 After you have selected your key duration, nodekit will instruct your node to generate participation keys.
 
 The time required for this step will depend on your participation key duration. As an indicative wait time, a 30-day participation key should take between 4-6 minutes to generate.
+
+<details>
+  <summary>Troubleshooting: Failed to get participation keys</summary>
+  Occasionally, Nodekit may fall out of sync with the Algorand node while waiting for the participation keys to be generated. In this case this error message will be shown:
+
+  `failed to get participation keys`
+
+  You can:
+
+  - wait for the participation keys to appear in the Accounts list
+  - try to generate a participation key again
+    - If the key generation process is still running on the node, you will see a `Participation key generation already in progress` error
+</details>
 
 ![](/assets/nodekit-partkey-gen-3.png)
 
@@ -52,8 +67,3 @@ When your participation keys are ready, nodekit will display the key information
 You are now one step away from participating in Algorand consensus!
 
 As the on screen message indicates, you can press `R` to start [Registering your keys](/guides/register-online).
-
-:::note
-**Did you encounted any errors?**
-Check out the [Troubleshooting: Generating participation keys](/troubleshooting#generating-participation-keys) section.
-:::
