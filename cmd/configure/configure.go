@@ -17,6 +17,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var dataDir string
+
 // short holds a brief description of the system settings configuration command, currently marked as work in progress.
 var short = "Change settings on the system (WIP)"
 
@@ -37,10 +39,14 @@ var Cmd = &cobra.Command{
 	Use:   "configure",
 	Short: short,
 	Long:  long,
+	Run: func(cmd *cobra.Command, args []string) {
+
+	},
 }
 
 func init() {
 	Cmd.AddCommand(serviceCmd)
+	Cmd.AddCommand(networkCmd)
 }
 
 const RunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"
@@ -49,12 +55,12 @@ const RunningErrorMsg = "algorand is currently running. Please stop the node wit
 func configureNode() error {
 	var systemServiceConfigure bool
 
-	if algod.IsRunning() {
+	if algod.IsRunning(dataDir) {
 		return fmt.Errorf(RunningErrorMsg)
 	}
 
 	// Check systemctl first
-	if algod.IsService() {
+	if algod.IsService("") {
 		if promptWrapperYes("Algorand is installed as a service. Do you wish to edit the service file to change the data directory? (y/N)") {
 			// Edit the service file with the user's new data directory
 			systemServiceConfigure = true

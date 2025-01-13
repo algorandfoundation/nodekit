@@ -39,7 +39,7 @@ var uninstallCmd = &cobra.Command{
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(UninstallWarningMsg))
 
-		err := algod.Uninstall(force)
+		err := algod.Uninstall("", force)
 		if err != nil {
 			log.Fatal(err)
 		}

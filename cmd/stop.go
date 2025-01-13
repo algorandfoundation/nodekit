@@ -46,13 +46,13 @@ var stopCmd = &cobra.Command{
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
-		err := algod.Stop()
+		err := algod.Stop("")
 		if err != nil {
 			log.Fatal(StopFailureMsg)
 		}
 		time.Sleep(StopTimeout)
 
-		if algod.IsRunning() {
+		if algod.IsRunning(dataDir) {
 			log.Fatal(StopFailureMsg)
 		}
 

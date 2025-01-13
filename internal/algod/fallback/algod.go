@@ -3,65 +3,63 @@ package fallback
 import (
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/internal/algod/msgs"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/charmbracelet/log"
+	"io"
+	"net/http"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"syscall"
 )
 
 // Install executes a series of commands to set up the Algorand node and development tools on a Unix environment.
-// TODO: Allow for changing of the paths
-func Install() error {
-	return system.RunAll(system.CmdsList{
-		{"mkdir", "~/node"},
-		{"sh", "-c", "cd ~/node"},
-		{"wget", "https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh"},
-		{"chmod", "744", "update.sh"},
-		{"sh", "-c", "./update.sh -i -c stable -p ~/node -d ~/node/data -n"},
-	})
-
-}
-
-// Start initializes and starts the `algod` process and verifies if the ALGORAND_DATA environment variable is valid.
-func Start() error {
-	path, err := exec.LookPath("algod")
-	log.Debug("Starting algod", "path", path)
-
-	// Check if ALGORAND_DATA environment variable is set
-	log.Info("Checking if ALGORAND_DATA env var is set...")
-	algorandData := os.Getenv("ALGORAND_DATA")
-
-	if !utils.IsDataDir(algorandData) {
-		return errors.New(msgs.InvalidDataDirectory)
+func Install(installDir string, dataDir string, force bool) error {
+	// Ensure the installation directory exists
+	if installDir == "" {
+		installDir = filepath.Join(os.Getenv("HOME"), "node")
+	}
+	_, err := os.Stat(installDir)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(installDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
-	log.Info("ALGORAND_DATA env var set to valid directory: " + algorandData)
-
-	cmd := exec.Command("algod")
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setsid: true,
+	// Ensure the data directory exists
+	if dataDir == "" {
+		dataDir = filepath.Join(os.Getenv("HOME"), ".algorand")
 	}
-	err = cmd.Start()
+	_, err = os.Stat(dataDir)
 	if err != nil {
-		return fmt.Errorf("Failed to start algod: %v\n", err)
+		err := os.MkdirAll(dataDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+
+	err = downloadUpdaterScript(installDir)
+	if err != nil {
+		return err
+	}
+
+	return system.RunAll(system.CmdsList{
+		{"sh", "-c", fmt.Sprintf("%s/update.sh -i -c stable -p %s -d %s -n", installDir, installDir, dataDir)},
+	})
 }
 
 // Stop gracefully shuts down the algod process by sending a SIGTERM signal to its process ID. It returns an error if any occurs.
-func Stop() error {
+func Stop(dataDir string) error {
 	log.Debug("Manually shutting down algod")
 	// Find the process ID of algod
-	pid, err := findAlgodPID()
+	info, err := utils.ToDataFolderConfig(dataDir)
 	if err != nil {
 		return err
 	}
 
 	// Send SIGTERM to the process
-	process, err := os.FindProcess(pid)
+	process, err := os.FindProcess(info.PID)
 	if err != nil {
 		return err
 	}
@@ -74,21 +72,83 @@ func Stop() error {
 	return nil
 }
 
-// findAlgodPID locates the process ID of the running algod instance by executing the "pgrep" command.
-// It returns the process ID as an integer or an error if the process is not found or the command execution fails.
-func findAlgodPID() (int, error) {
-	log.Debug("Scanning for algod process")
-	cmd := exec.Command("pgrep", "algod")
-	output, err := cmd.Output()
-	if err != nil {
-		return 0, err
+// SetNetwork TODO: replace with algocfg or goal templates
+func SetNetwork(dataDir string, network string, force bool) error {
+	if network != "testnet" && network != "mainnet" {
+		return errors.New("invalid network")
+	}
+	if dataDir == "" {
+		return errors.New("data directory is required")
 	}
 
-	var pid int
-	_, err = fmt.Sscanf(string(output), "%d", &pid)
-	if err != nil {
-		return 0, err
+	// Fetch the data directory
+	currentNetwork, err := utils.GetNetworkFromDataDir(dataDir)
+
+	// Create the genesis file when it is not found and is invalid
+	if os.IsNotExist(err) || !utils.IsDataDir(dataDir) || force {
+		if err = os.MkdirAll(dataDir, 0755); err != nil {
+			return err
+		}
+		return downloadGenesis(dataDir, network)
+	} else {
+		// Nothing to do, skipping
+		if currentNetwork == network {
+			return nil
+		} else if force {
+
+		}
 	}
 
-	return pid, nil
+	return errors.New("could not set network, please try again")
+}
+
+// downloadGenesis downloads the genesis.json file for a given network and saves it to the specified data directory.
+// Returns an error if the download fails or file operations encounter an issue.
+// TODO: refactor to use HTTPPkgInterface for testing
+func downloadGenesis(dataDir string, network string) error {
+	// Download the genesis.json file
+	resp, err := http.Get(fmt.Sprintf("https://raw.githubusercontent.com/algorand/go-algorand/master/installer/genesis/%s/genesis.json", network))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filepath.Join(dataDir, "genesis.json"))
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the content to the file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
+// downloadUpdaterScript downloads the updater script from a predefined URL and saves it to the specified install directory.
+// TODO: refactor to use HTTPPkgInterface for testing
+func downloadUpdaterScript(installDir string) error {
+	resp, err := http.Get("https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	installScriptPath := filepath.Join(installDir, "update.sh")
+	// Create the file
+	out, err := os.Create(installScriptPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the content to the file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = os.Chmod(installScriptPath, 0755)
+
+	return err
 }

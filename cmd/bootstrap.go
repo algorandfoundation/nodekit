@@ -46,14 +46,14 @@ This is the beginning of your adventure into running an Algorand node!
 `
 
 // bootstrapCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
-var bootstrapCmd = &cobra.Command{
+var bootstrapCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	Use:          "bootstrap",
 	Short:        bootstrapCmdShort,
 	Long:         bootstrapCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Exit the application in an invalid state
-		if algod.IsInstalled() && !algod.IsService() {
+		if algod.IsInstalled(dataDir) {
 			dataDir, _ := algod.GetDataDir("")
 			if dataDir == "" {
 				dataDir = "<Path to data directory>"
@@ -76,7 +76,7 @@ var bootstrapCmd = &cobra.Command{
 		fmt.Println(out)
 
 		model := bootstrap.NewModel()
-		if algod.IsInstalled() {
+		if algod.IsInstalled(dataDir) {
 			model.BootstrapMsg.Install = false
 			model.Question = bootstrap.CatchupQuestion
 		}
@@ -104,7 +104,7 @@ var bootstrapCmd = &cobra.Command{
 		if msg.Install {
 			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
-			err := algod.Install()
+			err := algod.Install(dataDir, "mainnet", false)
 			if err != nil {
 				return err
 			}
@@ -112,14 +112,14 @@ var bootstrapCmd = &cobra.Command{
 			// Wait for algod
 			time.Sleep(10 * time.Second)
 
-			if !algod.IsRunning() {
+			if !algod.IsRunning(dataDir) {
 				log.Fatal("algod is not running. Something went wrong with installation")
 			}
 		} else {
-			if !algod.IsRunning() {
+			if !algod.IsRunning(dataDir) {
 				log.Info(style.Green.Render("Starting Algod 🚀"))
 				log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
-				err := algod.Start()
+				err := algod.Start("")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -128,7 +128,7 @@ var bootstrapCmd = &cobra.Command{
 			}
 		}
 
-		dataDir, err := algod.GetDataDir("")
+		dataDir, err := algod.GetDataDir(dataDir)
 		if err != nil {
 			return err
 		}
@@ -198,4 +198,4 @@ var bootstrapCmd = &cobra.Command{
 		}
 		return nil
 	},
-}
+}, &dataDir)

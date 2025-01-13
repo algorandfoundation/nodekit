@@ -31,6 +31,9 @@ type DebugInfo struct {
 	// IsInstalled indicates whether the Algorand software is installed on the system by checking its presence and configuration.
 	IsInstalled bool `json:"isInstalled"`
 
+	// PIDS contains a list of process IDs (PIDs) for `algod` processes currently running on the system.
+	PIDS []int `json:"pids"`
+
 	// Algod holds the path to the `algod` executable if found on the system, or an empty string if not found.
 	Algod string `json:"algod"`
 
@@ -67,7 +70,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 
 		path, _ := exec.LookPath("algod")
 
-		dataDir, err := algod.GetDataDir("")
+		dataDir, err := algod.GetDataDir(dataDir)
 		if err != nil {
 			return err
 		}
@@ -77,9 +80,10 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		}
 		info := DebugInfo{
 			InPath:      system.CmdExists("algod"),
-			IsRunning:   algod.IsRunning(),
-			IsService:   algod.IsService(),
-			IsInstalled: algod.IsInstalled(),
+			IsRunning:   algod.IsRunning(dataDir),
+			PIDS:        system.GetCmdPids("algod"),
+			IsService:   algod.IsService(dataDir),
+			IsInstalled: algod.IsInstalled(dataDir),
 			Algod:       path,
 			DataFolder:  folderDebug,
 		}
@@ -92,4 +96,4 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		fmt.Println(style.Bold(string(data)))
 		return nil
 	},
-}, &algodData)
+}, &dataDir)

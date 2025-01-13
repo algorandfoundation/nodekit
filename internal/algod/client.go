@@ -34,7 +34,11 @@ func GetDataDir(dataDir string) (string, error) {
 			resolvedDir = envDataDir
 		}
 	} else {
-		resolvedDir = dataDir
+		var err error
+		resolvedDir, err = filepath.Abs(dataDir)
+		if err != nil {
+			return "", errors.New(InvalidDataDirMsg)
+		}
 	}
 
 	return resolvedDir, nil

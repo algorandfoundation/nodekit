@@ -22,7 +22,7 @@ var (
 	Name = "nodekit"
 
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
-	algodData string
+	dataDir string
 
 	// Version represents the application version string, which is set during build or defaults to "unknown".
 	Version = ""
@@ -56,7 +56,7 @@ var (
 			log.SetOutput(cmd.OutOrStdout())
 			// Create the dependencies
 			ctx := context.Background()
-			client, err := algod.GetClient(algodData)
+			client, err := algod.GetClient(dataDir)
 			cobra.CheckErr(err)
 			httpPkg := new(api.HttpPkg)
 			t := new(system.Clock)
@@ -96,7 +96,7 @@ var (
 				log.Fatal(err)
 			}
 		},
-	}, &algodData)
+	}, &dataDir)
 )
 
 // NeedsToBeRunning ensures the Algod software is installed and running before executing the associated Cobra command.
@@ -104,10 +104,10 @@ func NeedsToBeRunning(cmd *cobra.Command, args []string) {
 	if force {
 		return
 	}
-	if !algod.IsInstalled() {
+	if !algod.IsInstalled(dataDir) {
 		log.Fatal(explanations.NotInstalledErrorMsg)
 	}
-	if !algod.IsRunning() {
+	if !algod.IsRunning(dataDir) {
 		log.Fatal(explanations.NotRunningErrorMsg)
 	}
 }
@@ -117,10 +117,10 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 	if force {
 		return
 	}
-	if !algod.IsInstalled() {
+	if !algod.IsInstalled(dataDir) {
 		log.Fatal(explanations.NotInstalledErrorMsg)
 	}
-	if algod.IsRunning() {
+	if algod.IsRunning(dataDir) {
 		log.Fatal(explanations.RunningErrorMsg)
 	}
 }

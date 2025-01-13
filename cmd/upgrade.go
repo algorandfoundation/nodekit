@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
@@ -29,7 +30,7 @@ var upgradeLong = lipgloss.JoinVertical(
 )
 
 // upgradeCmd is a Cobra command used to upgrade Algod, utilizing the OS-specific package manager if applicable.
-var upgradeCmd = &cobra.Command{
+var upgradeCmd = utils.WithAlgodFlags(&cobra.Command{
 	Use:              "upgrade",
 	Short:            upgradeShort,
 	Long:             upgradeLong,
@@ -49,12 +50,12 @@ var upgradeCmd = &cobra.Command{
 		time.Sleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
-		if !algod.IsRunning() {
-			err = algod.Start()
+		if !algod.IsRunning(dataDir) {
+			err = algod.Start("")
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
 			}
 		}
 	},
-}
+}, &dataDir)

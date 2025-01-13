@@ -1,12 +1,14 @@
 package system
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -17,6 +19,32 @@ const CmdFailedErrorMsg = "command failed: %s output: %s error: %v"
 // IsSudo checks if the process is running with root privileges by verifying the effective user ID is 0.
 func IsSudo() bool {
 	return os.Geteuid() == 0
+}
+
+// GetCmdPids retrieves the process IDs (PIDs) for processes with the specified name using the 'pgrep' command.
+// It returns a slice of integers representing the PIDs and an error if the 'pgrep' command fails or the output is invalid.
+// TODO: refactor to not rely on package
+func GetCmdPids(name string) []int {
+	var pids = make([]int, 0)
+
+	// Execute the 'pgrep' command to find processes with the given name
+	output, err := exec.Command("pgrep", name).Output()
+	if err != nil {
+		return pids
+	}
+
+	// Split the output by newline to extract individual PIDs
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	for _, line := range lines {
+		pid, err := strconv.Atoi(line)
+		if err != nil {
+			return pids
+		}
+		pids = append(pids, pid)
+	}
+
+	return pids
+
 }
 
 // IsCmdRunning checks if a command with the specified name is currently running using the `pgrep` command.
@@ -121,4 +149,29 @@ func FindPathToFile(startDir string, targetFileName string) []string {
 	}
 
 	return dirPaths
+}
+
+func FindInFile(filePath string, searchString string) (bool, error) {
+	// Open the file for reading
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false, fmt.Errorf("failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	// Create a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		// Check if the search string is present in the current line
+		if strings.Contains(scanner.Text(), searchString) {
+			return true, nil
+		}
+	}
+
+	// Check if there were any errors during scanning
+	if err := scanner.Err(); err != nil {
+		return false, fmt.Errorf("error reading file: %v", err)
+	}
+
+	return false, nil
 }

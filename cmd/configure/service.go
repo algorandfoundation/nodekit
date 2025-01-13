@@ -1,12 +1,13 @@
 package configure
 
 import (
-	"errors"
+	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
 
@@ -27,19 +28,17 @@ var serviceLong = lipgloss.JoinVertical(
 )
 
 // serviceCmd is a Cobra command for managing Algorand service files, requiring root privileges to ensure proper execution.
-var serviceCmd = &cobra.Command{
+var serviceCmd = utils.WithAlgodFlags(&cobra.Command{
 	Use:   "service",
 	Short: serviceShort,
 	Long:  serviceLong,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		if !system.IsSudo() {
-			return errors.New(
-				"you need to be root to run this command. Please run this command with sudo")
+			log.Fatal("you need to be root to run this command. Please run this command with sudo")
 		}
-		return nil
+		resolvedDir, err := algod.GetDataDir(dataDir)
+		cobra.CheckErr(err)
+		err = algod.UpdateService(resolvedDir)
+		cobra.CheckErr(err)
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// TODO: Combine this with algod.UpdateService and algod.SetNetwork
-		return algod.EnsureService()
-	},
-}
+}, &dataDir)

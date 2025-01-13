@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"os"
 	"time"
 )
 
@@ -31,46 +31,39 @@ var installLong = lipgloss.JoinVertical(
 )
 
 // installCmd is a Cobra command that installs the Algorand daemon on the local machine, ensuring the service is operational.
-var installCmd = &cobra.Command{
+var installCmd = utils.WithAlgodFlags(&cobra.Command{
 	Use:          "install",
 	Short:        installShort,
 	Long:         installLong,
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: yes flag
-
-		// TODO: get expected version
 		log.Info(style.Green.Render(InstallMsg))
-		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
-		// TODO: compare expected version to existing version
-		if algod.IsInstalled() && !force {
-			log.Error(InstallExistsMsg)
-			os.Exit(1)
+		// Abort when an installation already exists
+		if algod.IsInstalled(dataDir) && !force {
+			log.Fatal(InstallExistsMsg)
 		}
 
 		// Run the installation
-		err := algod.Install()
+		err := algod.Install(dataDir, "mainnet", force)
 		if err != nil {
-			log.Error(err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
 
 		time.Sleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
-		if !algod.IsRunning() {
-			err = algod.Start()
+		if !algod.IsRunning(dataDir) {
+			err = algod.Start(dataDir)
 			if err != nil {
-				log.Error(err)
-				os.Exit(1)
+				log.Fatal(err)
 			}
 		}
 
 		log.Info(style.Green.Render("Algorand installed successfully 🎉"))
 	},
-}
+}, &dataDir)
 
 func init() {
 	installCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully install the node"))
