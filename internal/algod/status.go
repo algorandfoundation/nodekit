@@ -37,8 +37,12 @@ type Status struct {
 	// Network represents the name of the network the status is associated with.
 	Network string `json:"network"`
 
-	// Voting indicates whether a node participated in the current upgrade voting process.
-	Voting bool `json:"voting"`
+	// Consensus upgrade voting related fields
+	UpgradeVoteRounds    int `json:"upgradeVoteRounds"`
+	UpgradeYesVotes      int `json:"upgradeYesVotes"`
+	UpgradeNoVotes       int `json:"upgradeNoVotes"`
+	UpgradeVotes         int `json:"upgradeVotes"`
+	UpgradeVotesRequired int `json:"upgradeVotesRequired"`
 
 	// NeedsUpdate indicates whether the system requires an update based on the current version and available release data.
 	NeedsUpdate bool `json:"needsUpdate"`
@@ -77,8 +81,20 @@ func (s Status) Update(status Status) Status {
 	if s.Network != status.Network {
 		s.Network = status.Network
 	}
-	if s.Voting != status.Voting {
-		s.Voting = status.Voting
+	if s.UpgradeVoteRounds != status.UpgradeVoteRounds {
+		s.UpgradeVoteRounds = status.UpgradeVoteRounds
+	}
+	if s.UpgradeYesVotes != status.UpgradeYesVotes {
+		s.UpgradeYesVotes = status.UpgradeYesVotes
+	}
+	if s.UpgradeNoVotes != status.UpgradeNoVotes {
+		s.UpgradeNoVotes = status.UpgradeNoVotes
+	}
+	if s.UpgradeVotes != status.UpgradeVotes {
+		s.UpgradeVotes = status.UpgradeVotes
+	}
+	if s.UpgradeVotesRequired != status.UpgradeVotesRequired {
+		s.UpgradeVotesRequired = status.UpgradeVotesRequired
 	}
 	if s.NeedsUpdate != status.NeedsUpdate {
 		s.NeedsUpdate = status.NeedsUpdate
@@ -128,8 +144,19 @@ func (s Status) Merge(res api.StatusLike) Status {
 	}
 
 	if res.UpgradeNodeVote != nil {
-		s.Voting = true
+		s.UpgradeVoteRounds = *res.UpgradeVoteRounds
+		s.UpgradeYesVotes = *res.UpgradeYesVotes
+		s.UpgradeNoVotes = *res.UpgradeNoVotes
+		s.UpgradeVotes = *res.UpgradeVotes
+		s.UpgradeVotesRequired = *res.UpgradeVotesRequired
+	} else {
+		s.UpgradeVoteRounds = 0
+		s.UpgradeYesVotes = 0
+		s.UpgradeNoVotes = 0
+		s.UpgradeVotes = 0
+		s.UpgradeVotesRequired = 0
 	}
+
 	return s
 }
 

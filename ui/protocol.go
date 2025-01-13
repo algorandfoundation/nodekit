@@ -1,12 +1,14 @@
 package ui
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strconv"
-	"strings"
 )
 
 // ProtocolViewModel includes the internal.StatusModel and internal.Model
@@ -43,6 +45,25 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 	}
 	// Return the updated model to the Bubble Tea runtime for processing.
 	return m, nil
+}
+
+func formatProtocolVote(status algod.Status) string {
+	voting := status.UpgradeYesVotes > 0
+	if !voting {
+		return "No"
+	}
+	totalVotesCast := status.UpgradeYesVotes + status.UpgradeNoVotes
+
+	percentageYes := 100 * status.UpgradeYesVotes / totalVotesCast
+	percentageProgress := 100 * totalVotesCast / status.UpgradeVotesRequired
+
+	statusString := fmt.Sprintf("Voting %d%% complete, %d%% Yes", percentageProgress, percentageYes)
+
+	passing := status.UpgradeYesVotes > status.UpgradeVotesRequired
+	if passing {
+		statusString = statusString + ", will pass"
+	}
+	return statusString
 }
 
 // View renders the view for the ProtocolViewModel according to the current state and dimensions.
@@ -85,7 +106,7 @@ func (m ProtocolViewModel) View() string {
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, style.Blue.Render(" Consensus Upgrade Voting: ")+strconv.FormatBool(m.Data.Voting))
+	rows = append(rows, style.Blue.Render(" Protocol Upgrade: ")+formatProtocolVote(m.Data))
 
 	if isCompact && m.Data.NeedsUpdate {
 		rows = append(rows, style.Blue.Render(" Upgrade Available: ")+style.Green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
