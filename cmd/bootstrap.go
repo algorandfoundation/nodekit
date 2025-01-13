@@ -52,6 +52,17 @@ var bootstrapCmd = &cobra.Command{
 	Long:         bootstrapCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Exit the application in an invalid state
+		if algod.IsInstalled() && !algod.IsService() {
+			dataDir, _ := algod.GetDataDir("")
+			if dataDir == "" {
+				dataDir = "<Path to data directory>"
+			}
+			log.Warn("algorand is installed, but not running as a service. Continue at your own risk!")
+			log.Warn(fmt.Sprintf("try connecting to the node with: ./nodekit -d %s", dataDir))
+			log.Fatal("invalid state, exiting")
+		}
+
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
 		r, _ := glamour.NewTermRenderer(
