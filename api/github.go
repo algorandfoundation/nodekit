@@ -8,6 +8,7 @@ import (
 )
 
 const ChannelNotFoundMsg = "channel not found"
+const NodeKitReleaseNotFoundMsg = "nodekit release not found"
 
 type GithubVersionResponse struct {
 	HTTPResponse   *http.Response
@@ -64,5 +65,40 @@ func GetGoAlgorandReleaseWithResponse(http HttpPkgInterface, channel string) (*G
 
 	// Update the JSON200 data and return
 	versions.JSON200 = *versionResponse
+	return &versions, nil
+}
+
+func GetNodeKitReleaseWithResponse(http HttpPkgInterface) (*GithubVersionResponse, error) {
+	var versions GithubVersionResponse
+	resp, err := http.Get("https://api.github.com/repos/algorandfoundation/nodekit/releases/latest")
+	versions.HTTPResponse = resp
+	if resp == nil || err != nil {
+		return nil, err
+	}
+	// Update Model
+	versions.ResponseCode = resp.StatusCode
+	versions.ResponseStatus = resp.Status
+
+	// Exit if not 200
+	if resp.StatusCode != 200 {
+		return &versions, nil
+	}
+
+	defer resp.Body.Close()
+
+	// Parse the versions to a map
+	var releaseMap map[string]interface{}
+	if err = json.NewDecoder(resp.Body).Decode(&releaseMap); err != nil {
+		return &versions, err
+	}
+
+	version := releaseMap["tag_name"]
+
+	if version == nil {
+		return &versions, errors.New(NodeKitReleaseNotFoundMsg)
+	}
+
+	// Update the JSON200 data and return
+	versions.JSON200 = strings.Replace(version.(string), "v", "", 1)
 	return &versions, nil
 }

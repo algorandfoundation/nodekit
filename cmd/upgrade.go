@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -30,12 +32,19 @@ var upgradeLong = lipgloss.JoinVertical(
 
 // upgradeCmd is a Cobra command used to upgrade Algod, utilizing the OS-specific package manager if applicable.
 var upgradeCmd = &cobra.Command{
-	Use:              "upgrade",
-	Short:            upgradeShort,
-	Long:             upgradeLong,
-	SilenceUsage:     true,
-	PersistentPreRun: NeedsToBeStopped,
+	Use:          "upgrade",
+	Short:        upgradeShort,
+	Long:         upgradeLong,
+	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
+		if NeedsUpgrade {
+			log.Info(style.Green.Render("Upgrading NodeKit"))
+			err := system.Upgrade(new(api.HttpPkg))
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		// TODO: get expected version and check if update is required
 		log.Info(style.Green.Render(UpgradeMsg))
 		// Warn user for prompt

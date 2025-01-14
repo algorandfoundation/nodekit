@@ -22,6 +22,8 @@ import (
 var (
 	Name = "nodekit"
 
+	NeedsUpgrade = false
+
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
 	algodData string
 
@@ -141,7 +143,8 @@ func init() {
 }
 
 // Execute executes the root command.
-func Execute(version string) error {
+func Execute(version string, needsUpgrade bool) error {
 	RootCmd.Version = version
+	NeedsUpgrade = needsUpgrade
 	return RootCmd.Execute()
 }
