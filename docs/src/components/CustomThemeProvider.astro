@@ -1,0 +1,15 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/ThemeProvider.astro';
+---
+
+<script is:inline>
+  if (
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem('starlight-theme') == null
+  ) {
+    localStorage.setItem('starlight-theme', 'dark');
+  }
+</script>
+
+<Default {...Astro.props}><slot /></Default>

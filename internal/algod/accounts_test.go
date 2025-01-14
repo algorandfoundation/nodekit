@@ -2,13 +2,14 @@ package algod
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/test"
 	"github.com/algorandfoundation/nodekit/internal/test/mock"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func Test_AccountsFromState(t *testing.T) {
@@ -73,10 +74,16 @@ func Test_AccountsFromState(t *testing.T) {
 			TX:        2048,
 		},
 		Status: Status{
-			State:       "WATCHING",
-			Version:     "v0.0.0-test",
-			Network:     "tuinet",
-			Voting:      false,
+			State:   "WATCHING",
+			Version: "v0.0.0-test",
+			Network: "tuinet",
+
+			UpgradeVoteRounds:    0,
+			UpgradeYesVotes:      0,
+			UpgradeNoVotes:       0,
+			UpgradeVotes:         0,
+			UpgradeVotesRequired: 0,
+
 			NeedsUpdate: false,
 			LastRound:   1337,
 			Client:      client,

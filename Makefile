@@ -1,5 +1,9 @@
+VERSION ?= dev
+
+.PHONY: all
+
 build:
-	CGO_ENABLED=0 go build -o bin/nodekit .
+	CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" -o bin/nodekit .
 test:
 	go test -coverprofile=coverage.out -coverpkg=./... -covermode=atomic ./...
 generate:

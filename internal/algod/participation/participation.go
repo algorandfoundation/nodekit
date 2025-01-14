@@ -83,8 +83,11 @@ func GenerateKeys(
 			return nil, context.Canceled
 		case <-time.After(2 * time.Second):
 			partKeys, _, err := GetList(ctx, client)
-			if partKeys == nil || err != nil {
-				return nil, errors.New("failed to get participation keys")
+			if err != nil {
+				return nil, fmt.Errorf("failed to get participation keys: %s", err)
+			}
+			if partKeys == nil {
+				continue
 			}
 			for _, k := range partKeys {
 				if k.Address == address &&

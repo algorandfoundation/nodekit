@@ -17,14 +17,14 @@ const (
 
 const InstallQuestionMsg = `# Installing A Node
 
-It looks like you're running this for the first time. Would you like to install a node? (Y/n)
+It looks like you're running this for the first time. Would you like to install a node? (y/n)
 `
 
 const CatchupQuestionMsg = `# Catching Up
 
-Regular sync with the network usually takes multiple days to weeks. You can optionally perform fast-catchup to sync within minutes instead.
+Regular sync with the network usually takes multiple days to weeks. You can optionally perform fast-catchup to sync in 30-60 minutes instead.
  
-Would you like to preform a fast-catchup after installation? (Y/n)
+Would you like to preform a fast-catchup after installation? (y/n)
 `
 
 type Model struct {
@@ -66,7 +66,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.Question = WaitingQuestion
 					return m, app.EmitBootstrapSelection(app.BoostrapSelected(m.BootstrapMsg))
 				}
-
 			}
 		case "n":
 			{
@@ -77,10 +76,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case CatchupQuestion:
 					m.Question = WaitingQuestion
 					m.BootstrapMsg.Catchup = false
-				case WaitingQuestion:
-					return m, tea.Sequence(m.Outside.Emit(m.BootstrapMsg), tea.Quit)
+					return m, app.EmitBootstrapSelection(app.BoostrapSelected(m.BootstrapMsg))
 				}
-
 			}
 
 		case "ctrl+c", "esc", "q":

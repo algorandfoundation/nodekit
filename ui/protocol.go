@@ -1,17 +1,21 @@
 package ui
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strconv"
-	"strings"
 )
 
 // ProtocolViewModel includes the internal.StatusModel and internal.Model
 type ProtocolViewModel struct {
 	Data           algod.Status
+	Metrics        algod.Metrics
 	TerminalWidth  int
 	TerminalHeight int
 	IsVisible      bool
@@ -32,8 +36,14 @@ func (m ProtocolViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Handle a Status Update
+	case *algod.StateModel:
+		m.Data = msg.Status
+		m.Metrics = msg.Metrics
 	case algod.Status:
 		m.Data = msg
+		return m, nil
+	case algod.Metrics:
+		m.Metrics = msg
 		return m, nil
 	// Update Viewport Size
 	case tea.WindowSizeMsg:
@@ -43,6 +53,66 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 	}
 	// Return the updated model to the Bubble Tea runtime for processing.
 	return m, nil
+}
+
+func plural(singularForm string, value int) string {
+	if value == 1 {
+		return singularForm
+	} else {
+		return singularForm + "s"
+	}
+}
+
+func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
+	roundDelta := status.NextVersionRound - int(status.LastRound)
+	eta := time.Duration(roundDelta) * metrics.RoundTime
+	minutes := int(eta.Minutes()) % 60
+	hours := int(eta.Hours()) % 24
+	days := int(eta.Hours()) / 24
+	str := "Scheduled"
+	if days > 0 {
+		str = str + fmt.Sprintf(" %d %s", days, plural("day", days))
+	}
+	if hours > 0 {
+		str = str + fmt.Sprintf(" %d %s", hours, plural("hour", hours))
+	}
+	if days == 0 && minutes > 0 {
+		str = str + fmt.Sprintf(" %d %s", minutes, plural("min", minutes))
+	}
+	return str
+}
+
+func formatProtocolVote(status algod.Status, metrics algod.Metrics) string {
+	if status.NextVersionRound > int(status.LastRound)+1 {
+		return formatScheduledUpgrade(status, metrics)
+	}
+
+	voting := status.UpgradeYesVotes > 0 || status.UpgradeNoVotes > 0
+	if !voting {
+		return "No"
+	}
+
+	totalVotesCast := status.UpgradeYesVotes + status.UpgradeNoVotes
+	percentageProgress := 100 * totalVotesCast / status.UpgradeVoteRounds
+	percentageYes := 100 * status.UpgradeYesVotes / totalVotesCast
+
+	label := "Yes"
+	percentageVoteDisplay := percentageYes
+	if percentageYes < 50 {
+		label = "No"
+		percentageVoteDisplay = 100 * status.UpgradeNoVotes / totalVotesCast
+	}
+	statusString := fmt.Sprintf("Voting %d%% complete, %d%% %s", percentageProgress, percentageVoteDisplay, label)
+
+	passing := status.UpgradeYesVotes > status.UpgradeVotesRequired
+	if passing {
+		statusString = statusString + ", will pass"
+	}
+	failThreshold := status.UpgradeVoteRounds - status.UpgradeVotesRequired
+	if status.UpgradeNoVotes > failThreshold {
+		statusString = statusString + ", will fail"
+	}
+	return statusString
 }
 
 // View renders the view for the ProtocolViewModel according to the current state and dimensions.
@@ -85,8 +155,7 @@ func (m ProtocolViewModel) View() string {
 	if !isCompact {
 		rows = append(rows, "")
 	}
-	rows = append(rows, style.Blue.Render(" Protocol Voting: ")+strconv.FormatBool(m.Data.Voting))
-
+	rows = append(rows, style.Blue.Render(" Protocol Upgrade: ")+formatProtocolVote(m.Data, m.Metrics))
 	if isCompact && m.Data.NeedsUpdate {
 		rows = append(rows, style.Blue.Render(" Upgrade Available: ")+style.Green.Render(strconv.FormatBool(m.Data.NeedsUpdate)))
 	}
@@ -99,6 +168,7 @@ func (m ProtocolViewModel) View() string {
 func MakeProtocolViewModel(state *algod.StateModel) ProtocolViewModel {
 	return ProtocolViewModel{
 		Data:           state.Status,
+		Metrics:        state.Metrics,
 		TerminalWidth:  0,
 		TerminalHeight: 0,
 		IsVisible:      true,

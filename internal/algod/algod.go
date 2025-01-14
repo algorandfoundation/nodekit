@@ -2,10 +2,11 @@ package algod
 
 import (
 	"fmt"
+	"runtime"
+
 	"github.com/algorandfoundation/nodekit/internal/algod/linux"
 	"github.com/algorandfoundation/nodekit/internal/algod/mac"
 	"github.com/algorandfoundation/nodekit/internal/system"
-	"runtime"
 )
 
 // UnsupportedOSError indicates that the current operating system is not supported for the requested operation.

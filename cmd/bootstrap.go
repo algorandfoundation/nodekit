@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/api"
 	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
@@ -18,7 +20,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // bootstrapCmdShort provides a brief description of the "bootstrap" command to initialize a fresh Algorand node.
@@ -40,7 +41,7 @@ var bootstrapCmdLong = lipgloss.JoinVertical(
 
 var tutorial = `# Welcome!
 
-This is the beginning of your adventure into running the an Algorand node!
+This is the beginning of your adventure into running an Algorand node!
 
 `
 
@@ -51,6 +52,17 @@ var bootstrapCmd = &cobra.Command{
 	Long:         bootstrapCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Exit the application in an invalid state
+		if algod.IsInstalled() && !algod.IsService() {
+			dataDir, _ := algod.GetDataDir("")
+			if dataDir == "" {
+				dataDir = "<Path to data directory>"
+			}
+			log.Warn("algorand is installed, but not running as a service. Continue at your own risk!")
+			log.Warn(fmt.Sprintf("try connecting to the node with: ./nodekit -d %s", dataDir))
+			log.Fatal("invalid state, exiting")
+		}
+
 		ctx := context.Background()
 		httpPkg := new(api.HttpPkg)
 		r, _ := glamour.NewTermRenderer(
@@ -84,23 +96,36 @@ var bootstrapCmd = &cobra.Command{
 		if _, err := p.Run(); err != nil {
 			log.Fatal(err)
 		}
+
 		if msg == nil {
 			return nil
 		}
 
-		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
-		if msg.Install && !algod.IsInstalled() {
+		if msg.Install {
+			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
+
 			err := algod.Install()
 			if err != nil {
 				return err
 			}
-		}
 
-		// Wait for algod
-		time.Sleep(10 * time.Second)
+			// Wait for algod
+			time.Sleep(10 * time.Second)
 
-		if !algod.IsRunning() {
-			log.Fatal("algod is not running")
+			if !algod.IsRunning() {
+				log.Fatal("algod is not running. Something went wrong with installation")
+			}
+		} else {
+			if !algod.IsRunning() {
+				log.Info(style.Green.Render("Starting Algod 🚀"))
+				log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
+				err := algod.Start()
+				if err != nil {
+					log.Fatal(err)
+				}
+				log.Info(style.Green.Render("Algorand started successfully 🎉"))
+				time.Sleep(2 * time.Second)
+			}
 		}
 
 		dataDir, err := algod.GetDataDir("")
@@ -114,7 +139,6 @@ var bootstrapCmd = &cobra.Command{
 		}
 
 		if msg.Catchup {
-
 			network, err := utils.GetNetworkFromDataDir(dataDir)
 			if err != nil {
 				return err

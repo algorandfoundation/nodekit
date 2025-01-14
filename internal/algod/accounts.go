@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
-	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/nodekit/api"

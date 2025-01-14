@@ -19,16 +19,24 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: go get .
+      - uses: go-semantic-release/action@v1
+        name: release
+        id: semver
+        with:
+          dry: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add version to env        
+        run: echo "VERSION=${{ steps.semver.outputs.version }}" >> $GITHUB_ENV
       - name: Build
         env: 
           GOOS: ${{matrix.goos}}
           GOARCH: ${{matrix.goarch}}
           CGO_ENABLED: 0
-        run: go build -o bin/algorun-${{matrix.goarch}}-${{matrix.goos}} *.go
+        run: go build -ldflags "-X main.version=${VERSION}" -o bin/nodekit-${{matrix.goarch}}-${{matrix.goos}} *.go
       - uses: actions/upload-artifact@master
         with:
-          name: algorun-${{matrix.goarch}}-${{matrix.goos}}
-          path: bin/algorun-${{matrix.goarch}}-${{matrix.goos}}
+          name: nodekit-${{matrix.goarch}}-${{matrix.goos}}
+          path: bin/nodekit-${{matrix.goarch}}-${{matrix.goos}}
   release:
     needs: 
       - build
@@ -37,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: algorun*
+          pattern: nodekit*
           path: ./bin
       - uses: go-semantic-release/action@v1
         name: release

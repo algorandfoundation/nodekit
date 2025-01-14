@@ -1,0 +1,54 @@
+---
+title: Getting Started with NodeKit
+description: Installing NodeKit
+sidebar:
+  order: 10
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Welcome to NodeKit, your command-line one-stop-shop for Algorand node running.
+
+NodeKit can help you with:
+
+- Installing and configuring an Algorand node
+- Syncing your node with the latest state of the network
+- Managing consensus participation keys
+- Monitoring your node and the network
+
+To get started with NodeKit, copy-paste this command in your terminal:
+
+<Tabs syncKey="os">
+<TabItem label="Linux" icon="linux">
+
+```bash
+wget -qO- https://nodekit.run/install.sh | bash
+```
+</TabItem>
+<TabItem label="macOS" icon="apple">
+
+```sh
+curl -fsSL https://nodekit.run/install.sh | bash
+```
+
+</TabItem>
+</Tabs>
+
+<details>
+  <summary>Troubleshooting: Command 'bash' not found</summary>
+  Some versions of Mac OS may not include the required `bash` executable that runs the installer.
+
+  If you get an error about `bash` not being available, please install bash on your system manually.
+
+  For Mac OS, a popular way to do this is to install [Homebrew](https://brew.sh/) and then install bash using:
+
+  ```bash
+  brew install bash
+  ```
+</details>
+
+This will detect your operating system and download the appropriate NodeKit executable to your local directory.
+
+It will then immediately start the bootstrap process to get your Algorand node up and running:
+
+![Screenshot of a typical NodeKit installation process](/assets/nodekit-install.png)

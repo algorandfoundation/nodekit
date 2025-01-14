@@ -1,10 +1,11 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/nodekit/internal/algod"
-	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"strconv"
 	"time"
+
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
