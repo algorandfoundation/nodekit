@@ -32,7 +32,7 @@ func main() {
 			// Warn on all commands but version
 			if len(os.Args) > 1 && os.Args[1] != "--version" {
 				log.Warn(
-					fmt.Sprintf("nodekit version v%s is available", resp.JSON200))
+					fmt.Sprintf("nodekit version v%s is available. Upgrade with \"nodekit upgrade\"", resp.JSON200))
 			}
 		}
 	}
