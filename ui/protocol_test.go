@@ -2,24 +2,30 @@ package ui
 
 import (
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
-	"testing"
-	"time"
 )
 
 var protocolViewSnapshots = map[string]ProtocolViewModel{
 	"Hidden": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      true,
-			NeedsUpdate: true,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     1,
+			UpgradeVoteRounds:    10000,
+			UpgradeYesVotes:      841,
+			UpgradeNoVotes:       841,
+			UpgradeVotes:         1682,
+			UpgradeVotesRequired: 9000,
+			NeedsUpdate:          true,
+			LastRound:            0,
 		},
 		TerminalWidth:  60,
 		TerminalHeight: 40,
@@ -27,12 +33,17 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 	},
 	"HiddenHeight": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      true,
-			NeedsUpdate: true,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     1,
+			UpgradeVoteRounds:    10000,
+			UpgradeYesVotes:      841,
+			UpgradeNoVotes:       841,
+			UpgradeVotes:         1682,
+			UpgradeVotesRequired: 9000,
+			NeedsUpdate:          true,
+			LastRound:            0,
 		},
 		TerminalWidth:  70,
 		TerminalHeight: 20,
@@ -40,12 +51,17 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 	},
 	"Visible": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      true,
-			NeedsUpdate: true,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     1,
+			UpgradeVoteRounds:    10000,
+			UpgradeYesVotes:      3750,
+			UpgradeNoVotes:       1250,
+			UpgradeVotes:         5000,
+			UpgradeVotesRequired: 9000,
+			NeedsUpdate:          true,
+			LastRound:            0,
 		},
 		TerminalWidth:  160,
 		TerminalHeight: 80,
@@ -53,12 +69,20 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 	},
 	"VisibleSmall": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      true,
-			NeedsUpdate: true,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     180777,
+			UpgradeVoteRounds:    10000,
+			UpgradeYesVotes:      841,
+			UpgradeNoVotes:       841,
+			UpgradeVotes:         1682,
+			UpgradeVotesRequired: 9000,
+			NeedsUpdate:          true,
+			LastRound:            100,
+		},
+		Metrics: algod.Metrics{
+			RoundTime: time.Duration(2.89 * float64(time.Second)),
 		},
 		TerminalWidth:  80,
 		TerminalHeight: 40,
@@ -66,12 +90,17 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 	},
 	"NoVoteOrUpgrade": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      false,
-			NeedsUpdate: false,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     1,
+			UpgradeVoteRounds:    0,
+			UpgradeYesVotes:      0,
+			UpgradeNoVotes:       0,
+			UpgradeVotes:         0,
+			UpgradeVotesRequired: 0,
+			NeedsUpdate:          false,
+			LastRound:            0,
 		},
 		TerminalWidth:  160,
 		TerminalHeight: 80,
@@ -79,12 +108,17 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 	},
 	"NoVoteOrUpgradeSmall": {
 		Data: algod.Status{
-			State:       algod.SyncingState,
-			Version:     "v0.0.0-test",
-			Network:     "test-v1",
-			Voting:      false,
-			NeedsUpdate: false,
-			LastRound:   0,
+			State:                algod.SyncingState,
+			Version:              "v0.0.0-test",
+			Network:              "test-v1",
+			NextVersionRound:     1,
+			UpgradeVoteRounds:    0,
+			UpgradeYesVotes:      0,
+			UpgradeNoVotes:       0,
+			UpgradeVotes:         0,
+			UpgradeVotesRequired: 0,
+			NeedsUpdate:          false,
+			LastRound:            0,
 		},
 		TerminalWidth:  80,
 		TerminalHeight: 40,
@@ -135,12 +169,16 @@ func Test_ProtocolMessages(t *testing.T) {
 		teatest.WithDuration(time.Second*3),
 	)
 	tm.Send(algod.Status{
-		State:       "",
-		Version:     "",
-		Network:     "",
-		Voting:      false,
-		NeedsUpdate: false,
-		LastRound:   0,
+		State:                "",
+		Version:              "",
+		Network:              "",
+		UpgradeVoteRounds:    0,
+		UpgradeYesVotes:      0,
+		UpgradeNoVotes:       0,
+		UpgradeVotes:         0,
+		UpgradeVotesRequired: 0,
+		NeedsUpdate:          false,
+		LastRound:            0,
 	})
 	// Send hide key
 	tm.Send(tea.KeyMsg{
