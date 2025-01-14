@@ -57,13 +57,14 @@ func Run(args []string) (string, error) {
 func RunAll(list CmdsList) error {
 	// Run each installation command
 	for _, args := range list {
+		log.Debug(fmt.Sprintf("%s: %s", style.Green.Render("Running"), strings.Join(args, " ")))
 		cmd := exec.Command(args[0], args[1:]...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Error(fmt.Sprintf("%s: %s", style.Red.Render("Failed"), strings.Join(args, " ")))
 			return fmt.Errorf(CmdFailedErrorMsg, strings.Join(args, " "), output, err)
 		}
-		log.Debug(fmt.Sprintf("%s: %s", style.Green.Render("Running"), strings.Join(args, " ")))
+
 	}
 	return nil
 }
