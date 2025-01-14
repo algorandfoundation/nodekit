@@ -12,17 +12,16 @@ import (
 func GetState(client api.ClientWithResponsesInterface) *algod.StateModel {
 	sm := &algod.StateModel{
 		Status: algod.Status{
-			State:                         algod.StableState,
-			Version:                       "v-test",
-			Network:                       "v-test-network",
-			UpgradeNextProtocolVoteBefore: 0,
-			UpgradeVoteRounds:             0,
-			UpgradeYesVotes:               0,
-			UpgradeNoVotes:                0,
-			UpgradeVotes:                  0,
-			UpgradeVotesRequired:          0,
-			NeedsUpdate:                   false,
-			LastRound:                     0,
+			State:                algod.StableState,
+			Version:              "v-test",
+			Network:              "v-test-network",
+			UpgradeVoteRounds:    0,
+			UpgradeYesVotes:      0,
+			UpgradeNoVotes:       0,
+			UpgradeVotes:         0,
+			UpgradeVotesRequired: 0,
+			NeedsUpdate:          false,
+			LastRound:            0,
 
 			Client:  client,
 			HttpPkg: new(api.HttpPkg),

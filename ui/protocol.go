@@ -71,10 +71,10 @@ func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
 	days := int(eta.Hours()) / 24
 	str := "Scheduled"
 	if days > 0 {
-		str = str + fmt.Sprintf(" %d %s", days, plural("day", minutes))
+		str = str + fmt.Sprintf(" %d %s", days, plural("day", days))
 	}
 	if hours > 0 {
-		str = str + fmt.Sprintf(" %d %s", hours, plural("hour", minutes))
+		str = str + fmt.Sprintf(" %d %s", hours, plural("hour", hours))
 	}
 	if days == 0 && minutes > 0 {
 		str = str + fmt.Sprintf(" %d %s", minutes, plural("min", minutes))
@@ -93,7 +93,7 @@ func formatProtocolVote(status algod.Status, metrics algod.Metrics) string {
 	}
 
 	totalVotesCast := status.UpgradeYesVotes + status.UpgradeNoVotes
-	percentageProgress := 100 * totalVotesCast / status.UpgradeVotesRequired
+	percentageProgress := 100 * totalVotesCast / status.UpgradeVoteRounds
 	percentageYes := 100 * status.UpgradeYesVotes / totalVotesCast
 
 	label := "Yes"
@@ -110,7 +110,7 @@ func formatProtocolVote(status algod.Status, metrics algod.Metrics) string {
 	}
 	failThreshold := status.UpgradeVoteRounds - status.UpgradeVotesRequired
 	if status.UpgradeNoVotes > failThreshold {
-		statusString = statusString + ", will not pass"
+		statusString = statusString + ", will fail"
 	}
 	return statusString
 }
