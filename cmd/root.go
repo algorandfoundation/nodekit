@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/catchup"
 	"github.com/algorandfoundation/nodekit/cmd/configure"
@@ -21,11 +22,10 @@ import (
 var (
 	Name = "nodekit"
 
+	NeedsUpgrade = false
+
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
 	algodData string
-
-	// Version represents the application version string, which is set during build or defaults to "unknown".
-	Version = ""
 
 	// force indicates whether actions should be performed forcefully, bypassing checks or confirmations.
 	force bool = false
@@ -45,10 +45,9 @@ var (
 	)
 	// RootCmd is the primary command for managing Algorand nodes, providing CLI functionality and TUI for interaction.
 	RootCmd = utils.WithAlgodFlags(&cobra.Command{
-		Use:     Name,
-		Version: Version,
-		Short:   short,
-		Long:    long,
+		Use:   Name,
+		Short: short,
+		Long:  long,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -128,6 +127,7 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 // init initializes the application, setting up logging, commands, and version information.
 func init() {
 	log.SetReportTimestamp(false)
+	RootCmd.SetVersionTemplate(fmt.Sprintf("nodekit-%s-%s@{{.Version}}\n", runtime.GOARCH, runtime.GOOS))
 	// Add Commands
 	if runtime.GOOS != "windows" {
 		RootCmd.AddCommand(bootstrapCmd)
@@ -143,6 +143,8 @@ func init() {
 }
 
 // Execute executes the root command.
-func Execute() error {
+func Execute(version string, needsUpgrade bool) error {
+	RootCmd.Version = version
+	NeedsUpgrade = needsUpgrade
 	return RootCmd.Execute()
 }
