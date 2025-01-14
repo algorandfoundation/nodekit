@@ -24,14 +24,22 @@ export default defineConfig({
           autogenerate: { directory: "guides" },
         },
         {
-          label: "Troubleshooting",
-          link: "/troubleshooting",
-        },
-        {
           label: "Command Reference",
           collapsed: true,
           autogenerate: { directory: "reference" },
         },
+        {
+          label: "Source Code",
+          link: "https://github.com/algorandfoundation/nodekit/",
+        },
+        {
+          label: "Issue Tracker",
+          link: "https://github.com/algorandfoundation/nodekit/issues",
+        },
+        {
+          label: "Report an issue",
+          link: "https://github.com/algorandfoundation/nodekit/issues/new/choose",
+        }
       ],
       components: {
         ThemeProvider: "./src/components/CustomThemeProvider.astro",
