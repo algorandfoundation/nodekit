@@ -22,28 +22,8 @@ Build the project
 make build
 ```
 
-Optionally, run a sandboxed participation node
-
-
-```bash
-docker compose up
-```
-
-Create a configuration file for the participation node in the root directory of the project (.nodekit.yaml)
-
-```yaml
-algod-endpoint: http://localhost:8080
-algod-token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
-
-Launch the TUI
-
-
-> [!NOTE]
-> If you skipped the docker container or config file, try running `./bin/nodekit` standalone, 
-> which will detect your algorand data directory from the `ALGORAND_DATA` environment variable that works for `goal`. 
-> Otherwise, provide the `--algod-endpoint` and `--algod-token` arguments so that it can find your node. 
-> Note that nodekit requires the admin algod token.
+Launch the TUI. 
+See the [full documentation](https://nodekit.run/guides/getting-started/) for a complete guide
 
 ```bash
 ./bin/nodekit
@@ -52,7 +32,7 @@ Launch the TUI
 # 📂 Folder Structure
 
 ```bash
-├── api        # Generated API Client
+├── api        # Generated API Client and Hand Crafted HTTPInterface
 ├── cmd        # Command Controller
 ├── internal   # Data Models/Fetch Wrappers
 └── ui         # BubbleTea Interfaces
@@ -142,3 +122,8 @@ The full command for reference
 ```bash
 oapi-codegen -config generate.yaml https://raw.githubusercontent.com/algorand/go-algorand/v3.26.0-stable/daemon/algod/api/algod.oas3.yml
 ```
+
+# Submitting Changes
+
+This project follows [GitHub flow](https://githubflow.github.io/). 
+Create a fork and submit changes directly to the `main` branch.  
