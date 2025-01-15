@@ -88,8 +88,12 @@ target="nodekit-$platform"
 url="$release/$target"
 
 echo -e "${Opaque}Downloading:${Reset}${Bold_White} $target ${Reset}from $url"
-curl --fail --location --progress-bar --output nodekit "$url" ||
-error "Failed to download ${target} from ${release} ${url}"
+errormessage="Failed to download ${target} from ${release} ${url}"
+if curl --version > /dev/null 2>&1; then
+  curl --fail --location --progress-bar --output nodekit "$url" || error "$errormessage"
+else
+  wget -qO nodekit --show-progress "$url" || error "$errormessage"
+fi
 
 chmod +x nodekit
 
