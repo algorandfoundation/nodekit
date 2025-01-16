@@ -6,12 +6,9 @@ import (
 	"time"
 
 	"github.com/algorandfoundation/nodekit/api"
-	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
-	"github.com/algorandfoundation/nodekit/internal/system"
-	"github.com/algorandfoundation/nodekit/ui"
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/bootstrap"
 	"github.com/algorandfoundation/nodekit/ui/style"
@@ -63,8 +60,20 @@ var bootstrapCmd = &cobra.Command{
 			log.Fatal("invalid state, exiting")
 		}
 
-		ctx := context.Background()
-		httpPkg := new(api.HttpPkg)
+		// Just launch the TUI if it's already running
+		if algod.IsInstalled() && algod.IsService() && algod.IsRunning() {
+			dir, err := algod.GetDataDir("")
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = runTUI(RootCmd, dir)
+			if err != nil {
+				log.Fatal(err)
+			}
+			return nil
+		}
+
+		// Render the welcome text
 		r, _ := glamour.NewTermRenderer(
 			glamour.WithAutoStyle(),
 		)
@@ -75,6 +84,7 @@ var bootstrapCmd = &cobra.Command{
 		}
 		fmt.Println(out)
 
+		// Create the Bootstrap TUI
 		model := bootstrap.NewModel()
 		if algod.IsInstalled() {
 			model.BootstrapMsg.Install = false
@@ -92,15 +102,16 @@ var bootstrapCmd = &cobra.Command{
 				}
 			}
 		}()
-
 		if _, err := p.Run(); err != nil {
 			log.Fatal(err)
 		}
 
+		// If the pointer is empty, return (should not happen)
 		if msg == nil {
 			return nil
 		}
 
+		// User Answer for Install Question
 		if msg.Install {
 			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
@@ -128,17 +139,22 @@ var bootstrapCmd = &cobra.Command{
 			}
 		}
 
+		// Find the data directory automatically
 		dataDir, err := algod.GetDataDir("")
-		if err != nil {
-			return err
-		}
-		// Create the client
-		client, err := algod.GetClient(dataDir)
-		if err != nil {
-			return err
-		}
 
+		// User answer for catchup question
 		if msg.Catchup {
+			ctx := context.Background()
+			httpPkg := new(api.HttpPkg)
+
+			if err != nil {
+				return err
+			}
+			// Create the client
+			client, err := algod.GetClient(dataDir)
+			if err != nil {
+				return err
+			}
 			network, err := utils.GetNetworkFromDataDir(dataDir)
 			if err != nil {
 				return err
@@ -160,42 +176,6 @@ var bootstrapCmd = &cobra.Command{
 
 		}
 
-		t := new(system.Clock)
-		// Fetch the state and handle any creation errors
-		state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
-		cmdutils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
-		cobra.CheckErr(err)
-
-		// Construct the TUI Model from the State
-		m, err := ui.NewViewportViewModel(state, client)
-		cobra.CheckErr(err)
-
-		// Construct the TUI Application
-		p = tea.NewProgram(
-			m,
-			tea.WithAltScreen(),
-			tea.WithFPS(120),
-		)
-
-		// Watch for State Updates on a separate thread
-		// TODO: refactor into context aware watcher without callbacks
-		go func() {
-			state.Watch(func(status *algod.StateModel, err error) {
-				if err == nil {
-					p.Send(state)
-				}
-				if err != nil {
-					p.Send(state)
-					p.Send(err)
-				}
-			}, ctx, t)
-		}()
-
-		// Execute the TUI Application
-		_, err = p.Run()
-		if err != nil {
-			log.Fatal(err)
-		}
-		return nil
+		return runTUI(RootCmd, dataDir)
 	},
 }

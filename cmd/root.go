@@ -53,44 +53,7 @@ var (
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			log.SetOutput(cmd.OutOrStdout())
-			// Create the dependencies
-			ctx := context.Background()
-			client, err := algod.GetClient(algodData)
-			cobra.CheckErr(err)
-			httpPkg := new(api.HttpPkg)
-			t := new(system.Clock)
-			// Fetch the state and handle any creation errors
-			state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
-			utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
-			cobra.CheckErr(err)
-
-			// Construct the TUI Model from the State
-			m, err := ui.NewViewportViewModel(state, client)
-			cobra.CheckErr(err)
-
-			// Construct the TUI Application
-			p := tea.NewProgram(
-				m,
-				tea.WithAltScreen(),
-				tea.WithFPS(120),
-			)
-
-			// Watch for State Updates on a separate thread
-			// TODO: refactor into context aware watcher without callbacks
-			go func() {
-				state.Watch(func(status *algod.StateModel, err error) {
-					if err == nil {
-						p.Send(state)
-					}
-					if err != nil {
-						p.Send(state)
-						p.Send(err)
-					}
-				}, ctx, t)
-			}()
-
-			// Execute the TUI Application
-			_, err = p.Run()
+			err := runTUI(cmd, algodData)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -147,4 +110,50 @@ func Execute(version string, needsUpgrade bool) error {
 	RootCmd.Version = version
 	NeedsUpgrade = needsUpgrade
 	return RootCmd.Execute()
+}
+
+func runTUI(cmd *cobra.Command, dataDir string) error {
+	if cmd == nil {
+		return fmt.Errorf("cmd is nil")
+	}
+	// Create the dependencies
+	ctx := context.Background()
+	httpPkg := new(api.HttpPkg)
+	t := new(system.Clock)
+	client, err := algod.GetClient(dataDir)
+	cobra.CheckErr(err)
+
+	// Fetch the state and handle any creation errors
+	state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
+	utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
+	cobra.CheckErr(err)
+
+	// Construct the TUI Model from the State
+	m, err := ui.NewViewportViewModel(state, client)
+	cobra.CheckErr(err)
+
+	// Construct the TUI Application
+	p := tea.NewProgram(
+		m,
+		tea.WithAltScreen(),
+		tea.WithFPS(120),
+	)
+
+	// Watch for State Updates on a separate thread
+	// TODO: refactor into context aware watcher without callbacks
+	go func() {
+		state.Watch(func(status *algod.StateModel, err error) {
+			if err == nil {
+				p.Send(state)
+			}
+			if err != nil {
+				p.Send(state)
+				p.Send(err)
+			}
+		}, ctx, t)
+	}()
+
+	// Execute the TUI Application
+	_, err = p.Run()
+	return err
 }
