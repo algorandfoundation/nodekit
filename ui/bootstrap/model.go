@@ -95,6 +95,13 @@ func (m Model) View() string {
 	case CatchupQuestion:
 		str = CatchupQuestionMsg
 	}
-	msg, _ := glamour.Render(str, "dark")
+	var msg string
+	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle())
+	if err != nil {
+		// Fallback to dark mode
+		msg, _ = glamour.Render(str, "dark")
+	} else {
+		msg, _ = r.Render(str)
+	}
 	return msg
 }
