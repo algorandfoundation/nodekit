@@ -113,11 +113,19 @@ func Upgrade(force bool) error {
 	if !system.CmdExists("brew") {
 		return errors.New("homebrew is not installed")
 	}
-
-	return system.RunAll(system.CmdsList{
+	err := system.RunAll(system.CmdsList{
 		{"brew", "--prefix", "algorand", "--installed"},
+		{"brew", "update"},
 		{"brew", "upgrade", "algorand", "--formula"},
 	})
+	if err != nil {
+		return err
+	}
+	err = Stop(false)
+	if err != nil {
+		return err
+	}
+	return Start(false)
 }
 
 // Start algorand with launchd
