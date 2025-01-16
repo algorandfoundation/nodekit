@@ -8,6 +8,7 @@ import (
 	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/telemetry"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/algorandfoundation/nodekit/ui/style"
@@ -15,6 +16,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
+	"strings"
 )
 
 // DebugInfo represents diagnostic information about
@@ -38,6 +40,9 @@ type DebugInfo struct {
 	Algod string `json:"algod"`
 
 	DataFolder utils.DataFolderConfig `json:"data"`
+
+	// Telemetry holds the configuration settings for telemetry, such as enabling, logging, reporting URI, and user details.
+	Telemetry telemetry.Config `json:"telemetry"`
 }
 
 // debugCmdShort provides a brief description of the "debug" command, which displays debugging information.
@@ -74,6 +79,14 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		// Get the log configuration
+		logConfig, _ := utils.GetLogConfigFromDataDir(dataDir)
+		lenPassword := len(logConfig.Password)
+		if lenPassword > 0 {
+			logConfig.Password = strings.Repeat("*", lenPassword)
+		}
+
 		folderDebug, err := utils.ToDataFolderConfig(dataDir)
 		if err != nil {
 			folderDebug.Token = fmt.Sprint(err)
@@ -94,6 +107,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			IsInstalled: algod.IsInstalled(),
 			Algod:       path,
 			DataFolder:  folderDebug,
+			Telemetry:   *logConfig,
 		}
 		data, err := json.MarshalIndent(info, "", " ")
 		if err != nil {

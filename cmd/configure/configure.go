@@ -41,6 +41,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(serviceCmd)
+	Cmd.AddCommand(telemetryCmd)
 }
 
 const RunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"

@@ -3,14 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/algorandfoundation/nodekit/internal/algod/telemetry"
+	"github.com/algorandfoundation/nodekit/internal/system"
+	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/algorandfoundation/nodekit/internal/system"
-	"github.com/spf13/cobra"
 )
 
 const AlgodNetEndpointFileMissingAddress = "missing://endpoint"
@@ -160,6 +160,35 @@ func GetEndpointFromDataDir(path string) (string, error) {
 	endpoint = "http://" + ReplaceEndpointUrl(string(file))
 
 	return endpoint, nil
+}
+
+// GetLogConfigFromDataDir reads a logging configuration file from the
+// specified data directory and unmarshals it into a telemetry.Config.
+func GetLogConfigFromDataDir(path string) (*telemetry.Config, error) {
+	var logConfig telemetry.Config
+	file, err := os.ReadFile(path + "/logging.config")
+	if err != nil {
+		return &logConfig, err
+	}
+	err = json.Unmarshal(file, &logConfig)
+	if err != nil {
+		return &logConfig, err
+	}
+	return &logConfig, nil
+}
+
+// WriteLogConfigToDataDir writes the provided telemetry log configuration to a file in the specified data directory.
+// The configuration is formatted as indented JSON and saved to a file named "logging.config".
+func WriteLogConfigToDataDir(path string, logConfig *telemetry.Config) error {
+	file, err := json.MarshalIndent(logConfig, "", " ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(path+"/logging.config", file, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ReplaceEndpointUrl replaces newline characters and wildcard IP addresses in a URL with a specific local address.

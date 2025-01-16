@@ -6,6 +6,7 @@ import (
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/catchup"
 	"github.com/algorandfoundation/nodekit/cmd/configure"
+	"github.com/algorandfoundation/nodekit/cmd/telemetry"
 	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -107,6 +108,7 @@ func init() {
 		RootCmd.AddCommand(upgradeCmd)
 		RootCmd.AddCommand(catchup.Cmd)
 		RootCmd.AddCommand(configure.Cmd)
+		RootCmd.AddCommand(telemetry.Cmd)
 	}
 }
 
