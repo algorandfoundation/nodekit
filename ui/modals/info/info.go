@@ -3,12 +3,14 @@ package info
 import (
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/algorandfoundation/nodekit/ui/utils"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
+	"strings"
 )
 
 type ViewModel struct {
@@ -90,7 +92,7 @@ func (m ViewModel) View() string {
 	if m.Participation == nil {
 		return "No key selected"
 	}
-	account := style.Cyan.Render("Account: ") + m.Participation.Address
+	account := lipgloss.JoinHorizontal(lipgloss.Left, style.Cyan.Render("Account: "), m.Participation.Address)
 	id := style.Cyan.Render("Participation ID: ") + m.Participation.Id
 	selection := style.Yellow.Render("Selection Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.SelectionParticipationKey[:])
 	vote := style.Yellow.Render("Vote Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.VoteParticipationKey[:])
@@ -98,6 +100,29 @@ func (m ViewModel) View() string {
 	voteFirstValid := style.Purple("Vote First Valid: ") + utils.IntToStr(m.Participation.Key.VoteFirstValid)
 	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.Participation.Key.VoteLastValid)
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
+	hashBlock := ""
+
+	var hashResult string
+	var err error
+	if !m.Active {
+		hashResult, err = participation.IntegrityHash(*m.Participation)
+		if err == nil {
+			hashBlock = style.Cyan.Render("Integrity: ") + hashResult + "\n"
+		} else {
+			hashBlock = style.Cyan.Render("Integrity: ") + "Error" + err.Error() + "\n"
+		}
+	} else {
+		var loraNetwork = strings.Replace(strings.Replace(m.State.Status.Network, "-v1.0", "", 1), "-v1", "", 1)
+		if loraNetwork == "dockernet" || loraNetwork == "tuinet" {
+			loraNetwork = "localnet"
+		}
+		hashResult, err = participation.OfflineHash(m.Participation.Address, loraNetwork)
+		if err == nil {
+			hashBlock = style.Cyan.Render("Integrity: ") + hashResult + "\n"
+		} else {
+			hashBlock = style.Cyan.Render("Integrity: ") + "Error\n"
+		}
+	}
 
 	prefix := ""
 	if m.Prefix != "" {
@@ -108,7 +133,7 @@ func (m ViewModel) View() string {
 		prefix,
 		account,
 		id,
-		"",
+		hashBlock,
 		vote,
 		selection,
 		stateProof,

@@ -25,10 +25,14 @@ func Test_Snapshot(t *testing.T) {
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("InfoModal", func(t *testing.T) {
-		model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
-		model.SetKey(&mock.Keys[0])
+		model := New(lipgloss.NewStyle().Width(200).Height(80).Render(""), true, test.GetState(nil))
+		key, err := mock.GetPartKey()
+		if err != nil {
+			t.Fatal(err)
+		}
+		model.SetKey(key)
 		model.SetType(app.InfoModal)
-		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
+		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 201, Height: 80})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
