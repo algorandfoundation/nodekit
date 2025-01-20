@@ -167,7 +167,7 @@ func GetOnlineShortLink(http api.HttpPkgInterface, part OnlineShortLinkBody) (Sh
 	if err != nil {
 		return response, err
 	}
-	res, err := http.Post("http://b.nodekit.run/online", "applicaiton/json", bytes.NewReader(data))
+	res, err := http.Post("http://b.nodekit.run/online", "application/json", bytes.NewReader(data))
 	if err != nil {
 		return response, err
 	}
@@ -219,6 +219,10 @@ func GetOfflineShortLink(http api.HttpPkgInterface, offline OfflineShortLinkBody
 
 // ToShortLink generates a shortened URL string using the unique
 // identifier from the provided ShortLinkResponse.
-func ToShortLink(link ShortLinkResponse) string {
-	return fmt.Sprintf("https://b.nodekit.run/%s", link.Id)
+func ToShortLink(link ShortLinkResponse, incentiveEligibleFee bool) string {
+	suffix := ""
+	if incentiveEligibleFee {
+		suffix = "i"
+	}
+	return fmt.Sprintf("https://b.nodekit.run/%s%s", link.Id, suffix)
 }

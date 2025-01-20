@@ -29,12 +29,23 @@ func (m ViewModel) View() string {
 		adj = "online"
 	}
 	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
-	link := participation.ToShortLink(*m.Link)
+	link := participation.ToShortLink(*m.Link, m.ShouldAddIncentivesFee())
 	loraText := lipgloss.JoinVertical(
 		lipgloss.Center,
 		"Open this URL in your browser:\n",
 		style.WithHyperlink(link, link),
 	)
+
+	if m.ShouldAddIncentivesFee() {
+		loraText = lipgloss.JoinVertical(
+			lipgloss.Center,
+			loraText,
+			"",
+			"Note: Transction fee set to 2 ALGO",
+			"for staking rewards eligibility",
+		)
+	}
+
 	if isOffline {
 		loraText = lipgloss.JoinVertical(
 			lipgloss.Center,
