@@ -116,6 +116,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if !s.Watching {
 			break
 		}
+
 		// Abort on Fast-Catchup
 		if s.Status.State == FastCatchupState {
 			// Update current render
@@ -132,6 +133,9 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			cb(s, nil)
 			continue
 		}
+		// Fetch Keys
+		s.UpdateKeys(ctx, t)
+		cb(s, nil)
 
 		// Wait for the next block
 		s.Status, _, err = s.Status.Wait(ctx)
@@ -139,9 +143,6 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if err != nil {
 			continue
 		}
-
-		// Fetch Keys
-		s.UpdateKeys(ctx, t)
 
 		if s.Status.State == SyncingState {
 			cb(s, nil)
@@ -176,18 +177,18 @@ func (s *StateModel) UpdateKeys(ctx context.Context, t system.Time) {
 	if err == nil {
 		s.Admin = true
 		s.Accounts = ParticipationKeysToAccounts(s.ParticipationKeys)
-		for _, acct := range s.Accounts {
-			// For each account, update the data from the RPC endpoint
-			if s.Status.State == StableState {
-				// Skip eon errors
-				rpcAcct, err := GetAccount(s.Client, acct.Address)
-				if err != nil {
-					continue
-				}
 
-				s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
-				s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
+		// For each account, update the data from the RPC endpoint
+		for _, acct := range s.Accounts {
+			// Skip eon errors
+			rpcAcct, err := GetAccount(s.Client, acct.Address)
+			if err != nil {
+				continue
 			}
+
+			s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
+			s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
 		}
+
 	}
 }

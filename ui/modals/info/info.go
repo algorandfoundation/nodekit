@@ -94,9 +94,9 @@ func (m ViewModel) View() string {
 	}
 	account := lipgloss.JoinHorizontal(lipgloss.Left, style.Cyan.Render("Account: "), m.Participation.Address)
 	id := style.Cyan.Render("Participation ID: ") + m.Participation.Id
-	selection := style.Yellow.Render("Selection Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.SelectionParticipationKey[:])
-	vote := style.Yellow.Render("Vote Key: ") + *utils.UrlEncodeBytesPtrOrNil(m.Participation.Key.VoteParticipationKey[:])
-	stateProof := style.Yellow.Render("State Proof Key: ") + *utils.UrlEncodeBytesPtrOrNil(*m.Participation.Key.StateProofKey)
+	selection := style.Yellow.Render("Selection Key: ") + *utils.Base64EncodeBytesPtrOrNil(m.Participation.Key.SelectionParticipationKey[:])
+	vote := style.Yellow.Render("Vote Key: ") + *utils.Base64EncodeBytesPtrOrNil(m.Participation.Key.VoteParticipationKey[:])
+	stateProof := style.Yellow.Render("State Proof Key: ") + *utils.Base64EncodeBytesPtrOrNil(*m.Participation.Key.StateProofKey)
 	voteFirstValid := style.Purple("Vote First Valid: ") + utils.IntToStr(m.Participation.Key.VoteFirstValid)
 	voteLastValid := style.Purple("Vote Last Valid: ") + utils.IntToStr(m.Participation.Key.VoteLastValid)
 	voteKeyDilution := style.Purple("Vote Key Dilution: ") + utils.IntToStr(m.Participation.Key.VoteKeyDilution)
