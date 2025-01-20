@@ -2,10 +2,12 @@ package transaction
 
 import (
 	"encoding/base64"
+
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/app"
+	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -34,7 +36,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			return &m, app.EmitModalEvent(app.ModalEvent{
 				Type: app.CancelModal,
 			})
+		case "s":
+			if m.IsQREnabled() {
+				m.ShowLink = !m.ShowLink
+				m.UpdateState()
+				return &m, nil
+			}
 		}
+
 	// Handle View Size changes
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
@@ -43,6 +52,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	m.UpdateState()
 	return &m, cmd
 }
+
 func (m *ViewModel) Account() *algod.Account {
 	if m.Participation == nil || m.State == nil || m.State.Accounts == nil {
 		return nil
@@ -69,7 +79,25 @@ func (m *ViewModel) ShouldAddIncentivesFee() bool {
 	return m.State != nil && !m.State.IncentivesDisabled && !m.Active && m.IsIncentiveProtocol() && !m.Account().IncentiveEligible
 }
 
+func (m *ViewModel) GetControlText() string {
+	escLegend := style.Red.Render("(esc) go back")
+	if m.IsQREnabled() {
+		otherView := "link"
+		if m.ShowLink {
+			otherView = "QR"
+		}
+		return "( " + style.Yellow.Render("(s)how "+otherView) + " | " + escLegend + " )"
+	}
+	return "( " + escLegend + " )"
+}
+
 func (m *ViewModel) UpdateState() {
+	controlText := m.GetControlText()
+	if m.Controls != m.GetControlText() {
+		// TODO BUG: the controls do not re-render when changed
+		m.Controls = controlText
+	}
+
 	if m.Participation == nil {
 		return
 	}

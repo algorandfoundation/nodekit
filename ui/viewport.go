@@ -133,8 +133,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
 
 		modalMsg := tea.WindowSizeMsg{
-			Width:  m.PageWidth,
-			Height: m.PageHeight,
+			Width:  msg.Width,
+			Height: msg.Height,
 		}
 
 		m.modal, cmd = m.modal.HandleMessage(modalMsg)

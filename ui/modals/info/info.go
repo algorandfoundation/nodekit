@@ -78,12 +78,12 @@ func (m *ViewModel) UpdateState() {
 
 	if accountStatus == "Online" && m.Active {
 		m.BorderColor = "1"
-		m.Controls = "( take " + style.Red.Render(style.Red.Render("(o)ffline")) + " )"
+		m.Controls = "( " + style.Red.Render(style.Red.Render("take (o)ffline")) + " )"
 	}
 
 	if !m.Active {
 		m.BorderColor = "3"
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister") + " online )"
+		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister online") + " )"
 	}
 }
 func (m ViewModel) View() string {
