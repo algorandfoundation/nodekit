@@ -7,6 +7,13 @@ import (
 
 func toPtr[T any](constVar T) *T { return &constVar }
 
+func Base64EncodeBytesPtrOrNil(b []byte) *string {
+	if b == nil || len(b) == 0 || isZeros(b) {
+		return nil
+	}
+	return toPtr(base64.StdEncoding.EncodeToString(b))
+}
+
 func UrlEncodeBytesPtrOrNil(b []byte) *string {
 	if b == nil || len(b) == 0 || isZeros(b) {
 		return nil
