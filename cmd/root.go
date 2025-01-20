@@ -24,6 +24,9 @@ var (
 
 	NeedsUpgrade = false
 
+	// whether the user forbids incentive eligibility fees to be set
+	IncentivesDisabled = false
+
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
 	algodData string
 
@@ -60,7 +63,7 @@ var (
 			httpPkg := new(api.HttpPkg)
 			t := new(system.Clock)
 			// Fetch the state and handle any creation errors
-			state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
+			state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, IncentivesDisabled)
 			utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
 			cobra.CheckErr(err)
 
@@ -127,6 +130,7 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 // init initializes the application, setting up logging, commands, and version information.
 func init() {
 	log.SetReportTimestamp(false)
+	RootCmd.Flags().BoolVarP(&IncentivesDisabled, "no-incentives", "n", false, style.LightBlue("Disable setting incentive eligibility fees"))
 	RootCmd.SetVersionTemplate(fmt.Sprintf("nodekit-%s-%s@{{.Version}}\n", runtime.GOARCH, runtime.GOOS))
 	// Add Commands
 	if runtime.GOOS != "windows" {
