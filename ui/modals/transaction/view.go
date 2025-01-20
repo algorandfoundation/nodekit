@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"fmt"
+
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
@@ -15,11 +16,6 @@ func (m ViewModel) View() string {
 	if m.ATxn == nil || m.Link == nil {
 		return "Loading..."
 	}
-	// TODO: Refactor ATxn to Interface
-	txn, err := m.ATxn.ProduceQRCode()
-	if err != nil {
-		return "Something went wrong"
-	}
 
 	var adj string
 	isOffline := m.ATxn.AUrlTxnKeyreg.VotePK == nil
@@ -28,72 +24,73 @@ func (m ViewModel) View() string {
 	} else {
 		adj = "online"
 	}
+
 	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
-	link := participation.ToShortLink(*m.Link, m.ShouldAddIncentivesFee())
-	loraText := lipgloss.JoinVertical(
-		lipgloss.Center,
-		"Open this URL in your browser:\n",
-		style.WithHyperlink(link, link),
-	)
+	render := intro
+
+	if !m.ShowLink {
+		render = lipgloss.JoinVertical(
+			lipgloss.Center,
+			render,
+			style.Green.Render("Scan the QR code with Pera")+" or "+style.Yellow.Render("press S to show a link instead"),
+		)
+	}
 
 	if m.ShouldAddIncentivesFee() {
-		loraText = lipgloss.JoinVertical(
+		render = lipgloss.JoinVertical(
 			lipgloss.Center,
-			loraText,
+			render,
 			"",
-			"Note: Transction fee set to 2 ALGO",
-			"for staking rewards eligibility",
+			style.Bold("Note: Transction fee set to 2 ALGO (opting in to rewards)"),
 		)
 	}
 
 	if isOffline {
-		loraText = lipgloss.JoinVertical(
+		render = lipgloss.JoinVertical(
 			lipgloss.Center,
-			loraText,
+			render,
 			"",
-			"Note: this will take effect after 320 rounds (~15 min.)",
+			style.Bold("Note: this will take effect after 320 rounds (~15 min.)"),
 			"Please keep your node running during this cooldown period.",
 		)
 	}
 
-	var render string
-	if m.State.Status.Network == "testnet-v1.0" {
+	if m.ShowLink {
+		link := participation.ToShortLink(*m.Link, m.ShouldAddIncentivesFee())
 		render = lipgloss.JoinVertical(
 			lipgloss.Center,
-			intro,
+			render,
 			"",
-			"Scan the QR code with Pera or Defly",
-			style.Yellow.Render("(make sure you use the "+m.State.Status.Network+" network)"),
+			"Open this URL in your browser:",
 			"",
-			qrStyle.Render(txn),
-			"-or-",
+			style.WithHyperlink(link, link),
 			"",
-			loraText,
 		)
 	} else {
+		// TODO: Refactor ATxn to Interface
+		txn, err := m.ATxn.ProduceQRCode()
+		if err != nil {
+			return "Something went wrong"
+		}
 		render = lipgloss.JoinVertical(
 			lipgloss.Center,
-			"",
-			intro,
-			"",
-			loraText,
-			"",
+			render,
+			qrStyle.Render(txn),
 		)
 	}
 
 	width := lipgloss.Width(render)
 	height := lipgloss.Height(render)
 
-	if width > m.Width || height > m.Height {
+	if !m.ShowLink && (width > m.Width || height > m.Height) {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
 			intro,
 			"",
-			style.Red.Render(ansi.Wordwrap("Mobile QR is available but it does not fit on screen.", m.Width, " ")),
-			style.Red.Render(ansi.Wordwrap("Adjust terminal dimensions or font size to display.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("QR code is available but it does not fit on screen.", m.Width, " ")),
+			style.Red.Render(ansi.Wordwrap("Adjust terminal dimensions/font size to display.", m.Width, " ")),
 			"",
-			"-or-",
-			loraText,
+			ansi.Wordwrap("Or press S to switch to Link view.", m.Width, " "),
 		)
 	}
 

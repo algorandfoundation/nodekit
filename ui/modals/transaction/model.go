@@ -31,6 +31,8 @@ type ViewModel struct {
 	Controls    string
 	navigation  string
 
+	ShowLink bool
+
 	// QR Code
 	ATxn *encoder.AUrlTxn
 }
@@ -39,15 +41,21 @@ func (m ViewModel) FormatedAddress() string {
 	return fmt.Sprintf("%s...%s", m.Participation.Address[0:4], m.Participation.Address[len(m.Participation.Address)-4:])
 }
 
+func (m ViewModel) IsQREnabled() bool {
+	return true // TODO
+	// return m.State.Status.Network == "testnet-v1.0" || m.State.Status.Network == "mainnet-v1.0"
+}
+
 // New creates and instance of the ViewModel with a default controls.Model
 func New(state *algod.StateModel) *ViewModel {
 	return &ViewModel{
 		State:       state,
 		Title:       "Offline Transaction",
+		ShowLink:    true,
 		IsOnline:    false,
 		BorderColor: "9",
 		navigation:  "| accounts | keys | " + style.Green.Render("txn") + " |",
-		Controls:    "( " + style.Red.Render("esc") + " )",
+		Controls:    "",
 		ATxn:        nil,
 	}
 }
