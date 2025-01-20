@@ -27,7 +27,7 @@ func main() {
 	var needsUpgrade = false
 	resp, err := api.GetNodeKitReleaseWithResponse(new(api.HttpPkg))
 	if err == nil && resp.ResponseCode >= 200 && resp.ResponseCode < 300 {
-		if resp.JSON200 != version {
+		if version != "dev" && resp.JSON200 != version {
 			needsUpgrade = true
 			// Warn on all commands but version
 			if len(os.Args) > 1 && os.Args[1] != "--version" {
