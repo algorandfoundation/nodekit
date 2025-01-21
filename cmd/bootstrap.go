@@ -162,7 +162,7 @@ var bootstrapCmd = &cobra.Command{
 
 		t := new(system.Clock)
 		// Fetch the state and handle any creation errors
-		state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg)
+		state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, false)
 		cmdutils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
 		cobra.CheckErr(err)
 
