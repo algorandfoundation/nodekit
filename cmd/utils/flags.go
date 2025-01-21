@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -20,8 +21,7 @@ func WithInvalidResponsesExplanations(err error, response api.ResponseInterface,
 	}
 	if response.StatusCode() > 300 {
 		log.Fatal(
-			style.Red.Render("failed to get status: error code %d")+"\n\n"+explanations.TokenNotAdmin+"\n"+postFix,
-			response.StatusCode())
+			style.Red.Render(fmt.Sprintf("failed to get status: error code %d", response.StatusCode())) + "\n\n" + explanations.TokenNotAdmin + "\n" + postFix)
 	}
 }
 
