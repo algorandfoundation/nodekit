@@ -48,6 +48,9 @@ type Status struct {
 	// NeedsUpdate indicates whether the system requires an update based on the current version and available release data.
 	NeedsUpdate bool `json:"needsUpdate"`
 
+	// LastProtocolVersion represents the most recent round protocol version.
+	LastProtocolVersion string `json:"lastProtocolVersion"`
+
 	// LastRound represents the most recent round number recorded by the system or client.
 	LastRound uint64 `json:"lastRound"`
 
@@ -106,6 +109,9 @@ func (s Status) Update(status Status) Status {
 	if s.LastRound != status.LastRound {
 		s.LastRound = status.LastRound
 	}
+	if s.LastProtocolVersion != status.LastProtocolVersion {
+		s.LastProtocolVersion = status.LastProtocolVersion
+	}
 	return s
 }
 
@@ -127,6 +133,7 @@ func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error)
 // Merge updates the current Status with data from a given StatusLike instance and adjusts fields based on defined conditions.
 func (s Status) Merge(res api.StatusLike) Status {
 	s.LastRound = uint64(res.LastRound)
+	s.LastProtocolVersion = res.LastVersion
 	catchpoint := res.Catchpoint
 	if catchpoint != nil && *catchpoint != "" {
 		s.State = FastCatchupState

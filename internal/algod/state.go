@@ -38,6 +38,9 @@ type StateModel struct {
 	// TODO: handle contexts instead of adding it to state (skill-issue zero)
 	Watching bool
 
+	// Whether user has disabled automatically applying incentive eligibility fees
+	IncentivesDisabled bool
+
 	// Client provides an interface for interacting with API endpoints,
 	// enabling various node operations and data retrieval.
 	Client api.ClientWithResponsesInterface
@@ -53,7 +56,7 @@ type StateModel struct {
 
 // NewStateModel initializes and returns a new StateModel instance
 // along with an API response and potential error.
-func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface) (*StateModel, api.ResponseInterface, error) {
+func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface, incentivesDisabled bool) (*StateModel, api.ResponseInterface, error) {
 	// Preload the node status
 	status, response, err := NewStatus(ctx, client, httpPkg)
 	if err != nil {
@@ -79,6 +82,8 @@ func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface,
 		Client:  client,
 		HttpPkg: httpPkg,
 		Context: ctx,
+
+		IncentivesDisabled: incentivesDisabled,
 	}, partkeysResponse, nil
 }
 
@@ -116,6 +121,7 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if !s.Watching {
 			break
 		}
+
 		// Abort on Fast-Catchup
 		if s.Status.State == FastCatchupState {
 			// Update current render
@@ -132,6 +138,9 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 			cb(s, nil)
 			continue
 		}
+		// Fetch Keys
+		s.UpdateKeys(ctx, t)
+		cb(s, nil)
 
 		// Wait for the next block
 		s.Status, _, err = s.Status.Wait(ctx)
@@ -139,9 +148,6 @@ func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Co
 		if err != nil {
 			continue
 		}
-
-		// Fetch Keys
-		s.UpdateKeys(ctx, t)
 
 		if s.Status.State == SyncingState {
 			cb(s, nil)
@@ -176,18 +182,18 @@ func (s *StateModel) UpdateKeys(ctx context.Context, t system.Time) {
 	if err == nil {
 		s.Admin = true
 		s.Accounts = ParticipationKeysToAccounts(s.ParticipationKeys)
-		for _, acct := range s.Accounts {
-			// For each account, update the data from the RPC endpoint
-			if s.Status.State == StableState {
-				// Skip eon errors
-				rpcAcct, err := GetAccount(s.Client, acct.Address)
-				if err != nil {
-					continue
-				}
 
-				s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
-				s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
+		// For each account, update the data from the RPC endpoint
+		for _, acct := range s.Accounts {
+			// Skip eon errors
+			rpcAcct, err := GetAccount(s.Client, acct.Address)
+			if err != nil {
+				continue
 			}
+
+			s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
+			s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
 		}
+
 	}
 }

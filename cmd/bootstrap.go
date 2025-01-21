@@ -66,7 +66,7 @@ var bootstrapCmd = &cobra.Command{
 			if err != nil {
 				log.Fatal(err)
 			}
-			err = runTUI(RootCmd, dir)
+			err = runTUI(RootCmd, dir, false)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -176,6 +176,6 @@ var bootstrapCmd = &cobra.Command{
 
 		}
 
-		return runTUI(RootCmd, dataDir)
+		return runTUI(RootCmd, dataDir, false)
 	},
 }

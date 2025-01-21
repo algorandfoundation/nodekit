@@ -1,6 +1,7 @@
 package system
 
 import (
+	"errors"
 	"fmt"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/log"
@@ -10,9 +11,6 @@ import (
 	"strings"
 	"sync"
 )
-
-// CmdFailedErrorMsg is a formatted error message used to detail command failures, including output and the associated error.
-const CmdFailedErrorMsg = "command failed: %s output: %s error: %v"
 
 // IsSudo checks if the process is running with root privileges by verifying the effective user ID is 0.
 func IsSudo() bool {
@@ -60,9 +58,24 @@ func RunAll(list CmdsList) error {
 		log.Debug(fmt.Sprintf("%s: %s", style.Green.Render("Running"), strings.Join(args, " ")))
 		cmd := exec.Command(args[0], args[1:]...)
 		output, err := cmd.CombinedOutput()
+
 		if err != nil {
-			log.Error(fmt.Sprintf("%s: %s", style.Red.Render("Failed"), strings.Join(args, " ")))
-			return fmt.Errorf(CmdFailedErrorMsg, strings.Join(args, " "), output, err)
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				// Get Stderr when possible
+				if exitErr.Stderr != nil {
+					log.Error(exitErr.Stderr)
+				} else {
+					// Report the output
+					log.Error(strings.TrimSuffix(string(output), "\n"))
+				}
+
+			} else {
+				// Log the regular errors
+				log.Error(err)
+			}
+			// Alert the User
+			return fmt.Errorf("%s: %s", style.Red.Render("Failed"), strings.Join(args, " "))
 		}
 
 	}
