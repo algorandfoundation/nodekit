@@ -1,6 +1,7 @@
 package algod
 
 import (
+	"context"
 	"errors"
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
@@ -8,9 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 const InvalidDataDirMsg = "invalid data directory"
+const ClientTimeoutMsg = "the client has timed out"
 
 func GetDataDir(dataDir string) (string, error) {
 	envDataDir := os.Getenv("ALGORAND_DATA")
@@ -56,4 +59,41 @@ func GetClient(dataDir string) (*api.ClientWithResponses, error) {
 		return nil, err
 	}
 	return api.NewClientWithResponses(config.Endpoint, api.WithRequestEditorFn(apiToken.Intercept))
+}
+
+func WaitForClient(ctx context.Context, dataDir string, interval time.Duration, timeout time.Duration) (*api.ClientWithResponses, error) {
+	var client *api.ClientWithResponses
+	var err error
+	dataDir, err = GetDataDir(dataDir)
+	if err != nil {
+		return client, err
+	}
+	// Try to fetch the client before waiting
+	client, err = GetClient(dataDir)
+	if err == nil {
+		var resp api.ResponseInterface
+		resp, err = client.GetStatusWithResponse(ctx)
+		if err == nil && resp.StatusCode() == 200 {
+			return client, nil
+		}
+	}
+	// Wait for client to respond
+	for {
+		select {
+		case <-ctx.Done():
+			return client, nil
+		case <-time.After(interval):
+			client, err = GetClient(dataDir)
+			if err == nil {
+				var resp api.ResponseInterface
+				resp, err = client.GetStatusWithResponse(ctx)
+				if err == nil && resp.StatusCode() == 200 {
+					return client, nil
+				}
+			}
+		case <-time.After(timeout):
+			return client, errors.New(ClientTimeoutMsg)
+		}
+
+	}
 }

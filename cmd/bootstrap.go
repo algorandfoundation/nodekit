@@ -19,6 +19,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const CheckAlgodInterval = 10 * time.Second
+const CheckAlgodTimeout = 2 * time.Minute
+
+var CatchpointLagThreshold int = 30_000
+
 // bootstrapCmdShort provides a brief description of the "bootstrap" command to initialize a fresh Algorand node.
 var bootstrapCmdShort = "Initialize a fresh node"
 
@@ -42,6 +47,8 @@ This is the beginning of your adventure into running an Algorand node!
 
 `
 
+var FailedToAutoStartMessage = "Failed to start Algorand automatically."
+
 // bootstrapCmd defines the "debug" command used to display diagnostic information for developers, including debug data.
 var bootstrapCmd = &cobra.Command{
 	Use:          "bootstrap",
@@ -49,6 +56,47 @@ var bootstrapCmd = &cobra.Command{
 	Long:         bootstrapCmdLong,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var client *api.ClientWithResponses
+		// Create the Bootstrap TUI
+		model := bootstrap.NewModel()
+		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
+		// Try to launch the TUI if it's already running and configured
+		if algod.IsInitialized() {
+			// Parse the data directory
+			dir, err := algod.GetDataDir("")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Wait for the client to respond
+			log.Warn(style.Yellow.Render("Waiting for the node to start..."))
+			client, err = algod.WaitForClient(context.Background(), dir, CheckAlgodInterval, CheckAlgodTimeout)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Fetch the latest status
+			var resp *api.GetStatusResponse
+			resp, err = client.GetStatusWithResponse(context.Background())
+			// This should not happen, we waited for a status already
+			if err != nil {
+				log.Fatal(err)
+			}
+			if resp.StatusCode() != 200 {
+				log.Fatal(fmt.Sprintf("Failed to connect to the node at %s", dir))
+			}
+
+			// Execute the TUI if we are caught up.
+			// TODO: check the delta to see if it is necessary,
+			if resp.JSON200.CatchupTime == 0 {
+				err = runTUI(RootCmd, dir, false)
+				if err != nil {
+					log.Fatal(err)
+				}
+				return nil
+			}
+		}
+
 		// Exit the application in an invalid state
 		if algod.IsInstalled() && !algod.IsService() {
 			dataDir, _ := algod.GetDataDir("")
@@ -58,19 +106,6 @@ var bootstrapCmd = &cobra.Command{
 			log.Warn("algorand is installed, but not running as a service. Continue at your own risk!")
 			log.Warn(fmt.Sprintf("try connecting to the node with: ./nodekit -d %s", dataDir))
 			log.Fatal("invalid state, exiting")
-		}
-
-		// Just launch the TUI if it's already running
-		if algod.IsInstalled() && algod.IsService() && algod.IsRunning() {
-			dir, err := algod.GetDataDir("")
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = runTUI(RootCmd, dir, false)
-			if err != nil {
-				log.Fatal(err)
-			}
-			return nil
 		}
 
 		// Render the welcome text
@@ -84,12 +119,25 @@ var bootstrapCmd = &cobra.Command{
 		}
 		fmt.Println(out)
 
-		// Create the Bootstrap TUI
-		model := bootstrap.NewModel()
+		// Ensure it the service is started,
+		// in this case we won't be able to query state without the node running
+		if algod.IsInstalled() && algod.IsService() && !algod.IsRunning() {
+			log.Debug("Algorand is installed, but not running. Attempting to start it automatically.")
+			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
+			err := algod.Start()
+			if err != nil {
+				log.Error(FailedToAutoStartMessage)
+				log.Fatal(err)
+			}
+
+		}
+
+		// Prefill questions
 		if algod.IsInstalled() {
 			model.BootstrapMsg.Install = false
 			model.Question = bootstrap.CatchupQuestion
 		}
+		// Run the Bootstrap TUI
 		p := tea.NewProgram(model)
 		var msg *app.BootstrapMsg
 		go func() {
@@ -115,21 +163,31 @@ var bootstrapCmd = &cobra.Command{
 		if msg.Install {
 			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
+			// Run the installer
 			err := algod.Install()
 			if err != nil {
 				return err
 			}
 
-			// Wait for algod
-			time.Sleep(10 * time.Second)
+			// Parse the data directory
+			dir, err := algod.GetDataDir("")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Wait for the client to respond
+			client, err = algod.WaitForClient(context.Background(), dir, CheckAlgodInterval, CheckAlgodTimeout)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			if !algod.IsRunning() {
 				log.Fatal("algod is not running. Something went wrong with installation")
 			}
 		} else {
+			// This should not happen but just in case, ensure it is running
 			if !algod.IsRunning() {
 				log.Info(style.Green.Render("Starting Algod 🚀"))
-				log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 				err := algod.Start()
 				if err != nil {
 					log.Fatal(err)
@@ -141,20 +199,16 @@ var bootstrapCmd = &cobra.Command{
 
 		// Find the data directory automatically
 		dataDir, err := algod.GetDataDir("")
+		// Wait for the client to respond
+		client, err = algod.WaitForClient(context.Background(), dataDir, CheckAlgodInterval, CheckAlgodTimeout)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		// User answer for catchup question
 		if msg.Catchup {
 			ctx := context.Background()
 			httpPkg := new(api.HttpPkg)
-
-			if err != nil {
-				return err
-			}
-			// Create the client
-			client, err := algod.GetClient(dataDir)
-			if err != nil {
-				return err
-			}
 			network, err := utils.GetNetworkFromDataDir(dataDir)
 			if err != nil {
 				return err
@@ -167,8 +221,8 @@ var bootstrapCmd = &cobra.Command{
 				log.Info(style.Green.Render("Latest Catchpoint: " + catchpoint))
 			}
 
-			// Start catchup
-			res, _, err := algod.StartCatchup(ctx, client, catchpoint, nil)
+			// Start catchup with round threshold
+			res, _, err := algod.StartCatchup(ctx, client, catchpoint, &api.StartCatchupParams{Min: &CatchpointLagThreshold})
 			if err != nil {
 				log.Fatal(err)
 			}
