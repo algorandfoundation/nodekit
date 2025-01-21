@@ -20,6 +20,7 @@ import (
 // DebugInfo represents diagnostic information about
 // the Algod service, path availability, and related metadata.
 type DebugInfo struct {
+	Version string `json:"version"`
 
 	// InPath indicates whether the `algod` command-line tool is available in the system's executable path.
 	InPath bool `json:"inPath"`
@@ -86,6 +87,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		folderDebug.BytesFree = fmt.Sprintf("%d bytes (%d MB)", bytesFree, bytesFree/1024/1024)
 
 		info := DebugInfo{
+			Version:     cmd.Root().Version,
 			InPath:      system.CmdExists("algod"),
 			IsRunning:   algod.IsRunning(),
 			IsService:   algod.IsService(),
