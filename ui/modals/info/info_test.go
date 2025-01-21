@@ -33,7 +33,11 @@ func Test_New(t *testing.T) {
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
 		model := New(test.GetState(nil))
-		model.Participation = &mock.Keys[0]
+		var err error
+		model.Participation, err = mock.GetPartKey()
+		if err != nil {
+			t.Fatal(err)
+		}
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})

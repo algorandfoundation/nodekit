@@ -22,9 +22,9 @@ var (
 	MarketingBlue = lipgloss.NewStyle().Foreground(lipgloss.Color("#2d2df1")).Render
 	MarketingTeal = lipgloss.NewStyle().Foreground(lipgloss.Color("#17CAC6")).Render
 	Blue          = func() lipgloss.Style {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#12"))
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
 	}()
-	Cyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("#14"))
+	Cyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	Yellow  = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
 	Green   = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 	Red     = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
