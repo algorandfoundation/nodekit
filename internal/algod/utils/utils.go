@@ -3,23 +3,25 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/internal/system"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/algorandfoundation/nodekit/internal/system"
+	"github.com/spf13/cobra"
 )
 
 const AlgodNetEndpointFileMissingAddress = "missing://endpoint"
 
 type DataFolderConfig struct {
-	Path     string `json:"path"`
-	Token    string `json:"token"`
-	Endpoint string `json:"endpoint"`
-	Network  string `json:"network"`
-	PID      int    `json:"PID"`
+	Path      string `json:"path"`
+	BytesFree string `json:"bytesFree"`
+	Token     string `json:"token"`
+	Endpoint  string `json:"endpoint"`
+	Network   string `json:"network"`
+	PID       int    `json:"PID"`
 }
 
 func ToDataFolderConfig(path string) (DataFolderConfig, error) {

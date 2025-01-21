@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
+
 	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -12,12 +14,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"os/exec"
+	"golang.org/x/sys/unix"
 )
 
 // DebugInfo represents diagnostic information about
 // the Algod service, path availability, and related metadata.
 type DebugInfo struct {
+	Version string `json:"version"`
 
 	// InPath indicates whether the `algod` command-line tool is available in the system's executable path.
 	InPath bool `json:"inPath"`
@@ -72,11 +75,19 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			return err
 		}
 		folderDebug, err := utils.ToDataFolderConfig(dataDir)
-		folderDebug.Token = folderDebug.Token[:3] + "..."
 		if err != nil {
-			return err
+			folderDebug.Token = fmt.Sprint(err)
+		} else {
+			folderDebug.Token = folderDebug.Token[:3] + "..."
 		}
+
+		var stat unix.Statfs_t
+		unix.Statfs(dataDir, &stat)
+		bytesFree := stat.Bavail * uint64(stat.Bsize)
+		folderDebug.BytesFree = fmt.Sprintf("%d bytes (%d MB)", bytesFree, bytesFree/1024/1024)
+
 		info := DebugInfo{
+			Version:     cmd.Root().Version,
 			InPath:      system.CmdExists("algod"),
 			IsRunning:   algod.IsRunning(),
 			IsService:   algod.IsService(),
