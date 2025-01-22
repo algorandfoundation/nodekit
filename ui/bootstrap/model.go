@@ -2,9 +2,9 @@ package bootstrap
 
 import (
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/log"
 )
 
 type Question string
@@ -43,8 +43,17 @@ func NewModel() Model {
 		},
 	}
 }
+
+var termMarkdown *glamour.TermRenderer
+
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
+	var err error
+	termMarkdown, err = glamour.NewTermRenderer(glamour.WithAutoStyle())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
 }
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -95,13 +104,6 @@ func (m Model) View() string {
 	case CatchupQuestion:
 		str = CatchupQuestionMsg
 	}
-	var msg string
-	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle())
-	if err != nil {
-		// Fallback to dark mode
-		msg, _ = glamour.Render(str, "dark")
-	} else {
-		msg, _ = r.Render(str)
-	}
-	return msg
+	str, _ = termMarkdown.Render(str)
+	return str
 }

@@ -145,3 +145,8 @@ func Stop() error {
 		return fmt.Errorf(UnsupportedOSError)
 	}
 }
+
+// IsInitialized determines if the Algod software is installed, configured as a service, and currently running.
+func IsInitialized() bool {
+	return IsInstalled() && IsService() && IsRunning()
+}
