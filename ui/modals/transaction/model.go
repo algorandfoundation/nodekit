@@ -42,8 +42,7 @@ func (m ViewModel) FormatedAddress() string {
 }
 
 func (m ViewModel) IsQREnabled() bool {
-	return true // TODO
-	// return m.State.Status.Network == "testnet-v1.0" || m.State.Status.Network == "mainnet-v1.0"
+	return m.State.Status.Network == "testnet-v1.0" || m.State.Status.Network == "mainnet-v1.0"
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
