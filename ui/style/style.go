@@ -44,6 +44,9 @@ var (
 			Bold(true).
 			Underline(true).
 			Render
+	Italics = lipgloss.NewStyle().
+		Italic(true).
+		Render
 )
 
 func WithHyperlink(text string, url string) string {

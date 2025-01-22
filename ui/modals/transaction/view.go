@@ -14,6 +14,8 @@ func (m ViewModel) View() string {
 		return "No key selected"
 	}
 	if m.ATxn == nil || m.Link == nil {
+		// TODO make sure the link modal actually shows loading
+		// currently it "hangs" in the previous screen when pressing R until the shortener service responds
 		return "Loading..."
 	}
 
@@ -25,50 +27,76 @@ func (m ViewModel) View() string {
 		adj = "online"
 	}
 
-	intro := fmt.Sprintf("Sign this transaction to register your account as %s", adj)
+	textHeader := "Sign this transaction to register your account as %s"
+	textOpenURLInBrowser := "Open this URL in your browser:"
+	textPeraUserPressSForQr := style.Italics("Pera wallet user? Press S to scan a QR instead.")
+	text2AFeeWarning := style.Yellow.Render(style.Bold(("⚠ Transaction fee set to 2 ALGO (opting in to rewards)")))
+	textScanQrOrPressS := style.Green.Render("Scan the QR code with Pera") + " or " + style.Yellow.Render("press S to show a link instead")
+	textOffline320Note := style.Bold("Note: this will take effect after 320 rounds (~15 min.)\n") + "Please keep your node running during this cooldown period."
+
+	intro := fmt.Sprintf(textHeader, adj)
 	render := intro
-
-	if !m.ShowLink {
-		render = lipgloss.JoinVertical(
-			lipgloss.Center,
-			render,
-			style.Green.Render("Scan the QR code with Pera")+" or "+style.Yellow.Render("press S to show a link instead"),
-		)
-	}
-
-	if m.ShouldAddIncentivesFee() {
-		render = lipgloss.JoinVertical(
-			lipgloss.Center,
-			render,
-			"",
-			style.Bold("Note: Transction fee set to 2 ALGO (opting in to rewards)"),
-		)
-	}
-
-	if isOffline {
-		render = lipgloss.JoinVertical(
-			lipgloss.Center,
-			render,
-			"",
-			style.Bold("Note: this will take effect after 320 rounds (~15 min.)"),
-			"Please keep your node running during this cooldown period.",
-		)
-	}
 
 	if m.ShowLink {
 		link := participation.ToShortLink(*m.Link, m.ShouldAddIncentivesFee())
+
 		render = lipgloss.JoinVertical(
 			lipgloss.Center,
 			render,
 			"",
-			"Open this URL in your browser:",
+			textOpenURLInBrowser,
 			"",
 			style.WithHyperlink(link, link),
-			"",
 		)
+		if m.ShouldAddIncentivesFee() {
+			render = lipgloss.JoinVertical(
+				lipgloss.Center,
+				render,
+				"",
+				text2AFeeWarning,
+			)
+		}
+		if isOffline {
+			render = lipgloss.JoinVertical(
+				lipgloss.Center,
+				render,
+				"",
+				textOffline320Note,
+			)
+		}
+		if m.IsQREnabled() {
+			render = lipgloss.JoinVertical(
+				lipgloss.Center,
+				render,
+				"",
+				textPeraUserPressSForQr,
+			)
+		}
+
 	} else {
 		// TODO: Refactor ATxn to Interface
 		txn, err := m.ATxn.ProduceQRCode()
+
+		// TODO responsive vertical spaces? calculate on modal/screen height diff
+		if m.ShouldAddIncentivesFee() {
+			render = lipgloss.JoinVertical(
+				lipgloss.Center,
+				render,
+				text2AFeeWarning,
+			)
+		}
+		if isOffline {
+			render = lipgloss.JoinVertical(
+				lipgloss.Center,
+				render,
+				textOffline320Note,
+			)
+		}
+		render = lipgloss.JoinVertical(
+			lipgloss.Center,
+			render,
+			textScanQrOrPressS,
+		)
 		if err != nil {
 			return "Something went wrong"
 		}

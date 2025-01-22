@@ -66,7 +66,8 @@ func (m *ViewModel) Account() *algod.Account {
 }
 
 func (m *ViewModel) IsIncentiveProtocol() bool {
-	return m.State.Status.LastProtocolVersion == "https://github.com/algorandfoundation/specs/tree/236dcc18c9c507d794813ab768e467ea42d1b4d9"
+	return true // NOCOMMIT
+	// return m.State.Status.LastProtocolVersion == "https://github.com/algorandfoundation/specs/tree/236dcc18c9c507d794813ab768e467ea42d1b4d9"
 }
 
 // Whether the 2A incentive fee should be added
