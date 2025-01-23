@@ -37,7 +37,7 @@ type ViewModel struct {
 	// Views
 	infoModal        info.ViewModel
 	transactionModal *transaction.ViewModel
-	confirmModal     *confirm.ViewModel
+	confirmModal     confirm.ViewModel
 	generateModal    *generate.ViewModel
 	exceptionModal   *exception.ViewModel
 
@@ -57,7 +57,7 @@ func (m *ViewModel) SetAddress(address string) {
 // SetKey updates the participation key across infoModal, confirmModal, and transactionModal in the ViewModel.
 func (m *ViewModel) SetKey(key *api.ParticipationKey) {
 	m.infoModal.Participation = key
-	m.confirmModal.ActiveKey = key
+	m.confirmModal.Participation = key
 	m.transactionModal.Participation = key
 }
 
@@ -84,10 +84,6 @@ func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
 func (m *ViewModel) SetType(modal app.ModalType) {
 	m.Type = modal
 	switch modal {
-	case app.ConfirmModal:
-		m.title = m.confirmModal.Title
-		m.controls = m.confirmModal.Controls
-		m.borderColor = m.confirmModal.BorderColor
 	case app.GenerateModal:
 		m.title = m.generateModal.Title
 		m.controls = m.generateModal.Controls
@@ -118,7 +114,7 @@ func New(parent string, open bool, state *algod.StateModel) *ViewModel {
 
 		infoModal:        info.New(state),
 		transactionModal: transaction.New(state),
-		confirmModal:     confirm.New(state),
+		confirmModal:     confirm.New(state, nil),
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
 

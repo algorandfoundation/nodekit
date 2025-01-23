@@ -160,7 +160,6 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 		if msg.Type == app.InfoModal {
-			m.infoModal.Prefix = msg.Prefix
 			m.generateModal.SetStep(generate.AddressStep)
 		}
 		// On closing events
