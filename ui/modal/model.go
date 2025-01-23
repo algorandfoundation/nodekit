@@ -35,7 +35,7 @@ type ViewModel struct {
 	Link *participation.ShortLinkResponse
 
 	// Views
-	infoModal        *info.ViewModel
+	infoModal        info.ViewModel
 	transactionModal *transaction.ViewModel
 	confirmModal     *confirm.ViewModel
 	generateModal    *generate.ViewModel
@@ -63,8 +63,7 @@ func (m *ViewModel) SetKey(key *api.ParticipationKey) {
 
 // SetActive sets the active state for both infoModal and transactionModal, and updates their respective states.
 func (m *ViewModel) SetActive(active bool) {
-	m.infoModal.Active = active
-	m.infoModal.UpdateState()
+	m.infoModal.OfflineControls = active
 	m.transactionModal.Active = active
 	m.transactionModal.UpdateState()
 }
@@ -72,7 +71,6 @@ func (m *ViewModel) SetActive(active bool) {
 // SetSuspended sets the suspended state
 func (m *ViewModel) SetSuspended(sus bool) {
 	m.infoModal.Suspended = sus
-	m.infoModal.UpdateState()
 	m.transactionModal.Suspended = sus
 	m.transactionModal.UpdateState()
 }
@@ -86,10 +84,6 @@ func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
 func (m *ViewModel) SetType(modal app.ModalType) {
 	m.Type = modal
 	switch modal {
-	case app.InfoModal:
-		m.title = m.infoModal.Title
-		m.controls = m.infoModal.Controls
-		m.borderColor = m.infoModal.BorderColor
 	case app.ConfirmModal:
 		m.title = m.confirmModal.Title
 		m.controls = m.confirmModal.Controls

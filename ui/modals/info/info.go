@@ -12,26 +12,20 @@ import (
 )
 
 type ViewModel struct {
-	Width         int
-	Height        int
-	Title         string
-	Controls      string
-	BorderColor   string
-	Active        bool
-	Suspended     bool
-	Prefix        string
-	Participation *api.ParticipationKey
-	State         *algod.StateModel
+	Width           int
+	Height          int
+	OfflineControls bool
+	Suspended       bool
+	Prefix          string
+	Participation   *api.ParticipationKey
+	State           *algod.StateModel
 }
 
-func New(state *algod.StateModel) *ViewModel {
-	return &ViewModel{
-		Width:       0,
-		Height:      0,
-		Title:       "Key Information",
-		BorderColor: "3",
-		Controls:    "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(o)nline") + " )",
-		State:       state,
+func New(state *algod.StateModel) ViewModel {
+	return ViewModel{
+		Width:  0,
+		Height: 0,
+		State:  state,
 	}
 }
 
@@ -39,54 +33,75 @@ func (m ViewModel) Init() tea.Cmd {
 	return nil
 }
 
+// Update processes a message and returns the updated model and command based on the received input.
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
-func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
-
+func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
+	isOffline := !m.OfflineControls
 	switch msg := msg.(type) {
+	case app.ModalEvent:
+		if msg.Type == app.InfoModal {
+			m.Prefix = msg.Prefix
+			m.Participation = msg.Key
+			m.OfflineControls = msg.Active
+			isOffline = !m.OfflineControls
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return &m, app.EmitModalEvent(app.ModalEvent{
+			return m, app.EmitModalEvent(app.ModalEvent{
 				Type: app.CancelModal,
 			})
 		case "d":
-			if !m.Active {
-				return &m, app.EmitShowModal(app.ConfirmModal)
+			if !m.OfflineControls {
+				return m, app.EmitShowModal(app.ConfirmModal)
 			}
 		case "r":
-			if !m.Active {
-				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			if !m.OfflineControls {
+				return m, app.EmitCreateShortLink(isOffline, m.Participation, m.State)
 			}
 		case "o":
-			if m.Active {
-				return &m, app.EmitCreateShortLink(m.Active, m.Participation, m.State)
+			if m.OfflineControls {
+				return m, app.EmitCreateShortLink(isOffline, m.Participation, m.State)
 			}
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
 	}
-	m.UpdateState()
-	return &m, nil
+	return m, nil
 }
-func (m *ViewModel) UpdateState() {
+
+// Title returns the fixed title string "Key Information" for the ViewModel.
+func (m ViewModel) Title() string {
+	return "Key Information"
+}
+
+// Controls generates a string representation of control options based on the state of Participation and Active fields.
+func (m ViewModel) Controls() string {
 	if m.Participation == nil {
-		return
+		return ""
+	}
+	if m.OfflineControls {
+		return "( " + style.Red.Render(style.Red.Render("take (o)ffline")) + " )"
 	}
 
-	if m.Active && !m.Suspended {
-		m.BorderColor = "1"
-		m.Controls = "( " + style.Red.Render(style.Red.Render("take (o)ffline")) + " )"
-	}
+	return "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister online") + " )"
 
-	if !m.Active {
-		m.BorderColor = "3"
-		m.Controls = "( " + style.Red.Render("(d)elete") + " | " + style.Green.Render("(r)egister online") + " )"
-	}
 }
-func (m ViewModel) View() string {
+
+// BorderColor determines border color based on the state of participation and activity.
+// Returns "3" if Participation is nil, "4" if Active is true, and "5" otherwise.
+func (m ViewModel) BorderColor() string {
+	if m.OfflineControls {
+		return "1"
+	}
+	return "3"
+}
+
+// Body generates the formatted content of the ViewModel, displaying key details or indicating no key is selected.
+func (m ViewModel) Body() string {
 	if m.Participation == nil {
 		return "No key selected"
 	}
@@ -106,7 +121,6 @@ func (m ViewModel) View() string {
 	if m.Prefix != "" {
 		prefix = "\n" + m.Prefix
 	}
-
 	return ansi.Hardwrap(lipgloss.JoinVertical(lipgloss.Left,
 		prefix,
 		account,
@@ -121,5 +135,23 @@ func (m ViewModel) View() string {
 		voteKeyDilution,
 		"",
 	), m.Width, true)
+}
+
+// View renders the ViewModel as a styled string, incorporating title, controls, and body content with dynamic borders.
+func (m ViewModel) View() string {
+	body := m.Body()
+	width := lipgloss.Width(body)
+	height := lipgloss.Height(body)
+	return style.WithNavigation(
+		m.Controls(),
+		style.WithTitle(
+			m.Title(),
+			// Apply the Borders with the Padding
+			style.ApplyBorder(width+2, height-4, m.BorderColor()).
+				PaddingRight(1).
+				PaddingLeft(1).
+				Render(m.Body()),
+		),
+	)
 
 }

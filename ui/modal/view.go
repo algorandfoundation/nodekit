@@ -3,7 +3,6 @@ package modal
 import (
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/style"
-	"github.com/charmbracelet/lipgloss"
 )
 
 // View renders the current modal's UI based on its type and state, or returns the parent content if the modal is closed.
@@ -24,17 +23,6 @@ func (m ViewModel) View() string {
 	case app.ExceptionModal:
 		render = m.exceptionModal.View()
 	}
-	width := lipgloss.Width(render) + 2
-	height := lipgloss.Height(render)
 
-	return style.WithOverlay(style.WithNavigation(
-		m.controls,
-		style.WithTitle(
-			m.title,
-			style.ApplyBorder(width, height, m.borderColor).
-				PaddingRight(1).
-				PaddingLeft(1).
-				Render(render),
-		),
-	), m.Parent)
+	return style.WithOverlay(render, m.Parent)
 }
