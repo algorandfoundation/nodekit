@@ -38,7 +38,7 @@ type ViewModel struct {
 	infoModal        info.ViewModel
 	transactionModal *transaction.ViewModel
 	confirmModal     confirm.ViewModel
-	generateModal    *generate.ViewModel
+	generateModal    generate.ViewModel
 	exceptionModal   *exception.ViewModel
 
 	// Current Component Data
@@ -51,7 +51,7 @@ type ViewModel struct {
 // SetAddress updates the ViewModel's Address property and synchronizes it with the associated generateModal.
 func (m *ViewModel) SetAddress(address string) {
 	m.Address = address
-	m.generateModal.SetAddress(address)
+	//m.generateModal.SetAddress(address)
 }
 
 // SetKey updates the participation key across infoModal, confirmModal, and transactionModal in the ViewModel.
@@ -84,10 +84,6 @@ func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
 func (m *ViewModel) SetType(modal app.ModalType) {
 	m.Type = modal
 	switch modal {
-	case app.GenerateModal:
-		m.title = m.generateModal.Title
-		m.controls = m.generateModal.Controls
-		m.borderColor = m.generateModal.BorderColor
 	case app.TransactionModal:
 		m.title = m.transactionModal.Title
 		m.controls = m.transactionModal.Controls

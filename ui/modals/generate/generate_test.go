@@ -24,7 +24,7 @@ func Test_New(t *testing.T) {
 	if m.Step != AddressStep {
 		t.Error("Did not advance to address step")
 	}
-	if m.Controls != "( esc to cancel )" {
+	if m.Controls() != "( esc to cancel )" {
 		t.Error("Did not set controls")
 	}
 

@@ -165,7 +165,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		// On closing events
 		if msg.Type == app.CloseModal {
 			m.Open = false
-			m.generateModal.Input.Focus()
+			m.generateModal.AddressInput.Focus()
 		} else {
 			m.Open = true
 		}
@@ -178,7 +178,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				m.Open = false
 				m.SetType(app.InfoModal)
 				m.generateModal.SetStep(generate.AddressStep)
-				m.generateModal.Input.Focus()
+				m.generateModal.AddressInput.Focus()
 			case app.TransactionModal:
 				m.SetType(app.InfoModal)
 			case app.ExceptionModal:

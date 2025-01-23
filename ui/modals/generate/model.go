@@ -1,9 +1,9 @@
 package generate
 
 import (
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/charmbracelet/bubbles/cursor"
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
@@ -27,61 +27,75 @@ type ViewModel struct {
 	Width  int
 	Height int
 
-	Address       string
-	Input         *textinput.Model
-	InputError    string
-	InputTwo      *textinput.Model
-	InputTwoError string
-	Spinner       *spinner.Model
-	Step          Step
-	Range         Range
+	Address string
 
-	Title       string
-	Controls    string
-	BorderColor string
+	AddressInput      textinput.Model
+	AddressInputError string
 
-	State      *algod.StateModel
-	cursorMode cursor.Mode
+	DurationInput      textinput.Model
+	DurationInputError string
+
+	Step  Step
+	Range Range
+
+	Participation *api.ParticipationKey
+	State         *algod.StateModel
+	cursorMode    cursor.Mode
 }
 
-func (m *ViewModel) SetAddress(address string) {
+func (m *ViewModel) Reset(address string) {
 	m.Address = address
-	m.Input.SetValue(address)
+	m.AddressInput.SetValue(address)
+	m.AddressInputError = ""
+	m.AddressInput.Focus()
+	m.SetStep(AddressStep)
+	m.DurationInput.SetValue("")
+	m.DurationInputError = ""
+}
+func (m *ViewModel) SetStep(step Step) {
+	m.Step = step
+	switch m.Step {
+	case AddressStep:
+		m.AddressInputError = ""
+	case DurationStep:
+		m.DurationInput.SetValue("")
+		m.DurationInput.Focus()
+		m.DurationInput.PromptStyle = focusedStyle
+		m.DurationInput.TextStyle = focusedStyle
+		m.DurationInputError = ""
+		m.AddressInput.Blur()
+	}
 }
 
-var DefaultControls = "( esc to cancel )"
-var DefaultTitle = "Generate Consensus Participation Keys"
-var DefaultBorderColor = "2"
+//func (m ViewModel) SetAddress(address string) {
+//	m.Address = address
+//	m.AddressInput.SetValue(address)
+//}
 
-func New(address string, state *algod.StateModel) *ViewModel {
-	input := textinput.New()
-	input2 := textinput.New()
+func New(address string, state *algod.StateModel) ViewModel {
 
 	m := ViewModel{
-		Address:       address,
-		State:         state,
-		Input:         &input,
-		InputError:    "",
-		InputTwo:      &input2,
-		InputTwoError: "",
-		Step:          AddressStep,
-		Range:         Day,
-		Title:         DefaultTitle,
-		Controls:      DefaultControls,
-		BorderColor:   DefaultBorderColor,
+		Address:            address,
+		State:              state,
+		AddressInput:       textinput.New(),
+		AddressInputError:  "",
+		DurationInput:      textinput.New(),
+		DurationInputError: "",
+		Step:               AddressStep,
+		Range:              Day,
 	}
-	input.Cursor.Style = cursorStyle
-	input.CharLimit = 58
-	input.Placeholder = "Wallet Address"
-	input.Focus()
-	input.PromptStyle = focusedStyle
-	input.TextStyle = focusedStyle
+	m.AddressInput.Cursor.Style = cursorStyle
+	m.AddressInput.CharLimit = 58
+	m.AddressInput.Placeholder = "Wallet Address"
+	m.AddressInput.Focus()
+	m.AddressInput.PromptStyle = focusedStyle
+	m.AddressInput.TextStyle = focusedStyle
 
-	input2.Cursor.Style = cursorStyle
-	input2.CharLimit = 58
-	input2.Placeholder = "Length of time"
+	m.DurationInput.Cursor.Style = cursorStyle
+	m.DurationInput.CharLimit = 58
+	m.DurationInput.Placeholder = "Length of time"
 
-	input2.PromptStyle = noStyle
-	input2.TextStyle = noStyle
-	return &m
+	m.DurationInput.PromptStyle = noStyle
+	m.DurationInput.TextStyle = noStyle
+	return m
 }
