@@ -64,7 +64,7 @@ func (m *ViewModel) SetKey(key *api.ParticipationKey) {
 // SetActive sets the active state for both infoModal and transactionModal, and updates their respective states.
 func (m *ViewModel) SetActive(active bool) {
 	m.infoModal.OfflineControls = active
-	m.transactionModal.Active = active
+	m.transactionModal.OfflineControls = active
 	m.transactionModal.UpdateState()
 }
 
@@ -84,10 +84,6 @@ func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
 func (m *ViewModel) SetType(modal app.ModalType) {
 	m.Type = modal
 	switch modal {
-	case app.TransactionModal:
-		m.title = m.transactionModal.Title
-		m.controls = m.transactionModal.Controls
-		m.borderColor = m.transactionModal.BorderColor
 	case app.ExceptionModal:
 		m.title = m.exceptionModal.Title
 		m.controls = m.exceptionModal.Controls

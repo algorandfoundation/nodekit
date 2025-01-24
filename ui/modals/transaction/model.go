@@ -6,7 +6,6 @@ import (
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
-	"github.com/algorandfoundation/nodekit/ui/style"
 )
 
 type ViewModel struct {
@@ -15,23 +14,16 @@ type ViewModel struct {
 	// Height is the last known vertical lines
 	Height int
 
-	Title string
+	//Title string
 
 	// Active Participation Key
-	Participation *api.ParticipationKey
-	Active        bool
-	Suspended     bool
-	Link          *participation.ShortLinkResponse
+	Participation   *api.ParticipationKey
+	OfflineControls bool
+	Suspended       bool
+	Link            *participation.ShortLinkResponse
 
 	// Pointer to the State
 	State    *algod.StateModel
-	IsOnline bool
-
-	// Components
-	BorderColor string
-	Controls    string
-	navigation  string
-
 	ShowLink bool
 
 	// QR Code
@@ -49,13 +41,8 @@ func (m ViewModel) IsQREnabled() bool {
 // New creates and instance of the ViewModel with a default controls.Model
 func New(state *algod.StateModel) *ViewModel {
 	return &ViewModel{
-		State:       state,
-		Title:       "Offline Transaction",
-		ShowLink:    true,
-		IsOnline:    false,
-		BorderColor: "9",
-		navigation:  "| accounts | keys | " + style.Green.Render("txn") + " |",
-		Controls:    "",
-		ATxn:        nil,
+		State:    state,
+		ShowLink: true,
+		ATxn:     nil,
 	}
 }

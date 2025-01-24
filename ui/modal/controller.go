@@ -101,13 +101,13 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				diff, isDifferent, count := participation.HasChanged(*m.transactionModal.Participation, acct.Participation)
 
 				// The account is valid and we registered
-				if isValid && !isDifferent && m.Type == app.TransactionModal && !m.transactionModal.Active {
+				if isValid && !isDifferent && m.Type == app.TransactionModal && !m.transactionModal.OfflineControls {
 					m.SetActive(true)
 					m.infoModal.Prefix = "Successfully registered online!\n"
 					m.HasPrefix = true
 					m.SetType(app.InfoModal)
 					// For the love of all that is good, please lets refactor this. Preferably with a daemon
-				} else if isValid && isDifferent && count != 6 && (m.Type == app.InfoModal || (m.Type == app.TransactionModal && !m.transactionModal.Active)) {
+				} else if isValid && isDifferent && count != 6 && (m.Type == app.InfoModal || (m.Type == app.TransactionModal && !m.transactionModal.OfflineControls)) {
 					// It is online, has a participation key but not the one we are looking at AND all the keys are not different
 					// (AND it's the info modal (this case we are checking on enter) OR we are waiting to register a key, and we made a mistake
 
@@ -140,7 +140,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 						m.SetType(app.InfoModal)
 					}
-				} else if !isOnline && m.Type == app.TransactionModal && m.transactionModal.Active && m.transactionModal.ATxn.VotePK == nil {
+				} else if !isOnline && m.Type == app.TransactionModal && m.transactionModal.OfflineControls && m.transactionModal.ATxn.VotePK == nil {
 					m.SetActive(false)
 					m.infoModal.Prefix = "Successfully registered offline!\n"
 					m.HasPrefix = true

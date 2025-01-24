@@ -9,7 +9,34 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-func (m ViewModel) View() string {
+const (
+	OnlineTitle  = "Register Online"
+	OfflineTitle = "Register Offline"
+)
+
+func (m ViewModel) Title() string {
+	if m.OfflineControls {
+		return OfflineTitle
+	} else {
+		return OnlineTitle
+	}
+}
+func (m ViewModel) BorderColor() string {
+	return "9"
+}
+func (m ViewModel) Controls() string {
+	escLegend := style.Red.Render("(esc) go back")
+	if m.IsQREnabled() {
+		otherView := "link"
+		if m.ShowLink {
+			otherView = "QR"
+		}
+		return "( " + style.Yellow.Render("(s)how "+otherView) + " | " + escLegend + " )"
+	}
+	return "( " + escLegend + " )"
+}
+
+func (m ViewModel) Body() string {
 	if m.Participation == nil {
 		return "No key selected"
 	}
@@ -64,7 +91,6 @@ func (m ViewModel) View() string {
 			"Open this URL in your browser:",
 			"",
 			style.WithHyperlink(link, link),
-			"",
 		)
 	} else {
 		// TODO: Refactor ATxn to Interface
@@ -95,4 +121,22 @@ func (m ViewModel) View() string {
 	}
 
 	return render
+}
+
+// View renders the ViewModel as a styled string, incorporating title, controls, and body content with dynamic borders.
+func (m ViewModel) View() string {
+	body := m.Body()
+	width := lipgloss.Width(body)
+	height := lipgloss.Height(body)
+	return style.WithNavigation(
+		m.Controls(),
+		style.WithTitle(
+			m.Title(),
+			// Apply the Borders with the Padding
+			style.ApplyBorder(width+2, height+2, m.BorderColor()).
+				Padding(1).
+				Render(m.Body()),
+		),
+	)
+
 }
