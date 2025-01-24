@@ -111,13 +111,12 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 					// It is online, has a participation key but not the one we are looking at AND all the keys are not different
 					// (AND it's the info modal (this case we are checking on enter) OR we are waiting to register a key, and we made a mistake
 
-					// You know it's getting bad when the plugin recommendation is Grazie
-					// TODO: refactor this beast to have isolated state from the modal controller
-
-					// Ahh yes, classic "Set Active to the inverse then only navigate when there is no prefix"
+					// Ahh yes, classic "Set Active to the inverse then only navigate when there is no prefix and it's not the dilution changing"
+					// Dilution is likely to match some active keys so we just ignore it. First and last rounds must be unique pairs
 					// This is the closest thing we have to state, between this and the transaction modal state it works
+					// Set active ensures the offline modal is changed when a corruption happens
 					m.SetActive(false)
-					if m.infoModal.Prefix == "" {
+					if m.infoModal.Prefix == "" && diff.VoteKeyDilution {
 						m.infoModal.Prefix = "***WARNING***\nRegistered online but keys do not fully match\nCheck your registered keys carefully against the node keys\n\n"
 						if diff.VoteFirstValid {
 							m.infoModal.Prefix = m.infoModal.Prefix + "Mismatched: Vote First Valid\n"

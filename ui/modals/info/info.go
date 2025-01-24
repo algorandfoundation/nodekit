@@ -38,14 +38,12 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
-	isOffline := !m.OfflineControls
 	switch msg := msg.(type) {
 	case app.ModalEvent:
 		if msg.Type == app.InfoModal {
 			m.Prefix = msg.Prefix
 			m.Participation = msg.Key
 			m.OfflineControls = msg.Active
-			isOffline = !m.OfflineControls
 		}
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -59,11 +57,11 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			}
 		case "r":
 			if !m.OfflineControls {
-				return m, app.EmitCreateShortLink(isOffline, m.Participation, m.State)
+				return m, app.EmitCreateShortLink(false, m.Participation, m.State)
 			}
 		case "o":
 			if m.OfflineControls {
-				return m, app.EmitCreateShortLink(isOffline, m.Participation, m.State)
+				return m, app.EmitCreateShortLink(true, m.Participation, m.State)
 			}
 		}
 	case tea.WindowSizeMsg:
