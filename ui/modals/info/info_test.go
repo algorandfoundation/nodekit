@@ -14,23 +14,20 @@ import (
 
 func Test_New(t *testing.T) {
 	m := New(test.GetState(nil))
-	if m == nil {
-		t.Fatal("New returned nil")
-	}
 	m.Participation = &mock.Keys[0]
 	account := m.State.Accounts[mock.Keys[0].Address]
 	account.Status = "Online"
 	m.State.Accounts[mock.Keys[0].Address] = account
-	m.Active = true
-	m.UpdateState()
-	if m.BorderColor != "1" {
+	m.OfflineControls = true
+	if m.BorderColor() != "1" {
 		t.Error("State is not correct, border should be 1")
 	}
-	if m.Controls != "( take (o)ffline )" {
+	if m.Controls() != "( take (o)ffline )" {
 		t.Error("Controls are not correct")
 	}
 }
 func Test_Snapshot(t *testing.T) {
+	// TODO: Suspended, and Corrupt Key
 	t.Run("Visible", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Participation = &mock.Keys[0]

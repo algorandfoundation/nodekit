@@ -13,11 +13,11 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	m := New(test.GetState(nil))
-	if m.ActiveKey != nil {
+	m := New(test.GetState(nil), nil)
+	if m.Participation != nil {
 		t.Errorf("expected ActiveKey to be nil")
 	}
-	m.ActiveKey = &mock.Keys[0]
+	m.Participation = &mock.Keys[0]
 	// Handle Delete
 	m, cmd := m.HandleMessage(tea.KeyMsg{
 		Type:  tea.KeyRunes,
@@ -30,13 +30,12 @@ func Test_New(t *testing.T) {
 }
 func Test_Snapshot(t *testing.T) {
 	t.Run("NoKey", func(t *testing.T) {
-		model := New(test.GetState(nil))
+		model := New(test.GetState(nil), nil)
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
 	t.Run("Visible", func(t *testing.T) {
-		model := New(test.GetState(nil))
-		model.ActiveKey = &mock.Keys[0]
+		model := New(test.GetState(nil), &mock.Keys[0])
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
@@ -45,8 +44,7 @@ func Test_Snapshot(t *testing.T) {
 
 func Test_Messages(t *testing.T) {
 	// Create the Model
-	m := New(test.GetState(nil))
-	m.ActiveKey = &mock.Keys[0]
+	m := New(test.GetState(nil), &mock.Keys[0])
 	tm := teatest.NewTestModel(
 		t, m,
 		teatest.WithInitialTermSize(80, 40),

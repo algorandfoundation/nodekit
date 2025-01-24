@@ -46,7 +46,7 @@ func Test_Snapshot(t *testing.T) {
 			Height: 40,
 			Width:  80,
 		})
-		model.Active = true
+		model.OfflineControls = true
 		model.UpdateState()
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
