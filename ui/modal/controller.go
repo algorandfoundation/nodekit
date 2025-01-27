@@ -5,7 +5,6 @@ import (
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/algorandfoundation/nodekit/ui/modals/generate"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,28 +22,15 @@ func (m ViewModel) Init() tea.Cmd {
 	)
 }
 
-func boolToInt(input bool) int {
-	if input {
-		return 1
-	}
-	return 0
-}
-
 // HandleMessage processes the given message, updates the ViewModel state, and returns any commands to execute.
-func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
+func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 	switch msg := msg.(type) {
-	case error:
-		m.Open = true
-		m.exceptionModal.Message = msg.Error()
-		m.SetType(app.ExceptionModal)
-	case participation.ShortLinkResponse:
-		m.Open = true
-		m.SetShortLink(msg)
-		m.SetType(app.TransactionModal)
+	// When the state updates
+	// TODO: refactor to split this up a bit
 	case *algod.StateModel:
 		// Clear the catchup modal
 		if msg.Status.State != algod.FastCatchupState && m.Type == app.ExceptionModal && m.title == "Fast Catchup" {
@@ -116,7 +102,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 					// This is the closest thing we have to state, between this and the transaction modal state it works
 					// Set active ensures the offline modal is changed when a corruption happens
 					m.SetActive(false)
-					if m.infoModal.Prefix == "" && diff.VoteKeyDilution {
+					if (m.infoModal.Prefix == "" && diff.VoteKeyDilution) || (m.infoModal.Prefix == "" && count <= 4) {
 						m.infoModal.Prefix = "***WARNING***\nRegistered online but keys do not fully match\nCheck your registered keys carefully against the node keys\n\n"
 						if diff.VoteFirstValid {
 							m.infoModal.Prefix = m.infoModal.Prefix + "Mismatched: Vote First Valid\n"
@@ -150,103 +136,70 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			}
 		}
 
-	case app.ModalEvent:
-		if msg.Type == app.ExceptionModal {
-			m.Open = true
-			m.exceptionModal.Message = msg.Err.Error()
-			m.generateModal.SetStep(generate.AddressStep)
-			m.SetType(app.ExceptionModal)
+	case app.KeySelectedEvent:
+		m.Open = true
+		m.SetKey(msg.Key)
+		m.SetActive(msg.Active)
+		m.SetType(app.InfoModal)
+		// Only update prefix when something else has requested it
+		if msg.Prefix != "" && m.Type == app.InfoModal {
+			m.infoModal.Prefix = msg.Prefix
 		}
-
-		if msg.Type == app.InfoModal {
-			m.generateModal.SetStep(generate.AddressStep)
-		}
-		// On closing events
-		if msg.Type == app.CloseModal {
+	case app.OverlayEventType:
+		switch msg {
+		case app.OverlayEventClose:
 			m.Open = false
-			m.generateModal.AddressInput.Focus()
-		} else {
-			m.Open = true
-		}
-		// When something has triggered a cancel
-		if msg.Type == app.CancelModal {
+			m.SetType(app.InfoModal)
+			m.generateModal.Reset("")
+		case app.OverlayEventCancel:
 			switch m.Type {
 			case app.InfoModal:
-				m.Open = false
+				return m, app.EmitCloseOverlay()
 			case app.GenerateModal:
-				m.Open = false
-				m.SetType(app.InfoModal)
-				m.generateModal.SetStep(generate.AddressStep)
-				m.generateModal.AddressInput.Focus()
+				return m, app.EmitCloseOverlay()
 			case app.TransactionModal:
 				m.SetType(app.InfoModal)
-			case app.ExceptionModal:
-				m.Open = false
 			case app.ConfirmModal:
 				m.SetType(app.InfoModal)
 			}
 		}
-
-		if msg.Type != app.CloseModal && msg.Type != app.CancelModal {
-			m.SetKey(msg.Key)
-			m.SetAddress(msg.Address)
-			m.SetActive(msg.Active)
-			m.SetType(msg.Type)
-		}
-
 	// Handle Modal Type
 	case app.ModalType:
+		m.Open = true
 		m.SetType(msg)
 
-	// Handle Confirmation Dialog Delete Finished
-	case app.DeleteFinished:
-		m.Open = false
-		m.Type = app.InfoModal
-		if msg.Err != nil {
-			m.Open = true
-			m.Type = app.ExceptionModal
-			m.exceptionModal.Message = "Delete failed"
+	case tea.KeyMsg:
+		if msg.String() == "q" && m.Type != app.GenerateModal && m.Open {
+			return m, tea.Quit
 		}
-	// Handle View Size changes
-	case tea.WindowSizeMsg:
-		m.Width = msg.Width
-		m.Height = msg.Height
-
-		b := style.Border.Render("")
-		// Custom size message
-		modalMsg := tea.WindowSizeMsg{
-			Width:  m.Width - lipgloss.Width(b),
-			Height: m.Height - lipgloss.Height(b),
+		// Only trigger modal commands when they are active
+		switch m.Type {
+		case app.ExceptionModal:
+			m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
+		case app.InfoModal:
+			m.infoModal, cmd = m.infoModal.HandleMessage(msg)
+		case app.TransactionModal:
+			m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
+		case app.ConfirmModal:
+			m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
+		case app.GenerateModal:
+			m.generateModal, cmd = m.generateModal.HandleMessage(msg)
 		}
-
-		// Handle the page resize event
-		m.infoModal, cmd = m.infoModal.HandleMessage(modalMsg)
-		cmds = append(cmds, cmd)
-		m.transactionModal, cmd = m.transactionModal.HandleMessage(modalMsg)
-		cmds = append(cmds, cmd)
-		m.confirmModal, cmd = m.confirmModal.HandleMessage(modalMsg)
-		cmds = append(cmds, cmd)
-		m.generateModal, cmd = m.generateModal.HandleMessage(modalMsg)
-		cmds = append(cmds, cmd)
-		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(modalMsg)
+		// Exit early and don't apply twice
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	}
 
-	// Only trigger modal commands when they are active
-	switch m.Type {
-	case app.ExceptionModal:
-		m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
-	case app.InfoModal:
-		m.infoModal, cmd = m.infoModal.HandleMessage(msg)
-	case app.TransactionModal:
-		m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
-
-	case app.ConfirmModal:
-		m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
-	case app.GenerateModal:
-		m.generateModal, cmd = m.generateModal.HandleMessage(msg)
-	}
+	// Handle all other messages
+	m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.infoModal, cmd = m.infoModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.generateModal, cmd = m.generateModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/modal"
@@ -29,15 +28,17 @@ type ViewportViewModel struct {
 	accountsPage accounts.ViewModel
 	keysPage     keys.ViewModel
 
-	outside app.Outside
-	modal   *modal.ViewModel
-	page    app.Page
-	client  api.ClientWithResponsesInterface
+	modal modal.ViewModel
+	page  app.Page
 }
 
-// Init is a no-op
+// Init hooks for components
 func (m ViewportViewModel) Init() tea.Cmd {
-	return m.modal.Init()
+	return tea.Batch(
+		m.modal.Init(),
+		m.accountsPage.Init(),
+		m.keysPage.Init(),
+	)
 }
 
 // Update Handle the viewport lifecycle
@@ -46,50 +47,43 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
-	// Handle Header Updates
+	// Handle Header and Modal Updates
 	m.protocol, cmd = m.protocol.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.status, cmd = m.status.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
-	case app.Page:
-		if msg == app.KeysPage {
-			m.keysPage.Address = m.accountsPage.SelectedAccount().Address
-		}
-		m.page = msg
-	// When the state updates
 	case *algod.StateModel:
 		m.Data = msg
-		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
-		cmds = append(cmds, cmd)
-		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
-		cmds = append(cmds, cmd)
-		m.modal, cmd = m.modal.HandleMessage(msg)
-		cmds = append(cmds, cmd)
-		m.protocol, cmd = m.protocol.HandleMessage(msg)
-		cmds = append(cmds, cmd)
-		return m, tea.Batch(cmds...)
+	// When a page message comes, set the current page
+	case app.Page:
+		m.page = msg
+		return m, nil
+	// When the Participation Key endpoint responds, check for keys remaining
+	// and navigate back to accounts when te participation key list is empty.
 	case app.DeleteFinished:
 		if len(m.keysPage.Rows()) <= 1 {
-			cmd = app.EmitShowPage(app.AccountsPage)
-			cmds = append(cmds, cmd)
+			cmds = append(cmds, app.EmitShowPage(app.AccountsPage))
 		}
+	// Handle navigations between the different pages and modals
 	case tea.KeyMsg:
+		// When the modal is open, handle controls via the overlay component
+		if m.modal.Open {
+			m.modal, cmd = m.modal.HandleMessage(msg)
+			cmds = append(cmds, cmd)
+			return m, tea.Batch(cmds...)
+		}
+
+		// Otherwise let the viewport have focus on the inputs for the following global controls
 		switch msg.String() {
 		case "g":
 			// Only open modal when it is closed and not syncing
-			if !m.modal.Open && m.Data.Status.State == algod.StableState && m.Data.Metrics.RoundTime > 0 {
-				address := ""
-				selected := m.accountsPage.SelectedAccount()
-				if selected != nil {
-					address = selected.Address
-				}
-				return m, app.EmitModalEvent(app.ModalEvent{
-					Key:     nil,
-					Address: address,
-					Type:    app.GenerateModal,
-				})
+			if m.Data.Status.State == algod.StableState && m.Data.Metrics.RoundTime > 0 {
+				return m, tea.Sequence(
+					app.EmitAccountSelected(m.accountsPage.SelectedAccount()),
+					app.EmitShowModal(app.GenerateModal),
+				)
 			} else if m.Data.Status.State != algod.StableState || m.Data.Metrics.RoundTime == 0 {
 				genErr := errors.New("Please wait until your node is fully synced")
 				m.modal, cmd = m.modal.HandleMessage(genErr)
@@ -97,8 +91,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Batch(cmds...)
 			}
 		case "left":
-			// Disable when overlay is active or on Accounts
-			if m.modal.Open || m.page == app.AccountsPage {
+			// No more pages to the left
+			if m.page == app.AccountsPage {
 				return m, nil
 			}
 			// Navigate to the Keys Page
@@ -106,39 +100,48 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, app.EmitShowPage(app.AccountsPage)
 			}
 		case "right":
-			// Disable when overlay is active
-			if m.modal.Open {
+			// No more pages to the right
+			if m.page != app.AccountsPage {
 				return m, nil
 			}
-			if m.page == app.AccountsPage {
-				selAcc := m.accountsPage.SelectedAccount()
-				if selAcc != nil {
-					m.page = app.KeysPage
-					return m, app.EmitAccountSelected(*selAcc)
-				}
-				return m, nil
+
+			// Navigate to the keys page
+			selAcc := m.accountsPage.SelectedAccount()
+			if selAcc != nil {
+				return m, tea.Sequence(app.EmitAccountSelected(selAcc), app.EmitShowPage(app.KeysPage))
 			}
+
+			// Nothing to do if there are no accounts
 			return m, nil
+
+		// Exit the application
 		case "q", "ctrl+c":
-			// Close the app when anything other than generate modal is visible
-			if !m.modal.Open || (m.modal.Open && m.modal.Type != app.GenerateModal) {
-				return m, tea.Quit
-			}
+			return m, tea.Quit
+
 		}
 
+		// Pass commands to the pages, depending on which is active
+		if m.page == app.AccountsPage {
+			m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+			cmds = append(cmds, cmd)
+		}
+		if m.page == app.KeysPage {
+			m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+			cmds = append(cmds, cmd)
+		}
+
+		return m, tea.Batch(cmds...)
+
+	// Override the page height for the page renders
 	case tea.WindowSizeMsg:
+		// Handle modal height
+		m.modal, cmd = m.modal.HandleMessage(msg)
+		cmds = append(cmds, cmd)
+
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		m.PageWidth = msg.Width
 		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
-
-		modalMsg := tea.WindowSizeMsg{
-			Width:  msg.Width,
-			Height: msg.Height,
-		}
-
-		m.modal, cmd = m.modal.HandleMessage(modalMsg)
-		cmds = append(cmds, cmd)
 
 		// Custom size message
 		pageMsg := tea.WindowSizeMsg{
@@ -157,22 +160,14 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmds...)
 	}
 
-	// Ignore commands while open
-	if !m.modal.Open {
-		// Get Page Updates
-		switch m.page {
-		case app.AccountsPage:
-			m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
-		case app.KeysPage:
-			m.keysPage, cmd = m.keysPage.HandleMessage(msg)
-		}
-		cmds = append(cmds, cmd)
-	}
-
-	// Run Modal Updates Last,
-	// This ensures Page Behavior is checked before mutating modal state
+	// Handle all other events
+	m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+	cmds = append(cmds, cmd)
 	m.modal, cmd = m.modal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -213,7 +208,7 @@ func (m ViewportViewModel) headerView() string {
 }
 
 // NewViewportViewModel handles the construction of the TUI viewport
-func NewViewportViewModel(state *algod.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
+func NewViewportViewModel(state *algod.StateModel) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 
@@ -226,12 +221,9 @@ func NewViewportViewModel(state *algod.StateModel, client api.ClientWithResponse
 		keysPage:     keys.New("", state.ParticipationKeys),
 
 		// Modal
-		modal:   modal.New("", false, state),
-		outside: app.NewOutside(),
+		modal: modal.New("", false, state),
 		// Current Page
 		page: app.AccountsPage,
-		// RPC client
-		client: client,
 	}
 
 	return &m, nil

@@ -56,18 +56,11 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 
 		key, err := participation.GenerateKeys(state.Context, state.Client, account, &params)
 		if err != nil {
-			return ModalEvent{
-				Key:     nil,
-				Address: "",
-				Active:  false,
-				Err:     err,
-				Type:    ExceptionModal,
-			}
+			return err
 		}
 
-		return ModalEvent{
-			Key:     key,
-			Address: key.Address,
+		return KeySelectedEvent{
+			Key: key,
 			Prefix: lipgloss.JoinVertical(
 				lipgloss.Left,
 				"Participation keys generated.",
@@ -77,9 +70,27 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 				"",
 			),
 			Active: false,
-			Err:    nil,
-			Type:   InfoModal,
 		}
 	}
 
+}
+
+// KeySelectedEvent represents an event triggered in the modal system.
+type KeySelectedEvent struct {
+
+	// Key represents a participation key associated with the modal event.
+	Key *api.ParticipationKey
+
+	// Active indicates whether key is Online or not.
+	Active bool
+
+	// Prefix adds prefix message to info modal
+	Prefix string
+}
+
+// EmitKeySelectedEvent creates a command that emits a ModalEvent as a message in the Tea framework.
+func EmitKeySelectedEvent(event KeySelectedEvent) tea.Cmd {
+	return func() tea.Msg {
+		return event
+	}
 }

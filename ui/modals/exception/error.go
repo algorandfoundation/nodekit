@@ -12,22 +12,13 @@ type ViewModel struct {
 	Height  int
 	Width   int
 	Message string
-
-	Title       string
-	BorderColor string
-	Controls    string
-	Navigation  string
 }
 
-func New(message string) *ViewModel {
-	return &ViewModel{
-		Height:      0,
-		Width:       0,
-		Message:     message,
-		Title:       "Error",
-		BorderColor: "1",
-		Controls:    "( esc )",
-		Navigation:  "",
+func New(message string) ViewModel {
+	return ViewModel{
+		Height:  0,
+		Width:   0,
+		Message: message,
 	}
 }
 
@@ -39,28 +30,54 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 
-func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
+func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	// Handle errors make ensure the modal is visible
 	case error:
 		m.Message = msg.Error()
+		return m, app.EmitShowModal(app.ExceptionModal)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return &m, app.EmitModalEvent(app.ModalEvent{
-				Type: app.CancelModal,
-			})
+			return m, app.EmitCloseOverlay()
 
 		}
 	case tea.WindowSizeMsg:
-		borderRender := style.Border.Render("")
-		m.Width = max(0, msg.Width-lipgloss.Width(borderRender))
-		m.Height = max(0, msg.Height-lipgloss.Height(borderRender))
+		m.Width = msg.Width
+		m.Height = msg.Height
 	}
 
-	return &m, cmd
+	return m, cmd
 }
 
-func (m ViewModel) View() string {
+func (m ViewModel) Title() string {
+	return "Error"
+}
+func (m ViewModel) BorderColor() string {
+	return "1"
+}
+func (m ViewModel) Controls() string {
+	return "( esc )"
+}
+func (m ViewModel) Body() string {
 	return ansi.Hardwrap(style.Red.Render(m.Message), m.Width, false)
+}
+
+// View renders the ViewModel as a styled string, incorporating title, controls, and body content with dynamic borders.
+func (m ViewModel) View() string {
+	body := m.Body()
+	width := lipgloss.Width(body)
+	height := lipgloss.Height(body)
+	return style.WithNavigation(
+		m.Controls(),
+		style.WithTitle(
+			m.Title(),
+			// Apply the Borders with the Padding
+			style.ApplyBorder(width+2, height+2, m.BorderColor()).
+				Padding(1).
+				Render(m.Body()),
+		),
+	)
+
 }

@@ -3,6 +3,7 @@ package modal
 import (
 	"bytes"
 	"errors"
+	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/test/mock"
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/internal/test"
@@ -20,7 +21,7 @@ func Test_Snapshot(t *testing.T) {
 func Test_Messages(t *testing.T) {
 	model := New(lipgloss.NewStyle().Width(80).Height(80).Render(""), true, test.GetState(nil))
 	model.SetKey(&mock.Keys[0])
-	model.SetAddress("ABC")
+	//model.SetAddress("ABC")
 	model.SetType(app.InfoModal)
 	tm := teatest.NewTestModel(
 		t, model,
@@ -72,69 +73,16 @@ func Test_Messages(t *testing.T) {
 		Id:  "",
 	})
 
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.InfoModal,
+	tm.Send(app.KeySelectedEvent{
+		Key:    nil,
+		Active: false,
 	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
+	tm.Send(app.AccountSelected(&algod.Account{
 		Address: "ABC",
-		Err:     nil,
-		Type:    app.CancelModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.GenerateModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.CancelModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.ConfirmModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.CancelModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.TransactionModal,
-	})
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.CancelModal,
-	})
-
-	tm.Send(app.ModalEvent{
-		Key:     nil,
-		Active:  false,
-		Address: "ABC",
-		Err:     nil,
-		Type:    app.CloseModal,
+	}))
+	tm.Send(app.KeySelectedEvent{
+		Key:    nil,
+		Active: false,
 	})
 	tm.Send(tea.QuitMsg{})
 

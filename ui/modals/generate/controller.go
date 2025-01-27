@@ -35,11 +35,6 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		if msg.Address != m.Address {
 			m.Reset(msg.Address)
 		}
-	// Event triggered the Generate Modal
-	case app.ModalEvent:
-		if msg.Type == app.GenerateModal {
-			m.Reset(msg.Address)
-		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
@@ -47,9 +42,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			if m.Step != WaitingStep {
-				return m, app.EmitModalEvent(app.ModalEvent{
-					Type: app.CancelModal,
-				})
+				return m, app.EmitCancelOverlay()
 			}
 		case "s":
 			if m.Step == DurationStep {

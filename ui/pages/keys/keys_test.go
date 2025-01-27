@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/test/mock"
 	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/internal/test"
@@ -19,7 +18,7 @@ func Test_New(t *testing.T) {
 	if m.Address != "ABC" {
 		t.Errorf("Expected Address to be ABC, got %s", m.Address)
 	}
-	d, active := m.SelectedKey()
+	_, active := m.SelectedKey()
 	if active {
 		t.Errorf("Expected to not find a selected key")
 	}
@@ -29,26 +28,6 @@ func Test_New(t *testing.T) {
 	})
 	if cmd != nil {
 		t.Errorf("Expected no commands")
-	}
-	m.Data = mock.Keys
-	m, _ = m.HandleMessage(app.AccountSelected{Address: "ABC", Participation: &api.AccountParticipation{
-		SelectionParticipationKey: nil,
-		StateProofKey:             nil,
-		VoteFirstValid:            0,
-		VoteKeyDilution:           0,
-		VoteLastValid:             0,
-		VoteParticipationKey:      mock.VoteKey,
-	}})
-	d, active = m.SelectedKey()
-	if !active {
-		t.Errorf("Expected to find a selected key")
-	}
-	if d.Address != "ABC" {
-		t.Errorf("Expected Address to be ABC, got %s", d.Address)
-	}
-
-	if m.Address != "ABC" {
-		t.Errorf("Expected Address to be ABC, got %s", m.Address)
 	}
 }
 

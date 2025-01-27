@@ -133,7 +133,7 @@ func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version str
 	cobra.CheckErr(err)
 
 	// Construct the TUI Model from the State
-	m, err := ui.NewViewportViewModel(state, client)
+	m, err := ui.NewViewportViewModel(state)
 	cobra.CheckErr(err)
 
 	// Construct the TUI Application

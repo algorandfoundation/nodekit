@@ -22,7 +22,10 @@ func (m ViewModel) Title() string {
 	}
 }
 func (m ViewModel) BorderColor() string {
-	return "9"
+	if m.OfflineControls {
+		return "9"
+	}
+	return "2"
 }
 func (m ViewModel) Controls() string {
 	escLegend := style.Red.Render("(esc) go back")

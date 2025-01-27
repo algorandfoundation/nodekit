@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/base64"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorandfoundation/algourl/encoder"
@@ -10,10 +11,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Init initializes the ViewModel and returns a command for further processing or side effects.
 func (m ViewModel) Init() tea.Cmd {
 	return nil
 }
 
+// Update processes a given message and returns an updated model along with any command to be executed.
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
@@ -22,12 +25,16 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	// When the link response comes back, display this modal with the updated state
+	case participation.ShortLinkResponse:
+		m.Link = &msg
+		// Ensure the transaction modal is showing
+		return &m, app.EmitShowModal(app.TransactionModal)
+	// Handle keystroke interactions like cancel
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return &m, app.EmitModalEvent(app.ModalEvent{
-				Type: app.CancelModal,
-			})
+			return &m, app.EmitCancelOverlay()
 		case "s":
 			if m.IsQREnabled() {
 				m.ShowLink = !m.ShowLink
@@ -45,7 +52,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 	return &m, cmd
 }
 
-func (m *ViewModel) Account() *algod.Account {
+func (m ViewModel) Account() *algod.Account {
 	if m.Participation == nil || m.State == nil || m.State.Accounts == nil {
 		return nil
 	}
@@ -57,12 +64,12 @@ func (m *ViewModel) Account() *algod.Account {
 	return nil
 }
 
-func (m *ViewModel) IsIncentiveProtocol() bool {
+func (m ViewModel) IsIncentiveProtocol() bool {
 	return m.State.Status.LastProtocolVersion == "https://github.com/algorandfoundation/specs/tree/236dcc18c9c507d794813ab768e467ea42d1b4d9"
 }
 
 // Whether the 2A incentive fee should be added
-func (m *ViewModel) ShouldAddIncentivesFee() bool {
+func (m ViewModel) ShouldAddIncentivesFee() bool {
 	// conditions for 2A fee:
 	// 1) incentives allowed by user: command line flag to disable incentives has not been passed
 	// 2) online keyreg

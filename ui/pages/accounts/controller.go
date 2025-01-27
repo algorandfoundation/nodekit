@@ -26,10 +26,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		case "enter":
 			selAcc := m.SelectedAccount()
 			if selAcc != nil {
-				var cmds []tea.Cmd
-				cmds = append(cmds, app.EmitAccountSelected(*selAcc))
-				cmds = append(cmds, app.EmitShowPage(app.KeysPage))
-				return m, tea.Batch(cmds...)
+				return m, tea.Sequence(
+					app.EmitAccountSelected(selAcc),
+					app.EmitShowPage(app.KeysPage),
+				)
 			}
 			return m, nil
 		}

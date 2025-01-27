@@ -13,23 +13,17 @@ func Test_GenerateCmd(t *testing.T) {
 	client := test.GetClient(false)
 	fn := GenerateCmd("ABC", participation.TimeRange, int(time.Second*60), uitest.GetState(client))
 	res := fn()
-	evt, ok := res.(ModalEvent)
+	_, ok := res.(KeySelectedEvent)
 	if !ok {
 		t.Error("Expected ModalEvent")
-	}
-	if evt.Type != InfoModal {
-		t.Error("Expected InfoModal")
 	}
 
 	client = test.GetClient(true)
 	fn = GenerateCmd("ABC", participation.TimeRange, int(time.Second*60), uitest.GetState(client))
 	res = fn()
-	evt, ok = res.(ModalEvent)
+	_, ok = res.(error)
 	if !ok {
-		t.Error("Expected ModalEvent")
-	}
-	if evt.Type != ExceptionModal {
-		t.Error("Expected ExceptionModal")
+		t.Error("Expected error")
 	}
 
 }
