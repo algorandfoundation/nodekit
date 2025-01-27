@@ -6,7 +6,7 @@ import (
 
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/algorandfoundation/nodekit/ui/modal"
+	"github.com/algorandfoundation/nodekit/ui/overlay"
 	"github.com/algorandfoundation/nodekit/ui/pages/accounts"
 	"github.com/algorandfoundation/nodekit/ui/pages/keys"
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,7 +28,7 @@ type ViewportViewModel struct {
 	accountsPage accounts.ViewModel
 	keysPage     keys.ViewModel
 
-	modal modal.ViewModel
+	modal overlay.ViewModel
 	page  app.Page
 }
 
@@ -221,7 +221,7 @@ func NewViewportViewModel(state *algod.StateModel) (*ViewportViewModel, error) {
 		keysPage:     keys.New("", state.ParticipationKeys),
 
 		// Modal
-		modal: modal.New("", false, state),
+		modal: overlay.New("", false, state),
 		// Current Page
 		page: app.AccountsPage,
 	}

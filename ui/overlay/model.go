@@ -1,4 +1,4 @@
-package modal
+package overlay
 
 import (
 	"github.com/algorandfoundation/nodekit/api"

@@ -1,4 +1,4 @@
-package modal
+package overlay
 
 import (
 	"fmt"
@@ -29,6 +29,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		cmds []tea.Cmd
 	)
 	switch msg := msg.(type) {
+	case app.AccountSelected:
+		m.Address = msg.Address
 	// When the state updates
 	// TODO: refactor to split this up a bit
 	case *algod.StateModel:
@@ -141,10 +143,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.SetKey(msg.Key)
 		m.SetActive(msg.Active)
 		m.SetType(app.InfoModal)
-		// Only update prefix when something else has requested it
-		if msg.Prefix != "" && m.Type == app.InfoModal {
-			m.infoModal.Prefix = msg.Prefix
-		}
+		// Update or clear the prefix
+		m.infoModal.Prefix = msg.Prefix
+
 	case app.OverlayEventType:
 		switch msg {
 		case app.OverlayEventClose:
