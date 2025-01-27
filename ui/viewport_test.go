@@ -16,7 +16,7 @@ func Test_ViewportViewRender(t *testing.T) {
 	client := test.GetClient(false)
 	state := uitest.GetState(client)
 	// Create the Model
-	m, err := NewViewportViewModel(state, client)
+	m, err := NewViewportViewModel(state)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,8 +35,9 @@ func Test_ViewportViewRender(t *testing.T) {
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
 	)
+	acc := state.Accounts["ABC"]
 	tm.Send(app.AccountSelected(
-		state.Accounts["ABC"]))
+		&acc))
 	tm.Send(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune("left"),

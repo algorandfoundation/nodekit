@@ -43,11 +43,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			selKey, active := m.SelectedKey()
 			if selKey != nil {
 				// Show the Info Modal with the selected Key
-				return m, app.EmitModalEvent(app.ModalEvent{
-					Key:     selKey,
-					Active:  active,
-					Address: selKey.Address,
-					Type:    app.InfoModal,
+				return m, app.EmitKeySelectedEvent(app.KeySelectedEvent{
+					Key:    selKey,
+					Active: active,
 				})
 			}
 			return m, nil

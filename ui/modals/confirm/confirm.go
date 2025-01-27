@@ -44,18 +44,16 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // HandleMessage processes incoming messages, updates ViewModel state, and returns the updated model alongside a command.
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	// Handle Confirmation Dialog Delete Finished
+	case app.DeleteFinished:
+		return m, app.EmitCloseOverlay()
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "n":
-			return m, app.EmitModalEvent(app.ModalEvent{
-				Type: app.CancelModal,
-			})
+			return m, app.EmitCancelOverlay()
 		case "y":
-			var (
-				cmds []tea.Cmd
-			)
-			cmds = append(cmds, app.EmitDeleteKey(m.State.Context, m.State.Client, m.Participation.Id))
-			return m, tea.Batch(cmds...)
+			// Emit the delete request
+			return m, app.EmitDeleteKey(m.State.Context, m.State.Client, m.Participation.Id)
 		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width

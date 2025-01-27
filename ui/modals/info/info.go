@@ -39,18 +39,10 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
-	case app.ModalEvent:
-		if msg.Type == app.InfoModal {
-			m.Prefix = msg.Prefix
-			m.Participation = msg.Key
-			m.OfflineControls = msg.Active
-		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return m, app.EmitModalEvent(app.ModalEvent{
-				Type: app.CancelModal,
-			})
+			return m, app.EmitCloseOverlay()
 		case "d":
 			if !m.OfflineControls {
 				return m, app.EmitShowModal(app.ConfirmModal)

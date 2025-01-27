@@ -1,4 +1,4 @@
-package modal
+package overlay
 
 type Modal interface {
 	Title() string
