@@ -1,3 +1,5 @@
+.docker/algod
+
 .DS_Store
 nodekit
 coverage

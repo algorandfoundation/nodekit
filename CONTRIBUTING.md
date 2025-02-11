@@ -22,6 +22,18 @@ Build the project
 make build
 ```
 
+Launch a custom network
+
+```bash
+docker-compose up -d
+```
+
+Set the data directory
+
+```bash
+export ALGORAND_DATA=.docker/algod
+```
+
 Launch the TUI. 
 See the [full documentation](https://nodekit.run/guides/getting-started/) for a complete guide
 
