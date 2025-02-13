@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/algorandfoundation/nodekit/api"
+	"strconv"
+	"strings"
 )
+
+const CATCHPOINT_THRESHOLD = 30_000
+const NO_CATCHPOINT = "no catchpoint found"
 
 // StartCatchup sends a request to start a catchup operation on a specific catchpoint and returns the catchup message.
 // It uses the provided API client, catchpoint string, and optional parameters for catchup configuration.
@@ -44,4 +49,28 @@ func GetLatestCatchpoint(httpPkg api.HttpPkgInterface, network string) (string, 
 		return "", response, err
 	}
 	return response.JSON200, response, nil
+}
+
+// IsLagging determines if the given round is lagging behind the network's latest catchpoint round by a predefined threshold.
+// It takes an HTTP package interface, the current round, and the network name as inputs, and returns a boolean and an error.
+func IsLagging(httpPkg api.HttpPkgInterface, round uint64, network string) (bool, error) {
+	// Fetch catchpoint
+	catchpoint, _, err := GetLatestCatchpoint(httpPkg, network)
+	if err != nil {
+		return false, err
+	}
+	if catchpoint == "" {
+		return false, errors.New(NO_CATCHPOINT)
+	}
+	// Parse catchpoint round
+	// Example: 48670000#AXHC4X4SSLE7QUSXE5CLPRPV2YUNK3EL6CFVEYWXGONNRO6GWXRQ
+	catchpointParts := strings.Split(catchpoint, "#")
+	catchpointRound, err := strconv.ParseUint(catchpointParts[0], 10, 64)
+	if err != nil {
+		return false, err
+	}
+
+	// Considered lagging if the delta of the rounds are above the threshold
+	delta := int(catchpointRound) - int(round)
+	return CATCHPOINT_THRESHOLD < delta, nil
 }

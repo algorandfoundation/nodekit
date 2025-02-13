@@ -1,4 +1,4 @@
-package confirm
+package delete
 
 import (
 	"github.com/algorandfoundation/nodekit/api"

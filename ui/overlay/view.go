@@ -16,6 +16,10 @@ func (m ViewModel) View() string {
 		render = m.infoModal.View()
 	case app.TransactionModal:
 		render = m.transactionModal.View()
+	case app.CatchupModal:
+		render = m.catchupModal.View()
+	case app.LaggingModal:
+		render = m.laggingModal.View()
 	case app.ConfirmModal:
 		render = m.confirmModal.View()
 	case app.GenerateModal:
