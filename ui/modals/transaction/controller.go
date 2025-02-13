@@ -7,15 +7,7 @@ import (
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
-)
-
-type Title string
-
-const (
-	OnlineTitle  Title = "Register Online"
-	OfflineTitle Title = "Register Offline"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -76,27 +68,10 @@ func (m *ViewModel) ShouldAddIncentivesFee() bool {
 	// 2) online keyreg
 	// 3) protocol supports incentives
 	// 4) account is not already incentives eligible
-	return m.State != nil && !m.State.IncentivesDisabled && !m.Active && m.IsIncentiveProtocol() && m.Account() != nil && !m.Account().IncentiveEligible
-}
-
-func (m *ViewModel) GetControlText() string {
-	escLegend := style.Red.Render("(esc) go back")
-	if m.IsQREnabled() {
-		otherView := "link"
-		if m.ShowLink {
-			otherView = "QR"
-		}
-		return "( " + style.Yellow.Render("(s)how "+otherView) + " | " + escLegend + " )"
-	}
-	return "( " + escLegend + " )"
+	return m.State != nil && !m.State.IncentivesDisabled && !m.OfflineControls && m.IsIncentiveProtocol() && m.Account() != nil && !m.Account().IncentiveEligible
 }
 
 func (m *ViewModel) UpdateState() {
-	controlText := m.GetControlText()
-	if m.Controls != m.GetControlText() {
-		// TODO BUG: the controls do not re-render when changed
-		m.Controls = controlText
-	}
 
 	if m.Participation == nil {
 		return
@@ -116,9 +91,9 @@ func (m *ViewModel) UpdateState() {
 	m.ATxn.AUrlTxnKeyCommon.Type = string(types.KeyRegistrationTx)
 	m.ATxn.AUrlTxnKeyCommon.Fee = fee
 
-	if !m.Active {
-		m.Title = string(OnlineTitle)
-		m.BorderColor = "2"
+	if !m.OfflineControls {
+		//m.Title = string(OnlineTitle)
+		//m.BorderColor = "2"
 		votePartKey := base64.RawURLEncoding.EncodeToString(m.Participation.Key.VoteParticipationKey)
 		selPartKey := base64.RawURLEncoding.EncodeToString(m.Participation.Key.SelectionParticipationKey)
 		spKey := base64.RawURLEncoding.EncodeToString(*m.Participation.Key.StateProofKey)
@@ -133,8 +108,8 @@ func (m *ViewModel) UpdateState() {
 		m.ATxn.AUrlTxnKeyreg.VoteLast = &lastValid
 		m.ATxn.AUrlTxnKeyreg.VoteKeyDilution = &vkDilution
 	} else {
-		m.Title = string(OfflineTitle)
-		m.BorderColor = "9"
+		//m.Title = string(OfflineTitle)
+		//m.BorderColor = "9"
 		m.ATxn.AUrlTxnKeyreg.VotePK = nil
 		m.ATxn.AUrlTxnKeyreg.SelectionPK = nil
 		m.ATxn.AUrlTxnKeyreg.StateProofPK = nil

@@ -35,10 +35,10 @@ type ViewModel struct {
 	Link *participation.ShortLinkResponse
 
 	// Views
-	infoModal        *info.ViewModel
+	infoModal        info.ViewModel
 	transactionModal *transaction.ViewModel
-	confirmModal     *confirm.ViewModel
-	generateModal    *generate.ViewModel
+	confirmModal     confirm.ViewModel
+	generateModal    generate.ViewModel
 	exceptionModal   *exception.ViewModel
 
 	// Current Component Data
@@ -51,28 +51,26 @@ type ViewModel struct {
 // SetAddress updates the ViewModel's Address property and synchronizes it with the associated generateModal.
 func (m *ViewModel) SetAddress(address string) {
 	m.Address = address
-	m.generateModal.SetAddress(address)
+	//m.generateModal.SetAddress(address)
 }
 
 // SetKey updates the participation key across infoModal, confirmModal, and transactionModal in the ViewModel.
 func (m *ViewModel) SetKey(key *api.ParticipationKey) {
 	m.infoModal.Participation = key
-	m.confirmModal.ActiveKey = key
+	m.confirmModal.Participation = key
 	m.transactionModal.Participation = key
 }
 
 // SetActive sets the active state for both infoModal and transactionModal, and updates their respective states.
 func (m *ViewModel) SetActive(active bool) {
-	m.infoModal.Active = active
-	m.infoModal.UpdateState()
-	m.transactionModal.Active = active
+	m.infoModal.OfflineControls = active
+	m.transactionModal.OfflineControls = active
 	m.transactionModal.UpdateState()
 }
 
 // SetSuspended sets the suspended state
 func (m *ViewModel) SetSuspended(sus bool) {
 	m.infoModal.Suspended = sus
-	m.infoModal.UpdateState()
 	m.transactionModal.Suspended = sus
 	m.transactionModal.UpdateState()
 }
@@ -86,22 +84,6 @@ func (m *ViewModel) SetShortLink(res participation.ShortLinkResponse) {
 func (m *ViewModel) SetType(modal app.ModalType) {
 	m.Type = modal
 	switch modal {
-	case app.InfoModal:
-		m.title = m.infoModal.Title
-		m.controls = m.infoModal.Controls
-		m.borderColor = m.infoModal.BorderColor
-	case app.ConfirmModal:
-		m.title = m.confirmModal.Title
-		m.controls = m.confirmModal.Controls
-		m.borderColor = m.confirmModal.BorderColor
-	case app.GenerateModal:
-		m.title = m.generateModal.Title
-		m.controls = m.generateModal.Controls
-		m.borderColor = m.generateModal.BorderColor
-	case app.TransactionModal:
-		m.title = m.transactionModal.Title
-		m.controls = m.transactionModal.Controls
-		m.borderColor = m.transactionModal.BorderColor
 	case app.ExceptionModal:
 		m.title = m.exceptionModal.Title
 		m.controls = m.exceptionModal.Controls
@@ -124,7 +106,7 @@ func New(parent string, open bool, state *algod.StateModel) *ViewModel {
 
 		infoModal:        info.New(state),
 		transactionModal: transaction.New(state),
-		confirmModal:     confirm.New(state),
+		confirmModal:     confirm.New(state, nil),
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
 

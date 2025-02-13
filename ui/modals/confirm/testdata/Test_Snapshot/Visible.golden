@@ -1,9 +1,11 @@
-                                                          
- Are you sure you want to delete this key from your node? 
-                                                          
-                     Account Address:                     
-                            ABC                           
-                                                          
-                    Participation Key:                    
-                            123                           
-                                                          
+╭──Delete Key────────────────────────────────────────────────╮
+│                                                            │
+│  Are you sure you want to delete this key from your node?  │
+│                                                            │
+│                      Account Address:                      │
+│                             ABC                            │
+│                                                            │
+│                     Participation Key:                     │
+│                             123                            │
+│                                                            │
+╰────────────────────────────────────────( (y)es | (n)o )────╯

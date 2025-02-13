@@ -13,44 +13,33 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Init initializes the ViewModel by batching commands for text input blinking and spinner ticking.
 func (m ViewModel) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, spinner.Tick)
 }
 
+// Update processes incoming messages, updating the ViewModel state and returning a new model and command.
 func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.HandleMessage(msg)
 }
 
-func (m *ViewModel) SetStep(step Step) {
-	m.Step = step
-	switch m.Step {
-	case AddressStep:
-		m.Controls = "( esc to cancel )"
-		m.Title = DefaultTitle
-		m.InputError = ""
-		m.BorderColor = DefaultBorderColor
-	case DurationStep:
-		m.Controls = "( (s)witch range )"
-		m.Title = "Validity Range"
-		m.InputTwo.SetValue("")
-		m.InputTwo.Focus()
-		m.InputTwo.PromptStyle = focusedStyle
-		m.InputTwo.TextStyle = focusedStyle
-		m.InputTwoError = ""
-		m.Input.Blur()
-	case WaitingStep:
-		m.Controls = ""
-		m.Title = "Generating Keys"
-		m.BorderColor = "9"
-	}
-}
-
-func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
+// HandleMessage processes incoming messages, updates the ViewModel state, and returns an updated model and command.
+func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 	switch msg := msg.(type) {
+	// Account selection from list
+	case app.AccountSelected:
+		if msg.Address != m.Address {
+			m.Reset(msg.Address)
+		}
+	// Event triggered the Generate Modal
+	case app.ModalEvent:
+		if msg.Type == app.GenerateModal {
+			m.Reset(msg.Address)
+		}
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
@@ -58,7 +47,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			if m.Step != WaitingStep {
-				return &m, app.EmitModalEvent(app.ModalEvent{
+				return m, app.EmitModalEvent(app.ModalEvent{
 					Type: app.CancelModal,
 				})
 			}
@@ -72,26 +61,26 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				case Round:
 					m.Range = Day
 				}
-				return &m, nil
+				return m, nil
 			}
 		case "enter":
 			switch m.Step {
 			case AddressStep:
-				addr := m.Input.Value()
+				addr := m.AddressInput.Value()
 				if !algod.ValidateAddress(addr) {
-					m.InputError = "Error: invalid address"
-					return &m, nil
+					m.AddressInputError = "Error: invalid address"
+					return m, nil
 				}
-				m.InputError = ""
+				m.AddressInputError = ""
 				m.SetStep(DurationStep)
-				return &m, app.EmitShowModal(app.GenerateModal)
+				return m, app.EmitShowModal(app.GenerateModal)
 			case DurationStep:
-				val, err := strconv.Atoi(m.InputTwo.Value())
+				val, err := strconv.Atoi(m.DurationInput.Value())
 				if err != nil || val <= 0 {
-					m.InputTwoError = "Error: duration must be a positive number"
-					return &m, nil
+					m.DurationInputError = "Error: duration must be a positive number"
+					return m, nil
 				}
-				m.InputTwoError = ""
+				m.DurationInputError = ""
 				m.SetStep(WaitingStep)
 				var rangeType participation.RangeType
 				var dur int
@@ -106,7 +95,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 					dur = val
 					rangeType = participation.RoundRange
 				}
-				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), rangeType, dur, m.State))
+				return m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.AddressInput.Value(), rangeType, dur, m.State))
 
 			}
 
@@ -116,17 +105,12 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 	switch m.Step {
 	case AddressStep:
-		// Handle character input and blinking
-		var val textinput.Model
-		val, cmd = m.Input.Update(msg)
-		m.Input = &val
+		m.AddressInput, cmd = m.AddressInput.Update(msg)
 		cmds = append(cmds, cmd)
 	case DurationStep:
-		var val textinput.Model
-		val, cmd = m.InputTwo.Update(msg)
-		m.InputTwo = &val
+		m.DurationInput, cmd = m.DurationInput.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
-	return &m, tea.Batch(cmds...)
+	return m, tea.Batch(cmds...)
 }

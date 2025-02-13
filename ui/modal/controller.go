@@ -101,23 +101,22 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				diff, isDifferent, count := participation.HasChanged(*m.transactionModal.Participation, acct.Participation)
 
 				// The account is valid and we registered
-				if isValid && !isDifferent && m.Type == app.TransactionModal && !m.transactionModal.Active {
+				if isValid && !isDifferent && m.Type == app.TransactionModal && !m.transactionModal.OfflineControls {
 					m.SetActive(true)
 					m.infoModal.Prefix = "Successfully registered online!\n"
 					m.HasPrefix = true
 					m.SetType(app.InfoModal)
 					// For the love of all that is good, please lets refactor this. Preferably with a daemon
-				} else if isValid && isDifferent && count != 6 && (m.Type == app.InfoModal || (m.Type == app.TransactionModal && !m.transactionModal.Active)) {
+				} else if isValid && isDifferent && count != 6 && (m.Type == app.InfoModal || (m.Type == app.TransactionModal && !m.transactionModal.OfflineControls)) {
 					// It is online, has a participation key but not the one we are looking at AND all the keys are not different
 					// (AND it's the info modal (this case we are checking on enter) OR we are waiting to register a key, and we made a mistake
 
-					// You know it's getting bad when the plugin recommendation is Grazie
-					// TODO: refactor this beast to have isolated state from the modal controller
-
-					// Ahh yes, classic "Set Active to the inverse then only navigate when there is no prefix"
+					// Ahh yes, classic "Set Active to the inverse then only navigate when there is no prefix and it's not the dilution changing"
+					// Dilution is likely to match some active keys so we just ignore it. First and last rounds must be unique pairs
 					// This is the closest thing we have to state, between this and the transaction modal state it works
+					// Set active ensures the offline modal is changed when a corruption happens
 					m.SetActive(false)
-					if m.infoModal.Prefix == "" {
+					if m.infoModal.Prefix == "" && diff.VoteKeyDilution {
 						m.infoModal.Prefix = "***WARNING***\nRegistered online but keys do not fully match\nCheck your registered keys carefully against the node keys\n\n"
 						if diff.VoteFirstValid {
 							m.infoModal.Prefix = m.infoModal.Prefix + "Mismatched: Vote First Valid\n"
@@ -141,7 +140,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 
 						m.SetType(app.InfoModal)
 					}
-				} else if !isOnline && m.Type == app.TransactionModal && m.transactionModal.Active && m.transactionModal.ATxn.VotePK == nil {
+				} else if !isOnline && m.Type == app.TransactionModal && m.transactionModal.OfflineControls && m.transactionModal.ATxn.VotePK == nil {
 					m.SetActive(false)
 					m.infoModal.Prefix = "Successfully registered offline!\n"
 					m.HasPrefix = true
@@ -160,13 +159,12 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		}
 
 		if msg.Type == app.InfoModal {
-			m.infoModal.Prefix = msg.Prefix
 			m.generateModal.SetStep(generate.AddressStep)
 		}
 		// On closing events
 		if msg.Type == app.CloseModal {
 			m.Open = false
-			m.generateModal.Input.Focus()
+			m.generateModal.AddressInput.Focus()
 		} else {
 			m.Open = true
 		}
@@ -179,7 +177,7 @@ func (m *ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				m.Open = false
 				m.SetType(app.InfoModal)
 				m.generateModal.SetStep(generate.AddressStep)
-				m.generateModal.Input.Focus()
+				m.generateModal.AddressInput.Focus()
 			case app.TransactionModal:
 				m.SetType(app.InfoModal)
 			case app.ExceptionModal:
