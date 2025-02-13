@@ -5,11 +5,13 @@ import (
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/algorandfoundation/nodekit/ui/modals/confirm"
+	"github.com/algorandfoundation/nodekit/ui/modals/catchup"
+	"github.com/algorandfoundation/nodekit/ui/modals/catchup/lagging"
 	"github.com/algorandfoundation/nodekit/ui/modals/exception"
-	"github.com/algorandfoundation/nodekit/ui/modals/generate"
-	"github.com/algorandfoundation/nodekit/ui/modals/info"
-	"github.com/algorandfoundation/nodekit/ui/modals/transaction"
+	"github.com/algorandfoundation/nodekit/ui/modals/partkey/delete"
+	"github.com/algorandfoundation/nodekit/ui/modals/partkey/generate"
+	"github.com/algorandfoundation/nodekit/ui/modals/partkey/info"
+	"github.com/algorandfoundation/nodekit/ui/modals/partkey/transaction"
 )
 
 type ViewModel struct {
@@ -37,7 +39,9 @@ type ViewModel struct {
 	// Views
 	infoModal        info.ViewModel
 	transactionModal *transaction.ViewModel
-	confirmModal     confirm.ViewModel
+	catchupModal     catchup.ViewModel
+	laggingModal     lagging.ViewModel
+	confirmModal     delete.ViewModel
 	generateModal    generate.ViewModel
 	exceptionModal   exception.ViewModel
 
@@ -87,7 +91,9 @@ func New(parent string, open bool, state *algod.StateModel) ViewModel {
 
 		infoModal:        info.New(state),
 		transactionModal: transaction.New(state),
-		confirmModal:     confirm.New(state, nil),
+		catchupModal:     catchup.New(state),
+		laggingModal:     lagging.New(state),
+		confirmModal:     delete.New(state, nil),
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
 

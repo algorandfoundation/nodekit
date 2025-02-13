@@ -8,9 +8,14 @@ import (
 type ModalType string
 
 const (
-
 	// InfoModal indicates a modal type used for displaying informational messages or content in the application.
 	InfoModal ModalType = "info"
+
+	// CatchupModal represents a modal type used to display information or notifications related to the system catching up.
+	CatchupModal ModalType = "catchup"
+
+	// LaggingModal represents a modal type used to indicate that the system or process is lagging behind.
+	LaggingModal ModalType = "lagging"
 
 	// ConfirmModal represents a modal type used for user confirmation actions in the application.
 	ConfirmModal ModalType = "confirm"

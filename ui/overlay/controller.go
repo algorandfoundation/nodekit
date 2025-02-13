@@ -1,14 +1,10 @@
 package overlay
 
 import (
-	"fmt"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/algorandfoundation/nodekit/ui/app"
-	"github.com/algorandfoundation/nodekit/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"time"
 )
 
 // Init initializes the current ViewModel by batching initialization commands for all associated modal ViewModels.
@@ -18,6 +14,8 @@ func (m ViewModel) Init() tea.Cmd {
 		m.exceptionModal.Init(),
 		m.transactionModal.Init(),
 		m.confirmModal.Init(),
+		m.catchupModal.Init(),
+		m.laggingModal.Init(),
 		m.generateModal.Init(),
 	)
 }
@@ -35,38 +33,16 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	// TODO: refactor to split this up a bit
 	case *algod.StateModel:
 		// Clear the catchup modal
-		if msg.Status.State != algod.FastCatchupState && m.Type == app.ExceptionModal && m.title == "Fast Catchup" {
+		if msg.Status.State != algod.FastCatchupState && m.Type == app.CatchupModal {
 			m.Open = false
 			m.SetType(app.InfoModal)
 		}
+		// TODO: Clear the lagging modal
 
+		// Update State
 		m.State = msg
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
-
-		// On Fast-Catchup, handle the state as an exception modal
-		if m.State.Status.State == algod.FastCatchupState {
-			m.Open = true
-			m.SetType(app.ExceptionModal)
-			m.exceptionModal.Message = style.LightBlue(lipgloss.JoinVertical(lipgloss.Top,
-				"Please wait while your node syncs with the network.",
-				"This process can take up to an hour.",
-				"",
-				fmt.Sprintf("Accounts Processed:   %d / %d", m.State.Status.CatchpointAccountsProcessed, m.State.Status.CatchpointAccountsTotal),
-				fmt.Sprintf("Accounts Verified:    %d / %d", m.State.Status.CatchpointAccountsVerified, m.State.Status.CatchpointAccountsTotal),
-				fmt.Sprintf("Key Values Processed: %d / %d", m.State.Status.CatchpointKeyValueProcessed, m.State.Status.CatchpointKeyValueTotal),
-				fmt.Sprintf("Key Values Verified:  %d / %d", m.State.Status.CatchpointKeyValueVerified, m.State.Status.CatchpointKeyValueTotal),
-				fmt.Sprintf("Downloaded blocks:    %d / %d", m.State.Status.CatchpointBlocksAcquired, m.State.Status.CatchpointBlocksTotal),
-				"",
-				fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int(time.Second)),
-			))
-			m.borderColor = "7"
-			m.controls = ""
-			m.title = "Fast Catchup"
-			// Return early, skip any checks
-			m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
-			return m, cmd
-		}
 
 		// Get the existing account from the state
 		acct, ok := msg.Accounts[m.Address]
@@ -77,6 +53,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		}
 
 		// We found the account, and we are on one of the modals
+		// TODO: move to logic to Transaction and Info Modal based on events
 		if ok && m.Type == app.TransactionModal || m.Type == app.InfoModal {
 			// Make sure the transaction modal is set to the current address
 			if m.transactionModal.Participation != nil && m.transactionModal.Participation.Address == acct.Address {
@@ -138,6 +115,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			}
 		}
 
+	// Key Selected
+	// TODO: move to child components
 	case app.KeySelectedEvent:
 		m.Open = true
 		m.SetKey(msg.Key)
@@ -146,29 +125,30 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		// Update or clear the prefix
 		m.infoModal.Prefix = msg.Prefix
 
+	// Overlay Events
 	case app.OverlayEventType:
 		switch msg {
+		// Handle close events
 		case app.OverlayEventClose:
 			m.Open = false
 			m.SetType(app.InfoModal)
 			m.generateModal.Reset("")
+		// Handle back navigation
 		case app.OverlayEventCancel:
 			switch m.Type {
-			case app.InfoModal:
-				return m, app.EmitCloseOverlay()
-			case app.GenerateModal:
-				return m, app.EmitCloseOverlay()
 			case app.TransactionModal:
 				m.SetType(app.InfoModal)
 			case app.ConfirmModal:
 				m.SetType(app.InfoModal)
 			}
 		}
-	// Handle Modal Type
+
+	// Change the current modal
 	case app.ModalType:
 		m.Open = true
 		m.SetType(msg)
 
+	// Only trigger KeyMsgs when the modal is active
 	case tea.KeyMsg:
 		if msg.String() == "q" && m.Type != app.GenerateModal && m.Open {
 			return m, tea.Quit
@@ -183,6 +163,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			m.transactionModal, cmd = m.transactionModal.HandleMessage(msg)
 		case app.ConfirmModal:
 			m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
+		case app.CatchupModal:
+			m.catchupModal, cmd = m.catchupModal.HandleMessage(msg)
+		case app.LaggingModal:
+			m.laggingModal, cmd = m.laggingModal.HandleMessage(msg)
 		case app.GenerateModal:
 			m.generateModal, cmd = m.generateModal.HandleMessage(msg)
 		}
@@ -193,6 +177,10 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 
 	// Handle all other messages
 	m.confirmModal, cmd = m.confirmModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.catchupModal, cmd = m.catchupModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.laggingModal, cmd = m.laggingModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.infoModal, cmd = m.infoModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
