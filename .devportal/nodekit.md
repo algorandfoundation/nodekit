@@ -168,6 +168,34 @@ nodekit configure service [flags]
   -h, --help   help for service
 ```
 
+## configure telemetry                            
+                                                                                   
+                                                                                   
+Configure telemetry for the Algorand daemon                                        
+                                                                                   
+Overview:                                                                          
+When a node is run using the algod command, before the script starts the server,   
+it configures its telemetry based on the appropriate logging.config file.          
+When a node’s telemetry is enabled, a telemetry state is added to the node’s logger
+reflecting the fields contained within the appropriate config file                 
+                                                                                   
+The default telemetry provider is Nodely.                                          
+
+```
+nodekit configure telemetry [flags]
+```
+
+#### Options
+
+```
+  -d, --datadir string    Data directory for the node
+      --disable           Disables telemetry
+      --enable            Enables telemetry
+  -e, --endpoint string   Sets the "URI" property (default "https://tel.4160.nodely.io")
+  -h, --help              help for telemetry
+  -n, --name string       Enable Algorand remote logging with specified node name (default "anon")
+```
+
 ## debug                               
                                                                                       
                                                                                       
@@ -251,6 +279,119 @@ nodekit stop [flags]
   -h, --help    help for stop
 ```
 
+## telemetry 
+                                                        
+                                                        
+NoOp command                                            
+                                                        
+Overview:                                               
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                        
+
+#### Options
+
+```
+  -h, --help   help for telemetry
+```
+
+## telemetry disable             
+                                                                    
+                                                                    
+Disable Telemetry                                                   
+                                                                    
+Overview:                                                           
+Configure telemetry for the Algorand daemon.                        
+                                                                    
+Note: This is still a work in progress. Expect bugs and rough edges.
+
+#### Options
+
+```
+  -h, --help   help for disable
+```
+
+## telemetry                                                                                                                      
+                                                                                                                                                                             
+                                                                                                                                                                             
+Disable Nodely                                                                                                                                                               
+                                                                                                                                                                             
+Overview:                                                                                                                                                                    
+Nodely Telemetry is a free telemetry service offered by a third party (Nodely)                                                                                               
+Enabling telemetry will configure your node to send health metrics to Nodely                                                                                                 
+Privacy note: Information about your node (including participating accounts and approximate geographic location) will be associated with an anonymous user identifier (GUID.)
+Tip: Keep this GUID identifier private if you do not want this information to be linked to your identity.                                                                    
+                                                                                                                                                                             
+Note: This is still a work in progress. Expect bugs and rough edges.                                                                                                         
+
+```
+nodekit telemetry disable nodely [flags]
+```
+
+#### Options
+
+```
+  -d, --datadir string   Data directory for the node
+  -h, --help             help for nodely
+```
+
+## telemetry enable             
+                                                                    
+                                                                    
+Enable Telemetry                                                    
+                                                                    
+Overview:                                                           
+Configure telemetry for the Algorand daemon.                        
+                                                                    
+Note: This is still a work in progress. Expect bugs and rough edges.
+
+#### Options
+
+```
+  -h, --help   help for enable
+```
+
+## telemetry             
+                                                                    
+                                                                    
+Disable Nodely                                                      
+                                                                    
+Overview:                                                           
+Configure telemetry for the Algorand daemon.                        
+                                                                    
+Note: This is still a work in progress. Expect bugs and rough edges.
+
+```
+nodekit telemetry enable nodely [flags]
+```
+
+#### Options
+
+```
+  -d, --datadir string   Data directory for the node
+  -h, --help             help for nodely
+```
+
+## telemetry status             
+                                                                    
+                                                                    
+Status of telemetry                                                 
+                                                                    
+Overview:                                                           
+Configure telemetry for the Algorand daemon.                        
+                                                                    
+Note: This is still a work in progress. Expect bugs and rough edges.
+
+```
+nodekit telemetry status [flags]
+```
+
+#### Options
+
+```
+  -d, --datadir string   Data directory for the node
+  -h, --help             help for status
+```
+
 ## uninstall                                  
                                                                                          
                                                                                          
@@ -292,4 +433,4 @@ nodekit upgrade [flags]
   -h, --help   help for upgrade
 ```
 
-###### Auto generated by spf13/cobra on 28-Jan-2025
+###### Auto generated by spf13/cobra on 13-Feb-2025
