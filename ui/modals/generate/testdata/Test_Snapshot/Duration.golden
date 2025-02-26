@@ -3,6 +3,6 @@
 │ How long should the keys be valid for?                                 │
 │                                                                        │
 │ Duration in days:                                                      │
-│ > Length of time                                                       │
+│ > Length of time (default: 30 days)                                    │
 │                                                                        │
 ╰──────────────────────────────────────────────────( (s)witch range )────╯

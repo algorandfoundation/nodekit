@@ -49,10 +49,13 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 				switch m.Range {
 				case Day:
 					m.Range = Month
+					m.DurationInput.Placeholder = RangePlaceholders[Month]
 				case Month:
 					m.Range = Round
+					m.DurationInput.Placeholder = RangePlaceholders[Round]
 				case Round:
 					m.Range = Day
+					m.DurationInput.Placeholder = RangePlaceholders[Day]
 				}
 				return m, nil
 			}
@@ -68,6 +71,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 				m.SetStep(DurationStep)
 				return m, app.EmitShowModal(app.GenerateModal)
 			case DurationStep:
+				if m.DurationInput.Value() == "" {
+					m.DurationInput.SetValue(RangeDefaults[m.Range])
+				}
 				val, err := strconv.Atoi(m.DurationInput.Value())
 				if err != nil || val <= 0 {
 					m.DurationInputError = "Error: duration must be a positive number"

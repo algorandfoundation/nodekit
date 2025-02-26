@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/charmbracelet/bubbles/cursor"
@@ -22,6 +23,18 @@ const (
 	Month Range = "month"
 	Round Range = "round"
 )
+
+var RangeDefaults = map[Range]string{
+	Day:   "30",
+	Month: "",
+	Round: "",
+}
+
+var RangePlaceholders = map[Range]string{
+	Day:   fmt.Sprintf("Length of time (default: %s days)", RangeDefaults[Day]),
+	Month: "Length of time",
+	Round: "Length of time",
+}
 
 type ViewModel struct {
 	Width  int
@@ -93,7 +106,7 @@ func New(address string, state *algod.StateModel) ViewModel {
 
 	m.DurationInput.Cursor.Style = cursorStyle
 	m.DurationInput.CharLimit = 58
-	m.DurationInput.Placeholder = "Length of time"
+	m.DurationInput.Placeholder = RangePlaceholders[m.Range]
 
 	m.DurationInput.PromptStyle = noStyle
 	m.DurationInput.TextStyle = noStyle
