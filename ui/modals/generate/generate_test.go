@@ -138,3 +138,23 @@ func Test_Messages(t *testing.T) {
 
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second))
 }
+
+func Test_Defaults(t *testing.T) {
+	m := New("ABC", test.GetState(nil))
+
+	m.SetStep(DurationStep)
+
+	m, cmd := m.HandleMessage(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("enter"),
+	})
+	if cmd == nil {
+		t.Error("Did not return the generate command")
+	}
+	if m.Step != WaitingStep {
+		t.Error("Did not advance to waiting step")
+	}
+	if m.DurationInput.Value() != "30" {
+		t.Error("Did not set default duration")
+	}
+}
