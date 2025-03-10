@@ -158,3 +158,38 @@ func Test_Defaults(t *testing.T) {
 		t.Error("Did not set default duration")
 	}
 }
+
+func Test_Placeholders(t *testing.T) {
+	m := New("ABC", test.GetState(nil))
+
+	//// Enter into duration mode
+	//m.HandleMessage(tea.KeyMsg{
+	//	Type:  tea.KeyRunes,
+	//	Runes: []rune("enter"),
+	//})
+	m.SetStep(DurationStep)
+	if m.DurationInput.Placeholder != RangePlaceholders[Day] {
+		t.Error("Did not set day placeholder")
+	}
+	m, _ = m.HandleMessage(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("s"),
+	})
+	if m.DurationInput.Placeholder != RangePlaceholders[Month] {
+		t.Error("Did not set month placeholder")
+	}
+	m, _ = m.HandleMessage(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("s"),
+	})
+	if m.DurationInput.Placeholder != RangePlaceholders[Round] {
+		t.Error("Did not set round placeholder")
+	}
+	m, _ = m.HandleMessage(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("s"),
+	})
+	if m.DurationInput.Placeholder != RangePlaceholders[Day] {
+		t.Error("Did not set day placeholder")
+	}
+}
