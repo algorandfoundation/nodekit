@@ -52,8 +52,8 @@ func New(address string, keys participation.List) ViewModel {
 
 		// Page Wrapper
 		Title:       "Keys",
-		Controls:    "( (g)enerate )",
-		Navigation:  "| accounts | " + style.Green.Render("keys") + " |",
+		Controls:    "( (g)enerate | (enter) to select | (esc) to go back )",
+		Navigation:  "| <- | accounts | " + style.Green.Render("keys") + " |",
 		BorderColor: "4",
 	}
 

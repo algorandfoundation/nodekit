@@ -34,8 +34,8 @@ func New(state *algod.StateModel) ViewModel {
 		Height:      0,
 		BorderColor: "6",
 		Data:        state,
-		Controls:    "( (g)enerate )",
-		Navigation:  "| " + style.Green.Render("accounts") + " | keys |",
+		Controls:    "( (g)enerate | (enter) to select )",
+		Navigation:  "| -> | " + style.Green.Render("accounts") + " | keys |",
 	}
 
 	m.table = table.New(

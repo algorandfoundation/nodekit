@@ -27,7 +27,11 @@ func (m ViewModel) BorderColor() string {
 	}
 	return "2"
 }
+
 func (m ViewModel) Controls() string {
+	return ""
+}
+func (m ViewModel) Navigation() string {
 	escLegend := style.Red.Render("(esc) go back")
 	if m.IsQREnabled() {
 		otherView := "link"
@@ -132,7 +136,7 @@ func (m ViewModel) View() string {
 	width := lipgloss.Width(body)
 	height := lipgloss.Height(body)
 	return style.WithNavigation(
-		m.Controls(),
+		m.Navigation(),
 		style.WithTitle(
 			m.Title(),
 			// Apply the Borders with the Padding

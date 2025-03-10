@@ -72,8 +72,13 @@ func (m ViewModel) BorderColor() string {
 	return "9"
 }
 
-// Controls returns a formatted string displaying the available control options (yes or no) with styled color representations.
+// Controls returns a string representation of the available control options for the ViewModel.
 func (m ViewModel) Controls() string {
+	return "| (esc) |"
+}
+
+// Navigation returns a formatted string displaying the available control options (yes or no) with styled color representations.
+func (m ViewModel) Navigation() string {
 	return "( " + style.Green.Render("(y)es") + " | " + style.Red.Render("(n)o") + " )"
 }
 
@@ -97,16 +102,18 @@ func (m ViewModel) View() string {
 	body := m.Body()
 	width := lipgloss.Width(body)
 	height := lipgloss.Height(body)
-	return style.WithNavigation(
+	return style.WithControls(
 		m.Controls(),
-		style.WithTitle(
-			m.Title(),
-			// Apply the Borders with the Padding
-			style.ApplyBorder(width+2, height-4, m.BorderColor()).
-				PaddingRight(1).
-				PaddingLeft(1).
-				Render(m.Body()),
-		),
-	)
+		style.WithNavigation(
+			m.Navigation(),
+			style.WithTitle(
+				m.Title(),
+				// Apply the Borders with the Padding
+				style.ApplyBorder(width+2, height-4, m.BorderColor()).
+					PaddingRight(1).
+					PaddingLeft(1).
+					Render(m.Body()),
+			),
+		))
 
 }

@@ -24,18 +24,18 @@ func Test_New(t *testing.T) {
 	model.Participation.Address = "ABC"
 }
 func Test_Snapshot(t *testing.T) {
-	t.Skip("qa is not a priority for this project")
 	t.Run("NotVisible", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
+		model.ShowLink = false
 		model.Participation = &mock.Keys[0]
 		model.UpdateState()
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
-	t.Run("Offline", func(t *testing.T) {
+	t.Run("OfflineLora", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
@@ -51,27 +51,13 @@ func Test_Snapshot(t *testing.T) {
 		got := ansi.Strip(model.View())
 		golden.RequireEqual(t, []byte(got))
 	})
-	t.Run("Online", func(t *testing.T) {
+	t.Run("OnlineLora", func(t *testing.T) {
 		model := New(test.GetState(nil))
 		model.Link = &participation.ShortLinkResponse{
 			Id: "1234",
 		}
 		model.Participation = &mock.Keys[0]
 		model.State.Status.Network = "testnet-v1.0"
-		model, _ = model.HandleMessage(tea.WindowSizeMsg{
-			Height: 40,
-			Width:  80,
-		})
-		model.UpdateState()
-		got := ansi.Strip(model.View())
-		golden.RequireEqual(t, []byte(got))
-	})
-	t.Run("Unsupported", func(t *testing.T) {
-		model := New(test.GetState(nil))
-		model.Link = &participation.ShortLinkResponse{
-			Id: "1234",
-		}
-		model.Participation = &mock.Keys[0]
 		model, _ = model.HandleMessage(tea.WindowSizeMsg{
 			Height: 40,
 			Width:  80,

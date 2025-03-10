@@ -29,13 +29,21 @@ func (m ViewModel) BorderColor() string {
 	}
 }
 
-// Controls returns a string representing control instructions based on the current step in the ViewModel.
+// Controls returns a string representation of the available control options for the ViewModel.
 func (m ViewModel) Controls() string {
+	if m.Step == DurationStep {
+		return "| " + style.Red.Render("(esc) to cancel") + " |"
+	}
+	return ""
+}
+
+// Navigation returns a string representing control instructions based on the current step in the ViewModel.
+func (m ViewModel) Navigation() string {
 	switch m.Step {
 	case AddressStep:
-		return "( esc to cancel )"
+		return style.Bold("( esc to cancel )")
 	case DurationStep:
-		return "( (s)witch range )"
+		return style.Bold("( (s)witch range )")
 	default:
 		return ""
 	}
@@ -92,8 +100,8 @@ func (m ViewModel) View() string {
 	body := m.Body()
 	width := lipgloss.Width(body)
 	height := lipgloss.Height(body)
-	return style.WithNavigation(
-		m.Controls(),
+	return style.WithControls(m.Controls(), style.WithNavigation(
+		m.Navigation(),
 		style.WithTitle(
 			m.Title(),
 			// Apply the Borders with the Padding
@@ -102,6 +110,6 @@ func (m ViewModel) View() string {
 				PaddingLeft(1).
 				Render(m.Body()),
 		),
-	)
+	))
 
 }

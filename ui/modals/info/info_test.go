@@ -22,7 +22,7 @@ func Test_New(t *testing.T) {
 	if m.BorderColor() != "1" {
 		t.Error("State is not correct, border should be 1")
 	}
-	if m.Controls() != "( take (o)ffline )" {
+	if m.Navigation() != "( take (o)ffline )" {
 		t.Error("Controls are not correct")
 	}
 }

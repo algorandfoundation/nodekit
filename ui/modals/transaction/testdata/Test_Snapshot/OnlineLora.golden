@@ -2,9 +2,8 @@
 │                                                          │
 │ Sign this transaction to register your account as online │
 │                                                          │
-│    QR code is available but it does not fit on screen.   │
-│     Adjust terminal dimensions/font size to display.     │
+│              Open this URL in your browser:              │
 │                                                          │
-│            Or press S to switch to Link view.            │
+│                https://b.nodekit.run/1234                │
 │                                                          │
-╰─────────────────────────────────────( (esc) go back )────╯
+╰─────────────────────────( (s)how QR | (esc) go back )────╯

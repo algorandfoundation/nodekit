@@ -68,8 +68,12 @@ func (m ViewModel) Title() string {
 	return "Key Information"
 }
 
-// Controls generates a string representation of control options based on the state of Participation and Active fields.
 func (m ViewModel) Controls() string {
+	return "| " + style.Red.Render("(esc) to close") + " |"
+}
+
+// Navigation generates a string representation of control options based on the state of Participation and Active fields.
+func (m ViewModel) Navigation() string {
 	if m.Participation == nil {
 		return ""
 	}
@@ -132,8 +136,8 @@ func (m ViewModel) View() string {
 	body := m.Body()
 	width := lipgloss.Width(body)
 	height := lipgloss.Height(body)
-	return style.WithNavigation(
-		m.Controls(),
+	return style.WithControls(m.Controls(), style.WithNavigation(
+		m.Navigation(),
 		style.WithTitle(
 			m.Title(),
 			// Apply the Borders with the Padding
@@ -142,6 +146,6 @@ func (m ViewModel) View() string {
 				PaddingLeft(1).
 				Render(m.Body()),
 		),
-	)
+	))
 
 }
