@@ -194,9 +194,9 @@ func (s *StateModel) UpdateKeys(ctx context.Context, t system.Time) {
 			if err != nil {
 				continue
 			}
-
 			s.Accounts[acct.Address] = s.Accounts[acct.Address].Merge(rpcAcct)
 			s.Accounts[acct.Address] = s.Accounts[acct.Address].UpdateExpiredTime(t, s.ParticipationKeys, int(s.Status.LastRound), s.Metrics.RoundTime)
+			s.Accounts[acct.Address] = s.Accounts[acct.Address].PatchOnlineStatus(rpcAcct, int(s.Status.LastRound))
 		}
 
 	}

@@ -139,6 +139,16 @@ func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, l
 	return a
 }
 
+// PatchOnlineStatus updates the account's status to "Offline" if its participation key has expired for the given round.
+func (a Account) PatchOnlineStatus(acct api.Account, lastRound int) Account {
+	// Check if the account is online but expired,
+	// can happen when a node is offline when the key expired
+	if acct.Status == "Online" && acct.Participation != nil && acct.Participation.VoteLastValid > lastRound {
+		a.Status = "Offline"
+	}
+	return a
+}
+
 // ValidateAddress checks the validity of an Algorand address by decoding it. Returns true for valid addresses, false otherwise.
 func ValidateAddress(address string) bool {
 	_, err := types.DecodeAddress(address)
