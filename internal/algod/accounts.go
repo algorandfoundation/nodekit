@@ -143,7 +143,7 @@ func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, l
 func (a Account) PatchOnlineStatus(acct api.Account, lastRound int) Account {
 	// Check if the account is online but expired,
 	// can happen when a node is offline when the key expired
-	if acct.Status == "Online" && acct.Participation != nil && acct.Participation.VoteLastValid > lastRound {
+	if acct.Status == "Online" && acct.Participation != nil && acct.Participation.VoteLastValid < lastRound {
 		a.Status = "Offline"
 	}
 	return a

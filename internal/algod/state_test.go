@@ -3,20 +3,14 @@ package algod
 import (
 	"context"
 	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/test"
 	"github.com/algorandfoundation/nodekit/internal/test/mock"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"testing"
 	"time"
 )
 
 func Test_StateModel(t *testing.T) {
-	t.Skip()
-	// Setup elevated client
-	apiToken, err := securityprovider.NewSecurityProviderApiKey("header", "X-Algo-API-Token", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := api.NewClientWithResponses("http://localhost:8080", api.WithRequestEditorFn(apiToken.Intercept))
+	client := test.GetClient(false)
 	httpPkg := new(api.HttpPkg)
 	state := StateModel{
 		Watching: true,
@@ -64,4 +58,38 @@ func Test_StateModel(t *testing.T) {
 		"RX: ", state.Metrics.RX,
 		"TX: ", state.Metrics.TX,
 	)
+
+}
+
+func Test_UpdateKeys(t *testing.T) {
+	client := test.GetClient(false)
+	httpPkg := new(api.HttpPkg)
+	state := StateModel{
+		Watching: true,
+		Status: Status{
+			LastRound:   1000000000,
+			NeedsUpdate: true,
+			State:       SyncingState,
+			Client:      client,
+			HttpPkg:     httpPkg,
+		},
+		Metrics: Metrics{
+			RoundTime: time.Duration(2 * time.Second),
+			TX:        0,
+			RX:        0,
+			TPS:       0,
+			Client:    client,
+			HttpPkg:   httpPkg,
+		},
+		Client:  client,
+		Context: context.Background(),
+	}
+
+	acct := state.Accounts["EXPIRED"]
+	acct.Status = "Online"
+
+	state.UpdateKeys(context.Background(), new(mock.Clock))
+	if state.Accounts["EXPIRED"].Status != "Offline" {
+		t.Fatal("Account should be offline")
+	}
 }
