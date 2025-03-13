@@ -15,7 +15,7 @@ var Long = lipgloss.JoinVertical(
 	style.Bold(Short),
 	"",
 	style.BoldUnderline("Overview:"),
-	"Configure telemetry for the Algorand daemon.",
+	"Disable telemetry for the Algorand daemon.",
 	"",
 	style.Yellow.Render(explanations.ExperimentalWarning),
 )

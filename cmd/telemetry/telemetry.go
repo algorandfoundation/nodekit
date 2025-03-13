@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Short = "NoOp command"
+var Short = "Configure telemetry profile"
 var Long = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
@@ -16,7 +16,7 @@ var Long = lipgloss.JoinVertical(
 	style.Bold(Short),
 	"",
 	style.BoldUnderline("Overview:"),
-	"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+	"Enable, disable and view telemetry status.",
 	"",
 )
 

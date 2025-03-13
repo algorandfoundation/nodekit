@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var statusShort = "Status of telemetry"
+var statusShort = "Telemetry status"
 
 var statusLong = lipgloss.JoinVertical(
 	lipgloss.Left,
@@ -20,7 +20,7 @@ var statusLong = lipgloss.JoinVertical(
 	style.Bold(statusShort),
 	"",
 	style.BoldUnderline("Overview:"),
-	"Configure telemetry for the Algorand daemon.",
+	"Display telemetry profile status for the Algorand daemon.",
 	"",
 	style.Yellow.Render(explanations.ExperimentalWarning),
 )

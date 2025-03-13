@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-var nodelyShort = "Disable Nodely"
+var nodelyShort = "Disable telemetry"
 var nodelyLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
@@ -22,7 +22,7 @@ var nodelyLong = lipgloss.JoinVertical(
 	style.Bold(nodelyShort),
 	"",
 	style.BoldUnderline("Overview:"),
-	"Configure telemetry for the Algorand daemon.",
+	"Enable the Nodely telemetry profile for the Algorand daemon.",
 	"",
 	style.Yellow.Render(explanations.ExperimentalWarning),
 )
