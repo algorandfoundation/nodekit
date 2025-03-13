@@ -82,7 +82,7 @@ var nodelyCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			}
 
 			// Elevated Configuration
-			err = system.RunAll(system.CmdsList{{"sudo", path, "configure", "telemetry", "--disable"}})
+			err = system.RunAll(system.CmdsList{{"sudo", path, "configure", "telemetry", "--datadir", dataDir, "--disable"}})
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -58,6 +58,14 @@ var telemetryCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		hasFlags := hasDisable || hasEndpoint || hasName || hasEnabled
 
 		if hasFlags {
+			if !hasEndpoint && hasEnabled {
+				err := cmd.Usage()
+				if err != nil {
+					log.Fatal(err)
+				}
+				log.Fatal(
+					"The --endpoint flag is required when using the --enable flag")
+			}
 			newConfig := telemetry.Config{
 				SendToLog:          logConfig.SendToLog,
 				GUID:               logConfig.GUID,
