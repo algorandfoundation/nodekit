@@ -61,9 +61,11 @@ var statusCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 				fmt.Sprintf("Telemetry GUID: %s", config.GUID),
 				fmt.Sprintf("Telemetry Endpoint: %s", config.URI),
 			}...)
-
+			if config.Enable && config.URI == string(cmdutils.NodelyTelemetryProvider) {
+				msgs = append(msgs, fmt.Sprintf("Nodely Dashboard URL: https://g.nodely.io/d/telemetry/node-telemetry?var-GUID=%s", config.GUID))
+			}
 		} else {
-			msgs = append(msgs, fmt.Sprintf("You can enable nodely telemetry with %s", style.Bold("nodekit telemetry enable nodely")))
+			msgs = append(msgs, fmt.Sprintf("You can enable telemetry profiles with %s", style.Bold("nodekit telemetry enable")))
 		}
 
 		cmd.Println(lipgloss.JoinVertical(
