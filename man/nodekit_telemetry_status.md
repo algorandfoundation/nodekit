@@ -1,6 +1,6 @@
 ## nodekit telemetry status
 
-Status of telemetry
+Telemetry status
 
 ### Synopsis
 
@@ -8,10 +8,10 @@ Status of telemetry
 <img alt="Terminal Render" src="/assets/nodekit.png" width="65%">             
                                                                     
                                                                     
-Status of telemetry                                                 
+Telemetry status                                                    
                                                                     
 Overview:                                                           
-Configure telemetry for the Algorand daemon.                        
+Display telemetry profile status for the Algorand daemon.           
                                                                     
 Note: This is still a work in progress. Expect bugs and rough edges.
 
@@ -28,5 +28,5 @@ nodekit telemetry status [flags]
 
 ### SEE ALSO
 
-* [nodekit telemetry](/man/nodekit_telemetry.md)	 - NoOp command
+* [nodekit telemetry](/man/nodekit_telemetry.md)	 - Configure telemetry profile
 

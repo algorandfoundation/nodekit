@@ -11,7 +11,7 @@ Disable Telemetry
 Disable Telemetry                                                   
                                                                     
 Overview:                                                           
-Configure telemetry for the Algorand daemon.                        
+Disable telemetry for the Algorand daemon.                          
                                                                     
 Note: This is still a work in progress. Expect bugs and rough edges.
 
@@ -23,6 +23,6 @@ Note: This is still a work in progress. Expect bugs and rough edges.
 
 ### SEE ALSO
 
-* [nodekit telemetry](/man/nodekit_telemetry.md)	 - NoOp command
+* [nodekit telemetry](/man/nodekit_telemetry.md)	 - Configure telemetry profile
 * [nodekit telemetry disable nodely](/man/nodekit_telemetry_disable_nodely.md)	 - Disable Nodely
 

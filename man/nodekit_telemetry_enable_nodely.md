@@ -1,6 +1,6 @@
 ## nodekit telemetry enable nodely
 
-Disable Nodely
+Enable Nodely telemetry profile
 
 ### Synopsis
 
@@ -8,10 +8,10 @@ Disable Nodely
 <img alt="Terminal Render" src="/assets/nodekit.png" width="65%">             
                                                                     
                                                                     
-Disable Nodely                                                      
+Enable Nodely telemetry profile                                     
                                                                     
 Overview:                                                           
-Configure telemetry for the Algorand daemon.                        
+Enable the Nodely telemetry profile for the Algorand daemon.        
                                                                     
 Note: This is still a work in progress. Expect bugs and rough edges.
 

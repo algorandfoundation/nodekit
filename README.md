@@ -37,7 +37,7 @@ nodekit [flags]
 * [nodekit install](/man/nodekit_install.md)	 - Install the node daemon
 * [nodekit start](/man/nodekit_start.md)	 - Start the node daemon
 * [nodekit stop](/man/nodekit_stop.md)	 - Stop the node daemon
-* [nodekit telemetry](/man/nodekit_telemetry.md)	 - NoOp command
+* [nodekit telemetry](/man/nodekit_telemetry.md)	 - Configure telemetry profile
 * [nodekit uninstall](/man/nodekit_uninstall.md)	 - Uninstall the node daemon
 * [nodekit upgrade](/man/nodekit_upgrade.md)	 - Upgrade the node daemon
 
