@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-var nodelyShort = "Disable telemetry"
+var nodelyShort = "Enable Nodely telemetry profile"
 var nodelyLong = lipgloss.JoinVertical(
 	lipgloss.Left,
 	style.Purple(style.BANNER),
