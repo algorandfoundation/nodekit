@@ -27,6 +27,12 @@ var Long = lipgloss.JoinVertical(
 	style.Yellow.Render(explanations.ExperimentalWarning),
 )
 
+const (
+	TelemetryNotConfiguredErrorMsg = "telemetry is not configured"
+	TelemetryDisabledErrorMsg      = "telemetry is already disabled"
+)
+
+var dataDir string
 var disableQuestion = `
 # Overview
 
@@ -70,8 +76,4 @@ var Cmd = &cobra.Command{
 			}
 		}
 	},
-}
-
-func init() {
-	Cmd.AddCommand(nodelyCmd)
 }
