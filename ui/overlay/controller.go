@@ -32,12 +32,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	// When the state updates
 	// TODO: refactor to split this up a bit
 	case *algod.StateModel:
-		// Clear the catchup modal
-		if msg.Status.State != algod.FastCatchupState && m.Type == app.CatchupModal {
+		// Enforce the catchup modal
+		if msg.Status.State == algod.FastCatchupState && m.Type != app.CatchupModal {
+			m.Open = true
+			m.SetType(app.CatchupModal)
+		} else if msg.Status.State != algod.FastCatchupState && m.Type == app.CatchupModal {
 			m.Open = false
 			m.SetType(app.InfoModal)
 		}
-		// TODO: Clear the lagging modal
 
 		// Update State
 		m.State = msg

@@ -154,15 +154,13 @@ func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version str
 			cobra.CheckErr(err)
 		}
 		state.Watch(func(status *algod.StateModel, err error) {
-			// Handle a lagging node
-			if lagging && status.Status.State != algod.FastCatchupState {
-				p.Send(app.LaggingModal)
-				lagging = false
-			}
-
 			// Handle Fast Catchup
 			if state.Status.State == algod.FastCatchupState {
 				p.Send(app.CatchupModal)
+				lagging = false
+			} else if lagging && status.Status.State != algod.FastCatchupState {
+				p.Send(app.LaggingModal)
+				lagging = false
 			}
 
 			if err == nil {
