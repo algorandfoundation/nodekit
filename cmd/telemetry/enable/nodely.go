@@ -43,7 +43,7 @@ Enabling telemetry will configure your node to send health metrics to Nodely
 
 > Tip: Keep this GUID identifier private if you do not want this information to be linked to your identity.
 
-Nodely Telemetry Documentation: https://nodely.io/docs/public/telemetry/
+[Nodely Telemetry Documentation](https://nodely.io/docs/public/telemetry/)
 
 **Do you want to enable telemetry with the Nodely provider? (y/n)**
 `
