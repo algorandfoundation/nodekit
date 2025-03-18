@@ -30,7 +30,7 @@ var Long = lipgloss.JoinVertical(
 var disableQuestion = `
 # Overview
 
-**Do you want to disable telemetry with the provider? (y/n)**
+**Do you want to disable telemetry? (y/n)**
 `
 var Cmd = &cobra.Command{
 	Use:   "disable",
@@ -51,7 +51,7 @@ var Cmd = &cobra.Command{
 
 		// Error if already disabled
 		if !config.Enable {
-			log.Fatal(errors.New(NodelyDisabledErrorMsg))
+			log.Fatal(errors.New(TelemetryDisabledErrorMsg))
 		}
 		cmd.Println(style.BANNER)
 

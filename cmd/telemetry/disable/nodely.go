@@ -33,8 +33,8 @@ var nodelyLong = lipgloss.JoinVertical(
 var dataDir string
 
 const (
-	NodelyNotConfiguredErrorMsg = "nodely is not configured"
-	NodelyDisabledErrorMsg      = "nodely is already disabled"
+	TelemetryNotConfiguredErrorMsg = "telemetry is not configured"
+	TelemetryDisabledErrorMsg      = "telemetry is already disabled"
 )
 
 var nodelyQuestion = `
@@ -47,7 +47,7 @@ Enabling telemetry will configure your node to send health metrics to Nodely
 
 > Tip: Keep this GUID identifier private if you do not want this information to be linked to your identity.
 
-**Do you want to disable telemetry with the nodely provider? (y/n)**
+**Do you want to disable telemetry? (y/n)**
 `
 
 var nodelyCmd = cmdutils.WithAlgodFlags(&cobra.Command{
@@ -69,7 +69,7 @@ var nodelyCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 
 		// Error if already disabled
 		if !config.Enable && config.URI == string(cmdutils.NodelyTelemetryProvider) {
-			log.Fatal(errors.New(NodelyDisabledErrorMsg))
+			log.Fatal(errors.New(TelemetryDisabledErrorMsg))
 		}
 		cmd.Println(style.BANNER)
 
