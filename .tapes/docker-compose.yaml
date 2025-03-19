@@ -1,0 +1,9 @@
+services:
+  tape:
+    build:
+      target: noble
+      context: ..
+      dockerfile: .tapes/Dockerfile
+    volumes:
+      - .:/app/tapes
+      - ../assets/tapes:/app/artifacts
