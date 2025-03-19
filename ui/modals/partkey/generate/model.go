@@ -26,14 +26,14 @@ const (
 
 var RangeDefaults = map[Range]string{
 	Day:   "30",
-	Month: "",
-	Round: "",
+	Month: "1",
+	Round: "1000000",
 }
 
 var RangePlaceholders = map[Range]string{
-	Day:   fmt.Sprintf("Length of time (default: %s days)", RangeDefaults[Day]),
-	Month: "Length of time",
-	Round: "Length of time",
+	Day:   fmt.Sprintf(" (default: %s days)", RangeDefaults[Day]),
+	Month: fmt.Sprintf(" (default: %s month)", RangeDefaults[Month]),
+	Round: fmt.Sprintf(" (default: %s rounds)", RangeDefaults[Round]),
 }
 
 type ViewModel struct {
