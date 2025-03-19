@@ -8,6 +8,7 @@ import (
 
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/utils"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -55,14 +56,6 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 	return m, nil
 }
 
-func plural(singularForm string, value int) string {
-	if value == 1 {
-		return singularForm
-	} else {
-		return singularForm + "s"
-	}
-}
-
 func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
 	roundDelta := status.NextVersionRound - int(status.LastRound)
 	eta := time.Duration(roundDelta) * metrics.RoundTime
@@ -71,13 +64,13 @@ func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
 	days := int(eta.Hours()) / 24
 	str := "Scheduled"
 	if days > 0 {
-		str = str + fmt.Sprintf(" %d %s", days, plural("day", days))
+		str = str + fmt.Sprintf(" %d %s", days, utils.Plural("day", days))
 	}
 	if hours > 0 {
-		str = str + fmt.Sprintf(" %d %s", hours, plural("hour", hours))
+		str = str + fmt.Sprintf(" %d %s", hours, utils.Plural("hour", hours))
 	}
 	if days == 0 && minutes > 0 {
-		str = str + fmt.Sprintf(" %d %s", minutes, plural("min", minutes))
+		str = str + fmt.Sprintf(" %d %s", minutes, utils.Plural("min", minutes))
 	}
 	return str
 }

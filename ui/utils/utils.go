@@ -3,6 +3,8 @@ package utils
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/charmbracelet/log"
+	"strconv"
 )
 
 func toPtr[T any](constVar T) *T { return &constVar }
@@ -38,4 +40,23 @@ func StrOrNA(value *int) string {
 }
 func IntToStr(number int) string {
 	return fmt.Sprintf("%d", number)
+}
+
+func Plural(singularForm string, value int) string {
+	if value == 1 {
+		return singularForm
+	} else {
+		return singularForm + "s"
+	}
+}
+func PluralString(singularForm string, valueStr string) string {
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		log.Error(err)
+	}
+	if value == 1 {
+		return singularForm
+	} else {
+		return singularForm + "s"
+	}
 }
