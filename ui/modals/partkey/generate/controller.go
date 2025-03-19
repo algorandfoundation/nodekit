@@ -42,7 +42,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			if m.Step != WaitingStep {
-				return m, app.EmitCancelOverlay()
+				return m, app.EmitCloseOverlay()
 			}
 		case "s":
 			if m.Step == DurationStep {
