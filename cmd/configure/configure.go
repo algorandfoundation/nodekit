@@ -6,6 +6,7 @@ import (
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"os"
@@ -260,8 +261,9 @@ func editLaunchdAlgorandServiceFile(dataDirectoryPath string) {
 	}
 
 	// Boot out the launchd service (just in case - it should be off)
-	cmd := exec.Command("launchctl", "bootout", "system", overwriteFilePath)
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"launchctl", "bootout", "system", overwriteFilePath},
+	})
 	if err != nil {
 		if !strings.Contains(err.Error(), "No such process") {
 			fmt.Printf("Failed to bootout launchd service: %v\n", err)
@@ -270,8 +272,9 @@ func editLaunchdAlgorandServiceFile(dataDirectoryPath string) {
 	}
 
 	// Load the launchd service
-	cmd = exec.Command("launchctl", "load", overwriteFilePath)
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"launchctl", "load", overwriteFilePath},
+	})
 	if err != nil {
 		fmt.Printf("Failed to load launchd service: %v\n", err)
 		os.Exit(1)
@@ -335,8 +338,9 @@ ExecStart={{.AlgodPath}} -d {{.DataDirectoryPath}}`
 	}
 
 	// Reload systemd manager configuration
-	cmd := exec.Command("systemctl", "daemon-reload")
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"systemctl", "daemon-reload"},
+	})
 	if err != nil {
 		fmt.Printf("Failed to reload systemd daemon: %v\n", err)
 		os.Exit(1)

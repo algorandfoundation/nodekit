@@ -214,8 +214,9 @@ func UpdateService(dataDirectoryPath string) error {
 	}
 
 	// Boot out the launchd service (just in case - it should be off)
-	cmd := exec.Command("launchctl", "bootout", "system", overwriteFilePath)
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"launchctl", "bootout", "system", overwriteFilePath},
+	})
 	if err != nil {
 		if !strings.Contains(err.Error(), "No such process") {
 			log.Info("Failed to bootout launchd service: %v\n", err)
@@ -224,8 +225,9 @@ func UpdateService(dataDirectoryPath string) error {
 	}
 
 	// Load the launchd service
-	cmd = exec.Command("launchctl", "load", overwriteFilePath)
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"launchctl", "load", overwriteFilePath},
+	})
 	if err != nil {
 		log.Info("Failed to load launchd service: %v\n", err)
 		os.Exit(1)
