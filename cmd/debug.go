@@ -90,7 +90,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		folderDebug, err := utils.ToDataFolderConfig(dataDir)
 		if err != nil {
 			folderDebug.Token = fmt.Sprint(err)
-		} else {
+		} else if len(folderDebug.Token) > 3 {
 			folderDebug.Token = folderDebug.Token[:3] + "..."
 		}
 
