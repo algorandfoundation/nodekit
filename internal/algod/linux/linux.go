@@ -154,14 +154,18 @@ func Upgrade() error {
 // Returns an error if the command fails.
 // TODO: Replace with D-Bus integration
 func Start() error {
-	return exec.Command("sudo", "systemctl", "start", "algorand").Run()
+	return system.RunAll(system.CmdsList{
+		{"sudo", "systemctl", "start", "algorand"},
+	})
 }
 
 // Stop shuts down the Algorand algod system process on Linux using the systemctl stop command.
 // Returns an error if the operation fails.
 // TODO: Replace with D-Bus integration
 func Stop() error {
-	return exec.Command("sudo", "systemctl", "stop", "algorand").Run()
+	return system.RunAll(system.CmdsList{
+		{"sudo", "systemctl", "stop", "algorand"},
+	})
 }
 
 // IsService checks if the "algorand.service" is listed as a systemd unit file on Linux.
@@ -231,8 +235,10 @@ ExecStart={{.AlgodPath}} -d {{.DataDirectoryPath}}`
 	}
 
 	// Reload systemd manager configuration
-	cmd := exec.Command("systemctl", "daemon-reload")
-	err = cmd.Run()
+	err = system.RunAll(system.CmdsList{
+		{"systemctl", "daemon-reload"},
+	})
+
 	if err != nil {
 		fmt.Printf("Failed to reload systemd daemon: %v\n", err)
 		os.Exit(1)
