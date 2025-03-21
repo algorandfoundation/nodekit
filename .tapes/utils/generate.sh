@@ -4,6 +4,7 @@ set -e
 
 LOGPFX=$(basename "$0"):
 
+
 vhs bootstrap.tape
 
 mkdir -p bin

@@ -13,6 +13,7 @@ Source theme.tape
 Type "nodekit bootstrap" Sleep 500ms Enter
 Wait+Screen /Welcome/
 Wait+Screen /Installing/
+Sleep 1
 Screenshot ../artifacts/bootstrap.install.png
 
 Sleep 1.2s Type y
