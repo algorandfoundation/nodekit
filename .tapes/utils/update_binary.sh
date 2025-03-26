@@ -16,7 +16,8 @@ mkdir -p tmp
 SHASUMS_URL="https://fnet.algorand.green/static/SHA256SUMS"
 DOWNLOAD_URL_PREFIX="https://fnet.algorand.green/static"
 
-TMPDIR="bin"
+TMPDIR=$(realpath $(mktemp -p tmp -d -t update_binary-XXXXXX))
+trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "$LOGPFX downloading SHA256SUMS"
 
@@ -30,7 +31,7 @@ for file in algod goal; do
     LATEST_SHA=$(grep $file "$TMPFILE_SHA" | cut -d\  -f1)
     echo "$LOGPFX Latest $file: $LATEST_SHA"
 
-    BINARY_PATH="bin/$file"
+    BINARY_PATH=$(sudo which "$file")
 
     CURRENT_SHA=$(sha256 "$BINARY_PATH")
     echo "$LOGPFX Installed $file: $CURRENT_SHA"
@@ -58,3 +59,20 @@ for file in algod goal; do
         fi
     fi
 done
+
+if [ $UPDATED -gt 0 ]; then
+    echo "$LOGPFX Updates available"
+    for file in "${UPDATED_NAMES[@]}"; do
+        TMPFILE_BINARY="$TMPDIR/$file"
+        BINARY_PATH=$(sudo which "$file")
+        echo "$LOGPFX Installing $file to $BINARY_PATH"
+        sudo cp "$TMPFILE_BINARY" "$BINARY_PATH"
+        sudo chown "$USER:$USERGRP" "$BINARY_PATH"
+        sudo chmod 755 "$BINARY_PATH"
+    done
+    echo "$LOGPFX Updated OK"
+    exit 0
+fi
+
+echo "$LOGPFX OK, No updates"
+exit 2

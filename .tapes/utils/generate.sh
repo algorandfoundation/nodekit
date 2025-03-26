@@ -2,22 +2,29 @@
 
 set -e
 
-LOGPFX=$(basename "$0"):
+# Run the installer script
+vhs ./src/install.tape
 
+# Install Algod
+nodekit install
+nodekit stop
+rm -rf /var/lib/var/algorand
 
-vhs bootstrap.tape
+# Configure fnet
 
-mkdir -p bin
-touch bin/algod
-touch bin/goal
-
+# Update Algod Binary
 sudo ./utils/update_binary.sh
 echo '{"DNSBootstrapID": "<network>.algorand.green"}' | sudo tee /var/lib/algorand/config.json
-sudo chmod +x bin/algod
-sudo bin/algod -d /var/lib/algorand/ &
+./utils/get_genesis.sh | sudo tee /var/lib/algorand/genesis.json
 
-sleep 5
-vhs lagging.tape
+# Start fnet Algod
+sudo algod -d /var/lib/algorand/ &
 
-sleep 10
-vhs catchup.tape
+# Run fast-catchup
+vhs ./src/lagging.tape
+
+./utils/wait_sync.sh
+
+vhs ./src/create.tape
+
+vhs ./src/online.tape

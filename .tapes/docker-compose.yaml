@@ -1,18 +1,10 @@
 services:
-  tape:
+  systemd:
+    container_name: test-tapes
+    privileged: true
     build:
       target: noble
       context: ..
       dockerfile: .tapes/Dockerfile
     volumes:
-      - .:/app/tapes
-      - ../assets/tapes:/app/artifacts
-  systemd:
-    privileged: true
-    build:
-      target: noble
-      context: ..
-      dockerfile: .tapes/systemd.Dockerfile
-    volumes:
-      - .:/app/tapes
-      - ../assets/tapes:/app/artifacts
+      - .:/app

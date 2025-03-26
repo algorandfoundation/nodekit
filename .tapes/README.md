@@ -6,32 +6,45 @@ Useful for creating consistent demos and guides when the TUI updates
 
 ## Get Started
 
-Install vhs
+Start the test environment
 
 ```bash
-go install github.com/charmbracelet/vhs@latest
+docker compose up
 ```
 
-Copy the default `tui.tape` and name it appropriately
+Login to the container
 
 ```bash
-cp ./tui.tape ./my-demo.tape
+docker exec -it --user nodekit test-tapes /bin/bash 
 ```
 
-Edit the tape with your favorite editor. 
+Edit the tapes with your favorite editor and output. 
 Then you can run the vhs tape
-
-(Make sure to update the output file)
 
 ```bash
 vhs ./my-demo.tape
 ```
 
-### Theme
+When you need to restart, you can bring the node down:
 
-Example theme that uses some of the official Algorand Foundation brand guides
-
-```
-Set Theme { "name": "Whimsy", "black": "#2D2DFI", "red": "#ef6487", "green": "#5eca89", "yellow": "#fdd877", "blue": "#65aef7", "magenta": "#aa7ff0", "cyan": "#43c1be", "white": "#ffffff", "brightBlack": "#535178", "brightRed": "#ef6487", "brightGreen": "#5eca89", "brightYellow": "#fdd877", "brightBlue": "#65aef7", "brightMagenta": "#aa7ff0", "brightCyan": "#43c1be", "brightWhite": "#ffffff", "background": "#001324", "foreground": "#b3b0d6", "selection": "#3d3c58", "cursor": "#b3b0d6" }
+```bash
+docker compose down
 ```
 
+## CLI Tools
+
+`./utils/*` contains scripts for `fnet` and automation. 
+It includes an example runner `./utils/generate.sh` which can be used to run a suite of tapes on the instance.
+
+
+## Tips
+
+- All paths are relative to this directory (.tapes)
+- Leverage the `./src/theme.tape` as a base:
+
+    ```elixir
+    Source ./src/theme.tape
+    ```
+
+- Artifacts are stored in ./artifacts
+- The main node.run site can be used to test content

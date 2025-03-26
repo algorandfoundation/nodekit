@@ -11,28 +11,21 @@ FROM ubuntu:24.04 as noble
 
 
 RUN apt-get update && \
-    apt-get install curl ffmpeg ttyd libnss3 sudo dnsutils jq -y && \
+    apt-get install curl ffmpeg ttyd libnss3 sudo dnsutils jq systemd wget gnupg2 software-properties-common -y && \
     curl -sL -o /var/cache/apt/archives/vhs.deb https://github.com/charmbracelet/vhs/releases/download/v0.9.0/vhs_0.9.0_amd64.deb && \
     dpkg -i /var/cache/apt/archives/vhs.deb
 
-ADD .tapes/utils /app/utils
-
-RUN useradd -ms /bin/bash algorand
-
-RUN mkdir -p /var/lib/algorand
-RUN /app/utils/get_genesis.sh > /var/lib/algorand/genesis.json
-RUN chown algorand:algorand -R /var/lib/algorand/
 
 COPY --from=builder /app/bin/nodekit /bin/nodekit
 
 RUN mkdir -p /app/coverage/int/ubuntu/24.04 && \
     echo GOCOVERDIR=/app/coverage/int/ubuntu/24.04 >> /etc/environment
 
-STOPSIGNAL SIGRTMIN+3
 RUN useradd -ms /bin/bash nodekit
-RUN usermod -aG sudo,algorand nodekit
+RUN usermod -aG sudo nodekit
 RUN echo "nodekit ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nodekit
-USER nodekit
 
-WORKDIR "/app/tapes"
-ENTRYPOINT ["/app/utils/generate.sh"]
+STOPSIGNAL SIGRTMIN+3
+WORKDIR "/app"
+ENTRYPOINT ["/usr/lib/systemd/systemd"]
+#USER nodekit
