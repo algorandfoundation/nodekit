@@ -2,12 +2,9 @@
 import { Code } from "@astrojs/starlight/components";
 import { Icon } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from '@astrojs/starlight/components';
-import {isDev} from "../dev";
 
 const base = import.meta.env.BASE_URL;
 export const lang = "en";
-
-const docUrl = isDev() ?  "/nodes/nodekit-overview" : "https://developer.algorand.co/nodes/nodekit-quick-start"
 ---
 
 <html lang="en" data-mode="dark" class="dark">
@@ -107,34 +104,17 @@ const docUrl = isDev() ?  "/nodes/nodekit-overview" : "https://developer.algoran
                         class="w-full h-svh flex gap-4 flex-col items-center justify-center px-6"
                         >
                         <div class="mb-4">
-                            <Tabs syncKey="os">
-                                <TabItem label="Linux" icon="linux">
-                                <Code
-                                    lang="shell"
-                                    code={`wget -qO- https://nodekit.run/install.sh | bash`}
-                                    class="max-w-[95vw] z-10"
-                                    />
-                                </TabItem>
-                                <TabItem label="macOS" icon="apple">
-                                <Code
-                                    lang="shell"
-                                    code={`curl -fsSL https://nodekit.run/install.sh | bash`}
-                                    class="max-w-[95vw] z-10"
-                                    />
-                                </TabItem>
-                            </Tabs>
-                        </div>
-                        <div class="flex flex-col gap-4">
-                        <a
-                            class="text-white/80 block hover:text-[#BFBFF9]"
-                            href={docUrl}
-                            >Guides &amp; Documentation <Icon name="external" />
-                        </a>
-                        <a
-                            class="text-white/80 block hover:text-[#BFBFF9]"
-                            href="/offline"
-                            >Quick keyreg offline tool <Icon name="external" />
-                        </a>
+
+                            <div class="text-center text-white">
+                                <h1 class="text-4xl font-bold">404</h1>
+                                <p class="text-lg mt-2">Sorry, the page you are looking for does not exist.</p>
+                                <a
+                                        href="/"
+                                        class="mt-4 inline-block px-4 py-2 bg-[#BFBFF9] text-black rounded hover:bg-white hover:text-black transition"
+                                >
+                                    Go to Homepage
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

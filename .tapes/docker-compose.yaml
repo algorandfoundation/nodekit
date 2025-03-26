@@ -1,0 +1,10 @@
+services:
+  systemd:
+    container_name: test-tapes
+    privileged: true
+    build:
+      target: noble
+      context: ..
+      dockerfile: .tapes/Dockerfile
+    volumes:
+      - .:/app

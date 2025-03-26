@@ -1,0 +1,132 @@
+---
+title: NodeKit Overview
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+
+NodeKit is a terminal-based user interface (TUI) designed to simplify the process of managing Algorand nodes, a one-stop shop for managing Algorand nodes. With NodeKit, you can easily handle tasks like node installation, configuration, and maintenance, all from the command line, making it accessible for beginners and seasoned developers.
+
+## Benefits
+
+Setting up and running an Algorand node can be a complex process. NodeKit addresses common challenges by providing a unified interface to:
+
+- Install and bootstrap nodes with minimal configuration.
+- Simplify node upgrades and maintenance tasks.
+- Manage node settings and debugging in a consistent and structured way.
+
+With NodeKit, you save time and avoid the pitfalls of manual node management, empowering you to focus on building and deploying your applications.
+
+## Features
+
+NodeKit offers several powerful features for managing your Algorand nodes:
+
+### install
+
+Configures the local package manager and installs the Algorand daemon on your local machine.
+
+```bash showLineNumbers=false frame=none
+nodekit install [flags]
+```
+
+**Options**:
+
+```bash showLineNumbers=false frame=none
+  -f, --force   forcefully install the node
+  -h, --help    help for install
+```
+
+<LinkCard
+  title='nodekit install'
+  href='/nodes/nodekit-reference/commands/#install'
+  description='Install the node daemon'
+/>
+
+### bootstrap
+
+Get up and running with a fresh Algorand node.
+Uses the local package manager to install Algorand, then starts the node and performs a Fast-Catchup.
+
+```bash showLineNumbers=false frame=none
+nodekit bootstrap [flags]
+```
+
+**Options**:
+
+```bash showLineNumbers=false frame=none
+-h, --help   help for bootstrap
+```
+
+<LinkCard
+  title='nodekit bootstrap'
+  href='/nodes/nodekit-reference/commands/#bootstrap'
+  description='Initialize a fresh node'
+/>
+
+### catchup
+
+The entire process should sync a node in minutes rather than hours or days. Actual sync times may vary depending on the number of accounts, number of blocks and the network.
+
+```bash showLineNumbers=false frame=none
+nodekit catchup [flags]
+```
+
+**Options**:
+
+```bash showLineNumbers=false frame=none
+-d, --datadir string   Data directory for the node
+-h, --help             help for catchup
+```
+
+<LinkCard
+  title='nodekit catchup'
+  href='/nodes/nodekit-reference/commands/#catchup'
+  description='Manage Fast-Catchup for your node'
+/>
+
+### start
+
+Start the Algorand daemon on your local machine if it is not already running. Optionally, the daemon can be forcefully started.
+
+```bash showLineNumbers=false frame=none
+nodekit start [flags]
+```
+
+**Options**:
+
+```bash showLineNumbers=false frame=none
+-f, --force   forcefully start the node
+-h, --help    help for start
+```
+
+<LinkCard
+  title='nodekit start'
+  href='/nodes/nodekit-reference/commands/#start'
+  description='Start the node daemon'
+/>
+
+### stop
+
+Stops the Algorand daemon on your local machine. Optionally, the daemon can be forcefully stopped.
+
+This requires the daemon to be installed on your system.
+
+```bash showLineNumbers=false frame=none
+nodekit stop [flags]
+```
+
+**Options**:
+
+```bash showLineNumbers=false frame=none
+-f, --force   forcefully stop the node
+-h, --help    help for stop
+```
+
+<LinkCard
+  title='nodekit stop'
+  href='/nodes/nodekit-reference/commands/#stop'
+  description='Stop the node daemon'
+/>
+
+## Getting started
+
+Ready to get started? Follow the [Getting Started Guide](/nodes/nodekit-quick-start/) to install NodeKit and set up your first Algorand node.

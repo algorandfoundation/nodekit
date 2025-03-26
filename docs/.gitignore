@@ -1,3 +1,5 @@
+src/content/nodes/nodekit-reference
+
 # build output
 dist/
 # generated types
