@@ -3,5 +3,5 @@
 rm nodekit
 
 docker compose down
-docker compose up -d
-docker compose exec -it systemd /bin/bash -c "su -c /app/utils/generate.sh nodekit"
+docker compose up -d --build
+docker compose exec -it --user nodekit systemd /bin/bash -c "/app/utils/generate.sh"

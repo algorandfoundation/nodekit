@@ -2,6 +2,8 @@ services:
   systemd:
     container_name: test-tapes
     privileged: true
+    env_file:
+      - .env
     build:
       target: noble
       context: ..

@@ -15,7 +15,7 @@ Hide
 Type "nodekit" Sleep 100ms Enter
 
 Show
-Wait+Screen /Nodekit-dev/
+Wait+Screen /Nodekit/
 
 Sleep 500ms Type g
 

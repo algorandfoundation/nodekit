@@ -29,6 +29,9 @@ var (
 	// whether the user forbids incentive eligibility fees to be set
 	IncentivesDisabled = false
 
+	// ForceQrCode determines whether QR code generation is enforced, typically for displaying node-related information.
+	ForceQrCode = false
+
 	// algodEndpoint defines the URI address of the Algorand node, including the protocol (http/https), for client communication.
 	algodData string
 
@@ -58,7 +61,7 @@ var (
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			log.SetOutput(cmd.OutOrStdout())
-			err := runTUI(cmd, algodData, IncentivesDisabled, cmd.Version)
+			err := runTUI(cmd, algodData, IncentivesDisabled, ForceQrCode, cmd.Version)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -96,6 +99,7 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 func init() {
 	log.SetReportTimestamp(false)
 	RootCmd.Flags().BoolVarP(&IncentivesDisabled, "no-incentives", "n", false, style.LightBlue("Disable setting incentive eligibility fees"))
+	RootCmd.Flags().BoolVarP(&ForceQrCode, "force-qr", "", false, "Enable QR and bypass guards")
 	RootCmd.SetVersionTemplate(fmt.Sprintf("nodekit-%s-%s@{{.Version}}\n", runtime.GOARCH, runtime.GOOS))
 	// Add Commands
 	if runtime.GOOS != "windows" {
@@ -119,7 +123,7 @@ func Execute(version string, needsUpgrade bool) error {
 	return RootCmd.Execute()
 }
 
-func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version string) error {
+func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, forceQrFlag bool, version string) error {
 	if cmd == nil {
 		return fmt.Errorf("cmd is nil")
 	}
@@ -131,7 +135,7 @@ func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version str
 	cobra.CheckErr(err)
 
 	// Fetch the state and handle any creation errors
-	state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, incentivesFlag, version)
+	state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, incentivesFlag, forceQrFlag, version)
 	utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
 	cobra.CheckErr(err)
 	// Construct the TUI Model from the State

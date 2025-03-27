@@ -6,6 +6,13 @@ Useful for creating consistent demos and guides when the TUI updates
 
 ## Get Started
 
+Configure the ENV variables in the local .env file
+
+```bash
+DEPLOYER_MNEMONIC="****"
+DEPLOYER_ADDR="TAPEQCZOD42X3F4KRPVXEYI76V2WYBSWCD7QRZHY7PCLVLX74FKIIXWQHM"
+```
+
 Start the test environment
 
 ```bash
@@ -48,3 +55,4 @@ It includes an example runner `./utils/generate.sh` which can be used to run a s
 
 - Artifacts are stored in ./artifacts
 - The main node.run site can be used to test content
+- `rat.sh` will run everything automatically

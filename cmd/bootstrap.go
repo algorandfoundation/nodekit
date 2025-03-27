@@ -89,7 +89,7 @@ var bootstrapCmd = &cobra.Command{
 			// Execute the TUI if we are caught up.
 			// TODO: check the delta to see if it is necessary,
 			if resp.JSON200.CatchupTime == 0 {
-				err = runTUI(RootCmd, dir, false, RootCmd.Version)
+				err = runTUI(RootCmd, dir, false, false, RootCmd.Version)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -230,6 +230,6 @@ var bootstrapCmd = &cobra.Command{
 
 		}
 
-		return runTUI(RootCmd, dataDir, false, RootCmd.Version)
+		return runTUI(RootCmd, dataDir, false, false, RootCmd.Version)
 	},
 }

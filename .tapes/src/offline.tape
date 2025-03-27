@@ -1,4 +1,4 @@
-Output ./artifacts/nodekit.online.gif
+Output ./artifacts/nodekit.offline.gif
 
 Set Shell "bash"
 Set FontSize 15
@@ -14,16 +14,17 @@ Type "nodekit --force-qr" Enter
 Wait+Screen /Nodekit/
 
 Enter Sleep 500ms
+Wait+Screen /YES/
 Show
 Enter Sleep 1s
-Type "r" Sleep 1s
+Type "o" Sleep 1s
 
 Wait+Screen /how QR/
-Screenshot ./artifacts/nodekit.online.lora.png
+Screenshot ./artifacts/nodekit.offline.lora.png
 
 Type "s" Sleep 1s
-Screenshot ./artifacts/nodekit.online.qr-code.png
+Screenshot ./artifacts/nodekit.offline.qr-code.png
 
 Wait+Screen /Successfully/
-Screenshot ./artifacts/nodekit.online.qr-code.success.png
+Screenshot ./artifacts/nodekit.offline.qr-code.success.png
 Sleep 2s

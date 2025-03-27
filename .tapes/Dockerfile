@@ -4,10 +4,10 @@ WORKDIR /app
 
 ADD . .
 
-RUN CGO_ENABLED=0 go build -o ./bin/nodekit *.go
+RUN CGO_ENABLED=0 go build -ldflags "-X main.version=1.4.0" -o ./bin/nodekit *.go
 
 
-FROM ubuntu:24.04 as noble
+FROM ubuntu:24.04 AS noble
 
 
 RUN apt-get update && \

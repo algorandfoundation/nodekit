@@ -44,6 +44,9 @@ type StateModel struct {
 	// Whether user has disabled automatically applying incentive eligibility fees
 	IncentivesDisabled bool
 
+	// ForceQrCode determines whether QR code generation is forcibly enabled regardless of other conditions.
+	ForceQrCode bool
+
 	// Client provides an interface for interacting with API endpoints,
 	// enabling various node operations and data retrieval.
 	Client api.ClientWithResponsesInterface
@@ -59,7 +62,7 @@ type StateModel struct {
 
 // NewStateModel initializes and returns a new StateModel instance
 // along with an API response and potential error.
-func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface, incentivesDisabled bool, version string) (*StateModel, api.ResponseInterface, error) {
+func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface, incentivesDisabled bool, forceQr bool, version string) (*StateModel, api.ResponseInterface, error) {
 	// Preload the node status
 	status, response, err := NewStatus(ctx, client, httpPkg)
 	if err != nil {
@@ -88,6 +91,7 @@ func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface,
 		Context: ctx,
 
 		IncentivesDisabled: incentivesDisabled,
+		ForceQrCode:        forceQr,
 	}, partkeysResponse, nil
 }
 
