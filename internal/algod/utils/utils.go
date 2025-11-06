@@ -17,7 +17,6 @@ import (
 )
 
 const AlgodNetEndpointFileMissingAddress = "missing://endpoint"
-const NodeKitHybridNoticeFilename = ".NodeKit_Hybrid_Notice"
 
 type DataFolderConfig struct {
 	Path      string `json:"path"`
@@ -308,37 +307,24 @@ func ReplaceEndpointUrl(s string) string {
 	return s
 }
 
-// ShowHybridPopUp returns true if a specific dot file doesn't exist in the users
-// home directory, as the user may not have write access in the data directory.
+// ShowHybridPopUp returns true if a field in the NodeKitSettings doesn't exist or is false
 func ShowHybridPopUp() bool {
-	home, err := os.UserHomeDir()
+	settings, err := GetNodekitSettings()
 	if err != nil {
-		// Can't identify home directory, prevent showing
-		// because they can never disable it.
 		return false
 	}
-	hybridNotice := filepath.Join(home, NodeKitHybridNoticeFilename)
-	_, errFile := os.Stat(hybridNotice)
-	return errFile != nil
+
+	return !settings.DismissedNotices.HybridAvailable
 }
 
-// DontShowHybridPopUp touches a specific dot file in the users home directory,
-// as the user may not have write access in the data directory
+// DontShowHybridPopUp sets the "HybridAvailable" notice to true so they don't see it again.
 func DontShowHybridPopUp() error {
-	home, err := os.UserHomeDir()
+	settings, err := GetNodekitSettings()
 	if err != nil {
-		// Can't identify home directory
-		return nil
-	}
-	hybridNotice := filepath.Join(home, NodeKitHybridNoticeFilename)
-	_, err = os.Stat(hybridNotice)
-	if os.IsNotExist(err) {
-		file, err := os.Create(hybridNotice)
-		if err != nil {
-			return fmt.Errorf("failed to touch file: %s", err)
-		}
-		defer file.Close()
+		return err
 	}
 
-	return nil
+	settings.DismissedNotices.HybridAvailable = true
+
+	return WriteNodekitSettings(settings)
 }
