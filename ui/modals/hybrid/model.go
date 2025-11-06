@@ -58,7 +58,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	return m, cmd
 }
 
-// Title returns the static title string "Delete Key" for the ViewModel.
+// Title returns the static title string "NodeKit Information" for the ViewModel.
 func (m ViewModel) Title() string {
 	return "NodeKit Information"
 }
@@ -79,7 +79,7 @@ func (m ViewModel) Controls() string {
 	return controls
 }
 
-// Body returns the formatted body content of the ViewModel, including participation key details or a default message.
+// Body returns the formatted body content of the ViewModel, including information about P2P Hybrid being available with a URL to learn more, and how to enable it.
 func (m ViewModel) Body() string {
 	// TODO: Update this link to the actual NodeKit P2P Hybrid Mode documentation before release.
 	link := "https://d.nodekit.run/abcdef"
