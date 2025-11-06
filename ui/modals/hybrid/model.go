@@ -82,7 +82,7 @@ func (m ViewModel) Controls() string {
 // Body returns the formatted body content of the ViewModel, including information about P2P Hybrid being available with a URL to learn more, and how to enable it.
 func (m ViewModel) Body() string {
 	// TODO: Update this link to the actual NodeKit P2P Hybrid Mode documentation before release.
-	link := "https://d.nodekit.run/abcdef"
+	link := "https://b.nodekit.run/P2P"
 	return lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"Did you know P2P Hybrid Mode is now available in NodeKit?",
