@@ -165,7 +165,7 @@ func runTUI(cmd *cobra.Command, algodData string, incentivesFlag bool, version s
 
 		// Display Hybrid Notice on launch
 		// Only shown if EnableP2PHybridMode is unset/false and hasn't already been set to "do not show again"
-		hybridEnabled := m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode
+		hybridEnabled := m.Data.Config != nil && m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode
 		if !hybridEnabled && algodutils.ShowHybridPopUp() {
 			p.Send(app.HybridModal)
 		}

@@ -94,7 +94,7 @@ func (m StatusViewModel) View() string {
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	if m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode {
+	if m.Data.Config != nil && m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode {
 		end = "P2P: " + style.Green.Render("YES") + " "
 	} else {
 		end = "P2P: " + style.Red.Render("NO") + " "

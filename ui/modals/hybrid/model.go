@@ -70,7 +70,7 @@ func (m ViewModel) BorderColor() string {
 
 // Controls returns a formatted string displaying the available control options (yes or no) with styled color representations.
 func (m ViewModel) Controls() string {
-	hybridEnabled := m.State.Config.EnableP2PHybridMode != nil && *m.State.Config.EnableP2PHybridMode
+	hybridEnabled := m.State.Config != nil && m.State.Config.EnableP2PHybridMode != nil && *m.State.Config.EnableP2PHybridMode
 	controls := "| "
 	if !hybridEnabled && utils.ShowHybridPopUp() {
 		controls += style.Red.Render("(d)on't show again") + " | "

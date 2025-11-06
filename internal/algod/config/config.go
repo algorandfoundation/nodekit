@@ -7,7 +7,13 @@ type Config struct {
 
 // IsEqual compares two Config objects and returns true if all their fields have the same values, otherwise false.
 func (c Config) IsEqual(conf Config) bool {
-	return c.EnableP2PHybridMode == conf.EnableP2PHybridMode
+	if c.EnableP2PHybridMode == nil && conf.EnableP2PHybridMode == nil {
+		return true
+	}
+	if c.EnableP2PHybridMode == nil || conf.EnableP2PHybridMode == nil {
+		return false
+	}
+	return *c.EnableP2PHybridMode == *conf.EnableP2PHybridMode
 }
 
 // MergeAlgodConfigs merges two Config objects, with non-zero and non-default fields in 'b' overriding those in 'a'.
