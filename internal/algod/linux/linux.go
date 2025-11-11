@@ -3,9 +3,6 @@ package linux
 import (
 	"bytes"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/internal/algod/fallback"
-	"github.com/algorandfoundation/nodekit/internal/system"
-	"github.com/charmbracelet/log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -13,6 +10,10 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/algorandfoundation/nodekit/internal/algod/fallback"
+	"github.com/algorandfoundation/nodekit/internal/system"
+	"github.com/charmbracelet/log"
 )
 
 // PackageManagerNotFoundMsg is an error message indicating the absence of a supported package manager for uninstalling Algorand.
@@ -74,9 +75,12 @@ func Install() error {
 		log.Info("Installing with apt-get")
 		return system.RunAll(append(InstallRequirements(), system.CmdsList{
 			{"sudo", "apt-get", "update"},
-			{"sudo", "apt-get", "install", "-y", "gnupg2", "curl", "software-properties-common"},
-			{"sh", "-c", "curl -o - https://releases.algorand.com/key.pub | sudo tee /etc/apt/trusted.gpg.d/algorand.asc"},
-			{"sudo", "add-apt-repository", "-y", fmt.Sprintf("deb [arch=%s] https://releases.algorand.com/deb/ stable main", runtime.GOARCH)},
+			{"sudo", "apt-get", "install", "-y", "gnupg2", "curl"},
+			{"sh", "-c", "curl -sL https://releases.algorand.com/key.pub | sudo gpg --dearmor -o /usr/share/keyrings/algorand-keyring.gpg"},
+			{"sh", "-c", fmt.Sprintf(
+				"echo 'deb [arch=%s signed-by=/usr/share/keyrings/algorand-keyring.gpg] https://releases.algorand.com/deb/ stable main' | sudo tee /etc/apt/sources.list.d/algorand.list",
+				runtime.GOARCH,
+			)},
 			{"sudo", "apt-get", "update"},
 			{"sudo", "apt-get", "install", "-y", "algorand"},
 		}...))
