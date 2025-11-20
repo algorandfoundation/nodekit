@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,14 @@ type Metrics struct {
 	// RoundTime represents the average duration of a round,
 	// calculated based on recent round metrics.
 	RoundTime time.Duration
+
+	// PeersWS represents the total number of connections
+	// (inbound + outbound) for the traditional WS network.
+	PeersWS uint64
+
+	// PeersP2P represents the total number of connections
+	// (inbound + outbound) for the P2P network.
+	PeersP2P uint64
 
 	// TPS represents the calculated transactions per second,
 	// based on the recent metrics over a defined window of rounds.
@@ -79,6 +88,17 @@ type Metrics struct {
 // MetricsResponse represents a mapping of metric names to their integer values.
 type MetricsResponse map[string]uint64
 
+func orderLabels(keyWithLabels string) string {
+	if keyWithLabels == "" {
+		return ""
+	}
+
+	parts := strings.Split(keyWithLabels, ",")
+	slices.Sort(parts)
+
+	return strings.Join(parts, ",")
+}
+
 // parseMetricsContent parses Prometheus-style metrics content and returns a mapping of metric names to their integer values.
 // It validates the input format, extracts key-value pairs, and handles errors during parsing.
 func parseMetricsContent(content string) (MetricsResponse, error) {
@@ -89,29 +109,37 @@ func parseMetricsContent(content string) (MetricsResponse, error) {
 		return nil, errors.New("invalid metrics content: content must start with #")
 	}
 
-	// Regex for Metrics Format,
-	// (.*?) - Capture metric key (name+labels, non-greedy)
-	// \s    - Space delimiter
-	// (.*?) - Capture metric value
-	re := regexp.MustCompile(`(?m)^([^#].*?)\s(\d*?)$`)
+	// Main Regex to parse a single metric line:
+	// 1. ([^#].*?)         - Group 1: Metric Name
+	// 2. (?:\{([^}]+)\})?  - Group 2: Labels
+	// 3. \s                - Space delimiter
+	// 4. (\d*?)            - Group 3: Metric Value
+	re := regexp.MustCompile(`(?m)^([^#].*?)(?:\{([^}]+)\})?\s(\d*?)$`)
 	rows := re.FindAllStringSubmatch(content, -1)
 
 	// Add the strings to the map
 	for _, row := range rows {
-		if len(row) < 3 {
+		if len(row) < 4 {
 			// Shouldn't happen given the regex above, but here as a sanity check
 			continue
 		}
 
-		metricKey := strings.TrimSpace(row[1])
-		valueStr := row[2]
+		metricName := strings.TrimSpace(row[1])
+		metricLabel := orderLabels(row[2])
 
-		metricVal, err := strconv.ParseUint(valueStr, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse value '%s' for metric '%s': %w", valueStr, metricKey, err)
+		var metricKey string
+		if metricLabel != "" {
+			metricKey = fmt.Sprintf("%s{%s}", metricName, metricLabel)
+		} else {
+			metricKey = metricName
 		}
 
-		result[metricKey] = metricVal
+		metricValue, err := strconv.ParseUint(row[3], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse value '%s' for metric '%s': %w", row[3], metricKey, err)
+		}
+
+		result[metricKey] = metricValue
 	}
 
 	// Give the user what they asked for
@@ -143,6 +171,9 @@ func (m Metrics) Get(ctx context.Context, currentRound uint64) (Metrics, api.Res
 	m.Enabled = true
 	now := time.Now()
 	diff := now.Sub(m.LastTS)
+
+	m.PeersWS = content["algod_network_incoming_peers"] + content["algod_network_outgoing_peers"]
+	m.PeersP2P = content["libp2p_rcmgr_connections{dir=\"inbound\",scope=\"system\"}"] + content["libp2p_rcmgr_connections{dir=\"outbound\",scope=\"system\"}"]
 
 	m.TX = max(0, uint64(float64(content["algod_network_sent_bytes_total"]-m.LastTX)/diff.Seconds()))
 	m.RX = max(0, uint64(float64(content["algod_network_received_bytes_total"]-m.LastRX)/diff.Seconds()))
@@ -179,6 +210,8 @@ func NewMetrics(ctx context.Context, client api.ClientWithResponsesInterface, ht
 		Window:    100,
 		RoundTime: 0 * time.Second,
 		TPS:       0,
+		PeersWS:   0,
+		PeersP2P:  0,
 		RX:        0,
 		TX:        0,
 		RXP2P:     0,
