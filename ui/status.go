@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -47,15 +46,15 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 }
 
 // getBitRate converts a given byte rate to a human-readable string format. The output may vary from B/s to GB/s.
-func getBitRate(bytes int) string {
+func getBitRate(bytes uint64) string {
 	txString := fmt.Sprintf("%d B/s ", bytes)
 	if bytes >= 1024 {
 		txString = fmt.Sprintf("%d KB/s ", bytes/(1<<10))
 	}
-	if bytes >= int(math.Pow(1024, 2)) {
+	if bytes >= uint64(float64(1024*1024)) {
 		txString = fmt.Sprintf("%d MB/s ", bytes/(1<<20))
 	}
-	if bytes >= int(math.Pow(1024, 3)) {
+	if bytes >= uint64(float64(1024*1024*1024)) {
 		txString = fmt.Sprintf("%d GB/s ", bytes/(1<<30))
 	}
 
@@ -73,6 +72,7 @@ func (m StatusViewModel) View() string {
 	}
 
 	isCompact := m.TerminalWidth < 90
+	isP2PEnabled := m.Data.Config != nil && m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode
 
 	var size int
 	if isCompact {
@@ -94,7 +94,7 @@ func (m StatusViewModel) View() string {
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	if m.Data.Config != nil && m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode {
+	if isP2PEnabled {
 		end = "P2P: " + style.Green.Render("YES") + " "
 	} else {
 		end = "P2P: " + style.Red.Render("NO") + " "
@@ -108,7 +108,11 @@ func (m StatusViewModel) View() string {
 		roundTime = "--"
 	}
 	beginning = style.Blue.Render(" Round time: ") + roundTime
-	end = getBitRate(m.Data.Metrics.TX) + style.Green.Render("TX ")
+	end = getBitRate(m.Data.Metrics.TX)
+	if isP2PEnabled {
+		end += "| " + getBitRate(m.Data.Metrics.TXP2P)
+	}
+	end += style.Green.Render("TX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
@@ -118,7 +122,11 @@ func (m StatusViewModel) View() string {
 		tps = "--"
 	}
 	beginning = style.Blue.Render(" TPS: ") + tps
-	end = getBitRate(m.Data.Metrics.RX) + style.Green.Render("RX ")
+	end = getBitRate(m.Data.Metrics.RX)
+	if isP2PEnabled {
+		end += "| " + getBitRate(m.Data.Metrics.RXP2P)
+	}
+	end += style.Green.Render("RX ")
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row4 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)

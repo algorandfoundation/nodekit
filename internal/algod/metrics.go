@@ -3,17 +3,18 @@ package algod
 import (
 	"context"
 	"errors"
-	"github.com/algorandfoundation/nodekit/api"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/algorandfoundation/nodekit/api"
 )
 
 // Metrics represents runtime and performance metrics,
 // including network traffic stats, TPS, and round time data.
 type Metrics struct {
-
 	// Enabled indicates whether metrics collection and processing are active.
 	// If false, metrics are disabled or unavailable.
 	Enabled bool
@@ -32,11 +33,19 @@ type Metrics struct {
 
 	// RX represents the number of bytes received per second,
 	// calculated from network metrics over a time interval.
-	RX int
+	RX uint64
 
 	// TX represents the number of bytes sent per second,
 	// calculated from network metrics over a defined time interval.
-	TX int
+	TX uint64
+
+	// TXP2P represents the number of P2P bytes received per second,
+	// calculated from network metrics over a time interval.
+	RXP2P uint64
+
+	// TXP2P represents the number of P2P bytes sent per second,
+	// calculated from network metrics over a defined time interval.
+	TXP2P uint64
 
 	// LastTS represents the timestamp of the last update to metrics,
 	// used for calculating time deltas and rate metrics.
@@ -44,11 +53,19 @@ type Metrics struct {
 
 	// LastRX stores the total number of bytes received since the
 	// last metrics update, used for RX rate calculation.
-	LastRX int
+	LastRX uint64
 
 	// LastTX stores the total number of bytes sent since the
 	// last metrics update, used for TX rate calculation.
-	LastTX int
+	LastTX uint64
+
+	// LastRXP2P stores the total number of P2P bytes received since
+	// the last metrics update, used for RX rate calculation.
+	LastRXP2P uint64
+
+	// LastTXP2P stores the total number of P2P bytes sent since
+	// the last metrics update, used for TX rate calculation.
+	LastTXP2P uint64
 
 	// Client provides an interface for interacting with API endpoints,
 	// enabling metrics retrieval and other operations.
@@ -60,38 +77,41 @@ type Metrics struct {
 }
 
 // MetricsResponse represents a mapping of metric names to their integer values.
-type MetricsResponse map[string]int
+type MetricsResponse map[string]uint64
 
 // parseMetricsContent parses Prometheus-style metrics content and returns a mapping of metric names to their integer values.
 // It validates the input format, extracts key-value pairs, and handles errors during parsing.
 func parseMetricsContent(content string) (MetricsResponse, error) {
-	var err error
 	result := MetricsResponse{}
 
 	// Validate the Content
-	var isValid bool
-	isValid, err = regexp.MatchString(`^#`, content)
-	isValid = isValid && err == nil && content != ""
-	if !isValid {
-		return nil, errors.New("invalid metrics content")
+	if !strings.HasPrefix(content, "#") || content == "" {
+		return nil, errors.New("invalid metrics content: content must start with #")
 	}
 
 	// Regex for Metrics Format,
-	// selects all content that does not start with # in multiline mode
-	re := regexp.MustCompile(`(?m)^[^#].*`)
-	rows := re.FindAllString(content, -1)
+	// (.*?) - Capture metric key (name+labels, non-greedy)
+	// \s    - Space delimiter
+	// (.*?) - Capture metric value
+	re := regexp.MustCompile(`(?m)^([^#].*?)\s(\d*?)$`)
+	rows := re.FindAllStringSubmatch(content, -1)
 
 	// Add the strings to the map
 	for _, row := range rows {
-		var value int
-		keyValue := strings.Split(row, " ")
-		value, err = strconv.Atoi(keyValue[1])
-		result[keyValue[0]] = value
-	}
+		if len(row) < 3 {
+			// Shouldn't happen given the regex above, but here as a sanity check
+			continue
+		}
 
-	// Handle any error results
-	if err != nil {
-		return nil, err
+		metricKey := strings.TrimSpace(row[1])
+		valueStr := row[2]
+
+		metricVal, err := strconv.ParseUint(valueStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse value '%s' for metric '%s': %w", valueStr, metricKey, err)
+		}
+
+		result[metricKey] = metricVal
 	}
 
 	// Give the user what they asked for
@@ -124,12 +144,17 @@ func (m Metrics) Get(ctx context.Context, currentRound uint64) (Metrics, api.Res
 	now := time.Now()
 	diff := now.Sub(m.LastTS)
 
-	m.TX = max(0, int(float64(content["algod_network_sent_bytes_total"]-m.LastTX)/diff.Seconds()))
-	m.RX = max(0, int(float64(content["algod_network_received_bytes_total"]-m.LastRX)/diff.Seconds()))
+	m.TX = max(0, uint64(float64(content["algod_network_sent_bytes_total"]-m.LastTX)/diff.Seconds()))
+	m.RX = max(0, uint64(float64(content["algod_network_received_bytes_total"]-m.LastRX)/diff.Seconds()))
+
+	m.TXP2P = max(0, uint64(float64(content["algod_network_p2p_sent_bytes_total"]-m.LastTXP2P)/diff.Seconds()))
+	m.RXP2P = max(0, uint64(float64(content["algod_network_p2p_received_bytes_total"]-m.LastRXP2P)/diff.Seconds()))
 
 	m.LastTS = now
 	m.LastTX = content["algod_network_sent_bytes_total"]
 	m.LastRX = content["algod_network_received_bytes_total"]
+	m.LastTXP2P = content["algod_network_p2p_sent_bytes_total"]
+	m.LastRXP2P = content["algod_network_p2p_received_bytes_total"]
 
 	if int(currentRound) > m.Window {
 		var blockMetrics BlockMetrics
@@ -156,8 +181,13 @@ func NewMetrics(ctx context.Context, client api.ClientWithResponsesInterface, ht
 		TPS:       0,
 		RX:        0,
 		TX:        0,
+		RXP2P:     0,
+		TXP2P:     0,
 		LastTS:    time.Time{},
+		LastTX:    0,
 		LastRX:    0,
+		LastTXP2P: 0,
+		LastRXP2P: 0,
 
 		Client:  client,
 		HttpPkg: httpPkg,
