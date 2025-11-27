@@ -142,6 +142,10 @@ func parseMetricsContent(content string) (MetricsResponse, error) {
 		result[metricKey] = metricValue
 	}
 
+	if len(result) < 1 {
+		return nil, errors.New("failed to parse any valid metrics")
+	}
+
 	// Give the user what they asked for
 	return result, nil
 }

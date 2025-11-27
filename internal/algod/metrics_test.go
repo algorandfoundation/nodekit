@@ -2,10 +2,11 @@ package algod
 
 import (
 	"context"
-	"github.com/algorandfoundation/nodekit/api"
-	"github.com/algorandfoundation/nodekit/internal/test"
 	"strconv"
 	"testing"
+
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/test"
 )
 
 func Test_GetMetrics(t *testing.T) {
@@ -50,13 +51,12 @@ algod_crypto_vrf_prove_total 0
 algod_crypto_vrf_hash_total 0
 `
 	metrics, err := parseMetricsContent(content)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if metrics["algod_telemetry_drops_total"] != 0 {
-		t.Fatal(strconv.Itoa(metrics["algod_telemetry_drops_total"]) + " is not 0")
+		t.Fatal(strconv.FormatUint(metrics["algod_telemetry_drops_total"], 10) + " is not 0")
 	}
 
 	content = `INVALID`
