@@ -16,7 +16,7 @@ const (
 	MainNet CatchPointUrl = "https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/mainnet/latest.catchpoint"
 )
 
-const InvalidNetworkParamMsg = "invalid network"
+var ErrInvalidNetwork = errors.New("invalid network")
 
 type LatestCatchpointResponse struct {
 	HTTPResponse   *http.Response
@@ -45,9 +45,8 @@ func GetLatestCatchpointWithResponse(http HttpPkgInterface, network string) (Lat
 		url = TestNet
 	case "mainnet-v1.0", "mainnet":
 		url = MainNet
-	}
-	if url == "" {
-		return response, errors.New(InvalidNetworkParamMsg)
+	default:
+		return response, ErrInvalidNetwork
 	}
 	res, err := http.Get(string(url))
 	response.HTTPResponse = res

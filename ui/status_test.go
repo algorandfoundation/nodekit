@@ -2,15 +2,22 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/nodekit/internal/algod"
 	"testing"
 	"time"
+
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/config"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest"
 )
+
+// Helper function to create bool pointers
+func Bool(b bool) *bool {
+	return &b
+}
 
 var statusViewSnapshots = map[string]StatusViewModel{
 	"Syncing": {
@@ -24,6 +31,9 @@ var statusViewSnapshots = map[string]StatusViewModel{
 			Metrics: algod.Metrics{
 				RoundTime: 0,
 				TX:        0,
+			},
+			Config: &config.Config{
+				EnableP2PHybridMode: Bool(true),
 			},
 		},
 		TerminalWidth:  180,
@@ -42,6 +52,9 @@ var statusViewSnapshots = map[string]StatusViewModel{
 				RoundTime: 0,
 				TX:        0,
 			},
+			Config: &config.Config{
+				EnableP2PHybridMode: Bool(true),
+			},
 		},
 		TerminalWidth:  180,
 		TerminalHeight: 80,
@@ -58,6 +71,9 @@ var statusViewSnapshots = map[string]StatusViewModel{
 			Metrics: algod.Metrics{
 				RoundTime: 0,
 				TX:        0,
+			},
+			Config: &config.Config{
+				EnableP2PHybridMode: Bool(true),
 			},
 		},
 		TerminalWidth:  0,
@@ -87,6 +103,9 @@ func Test_StatusMessages(t *testing.T) {
 			TX:        0,
 			RX:        0,
 			TPS:       0,
+		},
+		Config: &config.Config{
+			EnableP2PHybridMode: Bool(true),
 		},
 	}
 	// Create the Model

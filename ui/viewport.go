@@ -77,6 +77,8 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Otherwise let the viewport have focus on the inputs for the following global controls
 		switch msg.String() {
+		case "p":
+			return m, app.EmitShowModal(app.HybridModal)
 		case "g":
 			// Only open modal when it is closed and not syncing
 			if m.Data.Status.State == algod.StableState && m.Data.Metrics.RoundTime > 0 {

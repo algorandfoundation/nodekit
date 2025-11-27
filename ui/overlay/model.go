@@ -8,6 +8,7 @@ import (
 	"github.com/algorandfoundation/nodekit/ui/modals/catchup"
 	"github.com/algorandfoundation/nodekit/ui/modals/catchup/lagging"
 	"github.com/algorandfoundation/nodekit/ui/modals/exception"
+	"github.com/algorandfoundation/nodekit/ui/modals/hybrid"
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/delete"
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/generate"
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/info"
@@ -44,6 +45,7 @@ type ViewModel struct {
 	confirmModal     delete.ViewModel
 	generateModal    generate.ViewModel
 	exceptionModal   exception.ViewModel
+	hybridModal      hybrid.ViewModel
 
 	// Current Component Data
 	title       string
@@ -96,6 +98,7 @@ func New(parent string, open bool, state *algod.StateModel) ViewModel {
 		confirmModal:     delete.New(state, nil),
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
+		hybridModal:      hybrid.New(state),
 
 		Type:        app.InfoModal,
 		controls:    "",

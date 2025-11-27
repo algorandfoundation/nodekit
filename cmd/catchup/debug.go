@@ -66,7 +66,7 @@ var debugCmd = utils.WithAlgodFlags(&cobra.Command{
 
 		var isSupported bool
 		catchpoint, _, err := algod.GetLatestCatchpoint(httpPkg, status.Network)
-		if err != nil && err.Error() == api.InvalidNetworkParamMsg {
+		if err != nil && err == api.ErrInvalidNetwork {
 			isSupported = false
 		} else {
 			isSupported = true

@@ -6,6 +6,7 @@ import (
 
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/config"
 	mock2 "github.com/algorandfoundation/nodekit/internal/test/mock"
 )
 
@@ -37,6 +38,9 @@ func GetState(client api.ClientWithResponsesInterface) *algod.StateModel {
 			LastTS:    time.Time{},
 			LastRX:    0,
 			LastTX:    0,
+		},
+		Config: &config.Config{
+			EnableP2PHybridMode: func(b bool) *bool { return &b }(true),
 		},
 		Accounts:          nil,
 		ParticipationKeys: mock2.Keys,

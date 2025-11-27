@@ -28,6 +28,9 @@ const (
 
 	// ExceptionModal represents a modal type used for displaying errors or exceptions within the application.
 	ExceptionModal ModalType = "exception"
+
+	// HybridModal represents a modal type used for displaying information to the user about new P2P Hybrid configurations.
+	HybridModal ModalType = "hybrid"
 )
 
 // EmitShowModal creates a command to emit a modal message of the specified ModalType.

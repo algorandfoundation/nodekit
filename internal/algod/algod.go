@@ -3,9 +3,11 @@ package algod
 import (
 	"fmt"
 	"runtime"
+	"syscall"
 
 	"github.com/algorandfoundation/nodekit/internal/algod/linux"
 	"github.com/algorandfoundation/nodekit/internal/algod/mac"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 )
 
@@ -24,17 +26,42 @@ func IsInstalled() bool {
 	return system.CmdExists("algod")
 }
 
-// IsRunning checks if the algod is currently running on the host operating system.
+// IsRunning checks the algod PID file and if it's currently running on the host operating system.
 // It returns true if the application is running, or false if it is not or if an error occurs.
-// This function supports Linux and macOS platforms. It returns an error for unsupported operating systems.
-func IsRunning() bool {
-	switch runtime.GOOS {
-	case "linux", "darwin":
-		return system.IsCmdRunning("algod")
-
-	default:
+// This function supports Linux and macOS platforms.
+func IsRunning(dataDir string) bool {
+	resolvedDir, err := GetDataDir(dataDir)
+	if err != nil {
 		return false
 	}
+
+	pid, err := utils.GetPidFromDataDir(resolvedDir)
+	if err != nil {
+		return false
+	}
+
+	if pid == 0 {
+		return false
+	}
+
+	// The syscall.Kill function with signal 0 checks for process existence and permissions.
+	// It doesn't actually kill the process.
+	err = syscall.Kill(pid, syscall.Signal(0))
+	if err != nil {
+		// ESRCH means "No such process".
+		if err == syscall.ESRCH {
+			return false
+		}
+
+		// EPERM means "operation not permitted"
+		// i.e. you're not root, which is fine, since we just want to know if the process exists.
+		if err != syscall.EPERM {
+			// TODO: Probably worth asking anyone seeing something here to let us know.
+			return false
+		}
+	}
+
+	return true
 }
 
 // IsService determines if the Algorand service is configured as
@@ -147,6 +174,6 @@ func Stop() error {
 }
 
 // IsInitialized determines if the Algod software is installed, configured as a service, and currently running.
-func IsInitialized() bool {
-	return IsInstalled() && IsService() && IsRunning()
+func IsInitialized(dataDir string) bool {
+	return IsInstalled() && IsService() && IsRunning(dataDir)
 }

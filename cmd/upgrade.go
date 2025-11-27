@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"time"
+
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -9,8 +12,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"os"
-	"time"
 )
 
 // UpgradeMsg is a constant string used to indicate the start of the Algod upgrade process.
@@ -58,7 +59,7 @@ var upgradeCmd = &cobra.Command{
 		time.Sleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
-		if !algod.IsRunning() {
+		if !algod.IsRunning(algodData) {
 			err = algod.Start()
 			if err != nil {
 				log.Error(err)
