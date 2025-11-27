@@ -1,7 +1,7 @@
 ╭───( Nodekit-v0.0.0-test )─────────────────────────────────────────────────────Status───╮
 │ Latest Round: 1337                                                             SYNCING │
-│                                                                            P2P: HYBRID │
-│ -- 0 round average --                                       Peers:     0 WS |    0 P2P │
-│ Round time: --                                                 Tx:    0 B/s |    0 B/s │
-│ TPS: --                                                        Rx:    0 B/s |    0 B/s │
+│                                                                                        │
+│ P2P:        HYBRID                                          Peers:     0 WS |    0 P2P │
+│ TPS:        --                                                 Tx:    0 B/s |    0 B/s │
+│ Round time: --                                                 Rx:    0 B/s |    0 B/s │
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
