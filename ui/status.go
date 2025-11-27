@@ -95,18 +95,19 @@ func (m StatusViewModel) View() string {
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	if isP2PHybridEnabled {
-		end = "P2P: " + style.Green.Render("HYBRID") + " "
-	} else if isP2PEnabled {
-		end = "P2P: " + style.Green.Render("ONLY") + " "
-	} else {
-		end = "P2P: " + style.Red.Render("NO") + " "
-	}
 	beginning = ""
+	end = ""
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	beginning = style.Cyan.Render(" -- " + strconv.Itoa(m.Data.Metrics.Window) + " round average --")
+	if isP2PHybridEnabled {
+		beginning = " P2P:        " + style.Green.Render("HYBRID") + " "
+	} else if isP2PEnabled {
+		beginning = " P2P:        " + style.Green.Render("ONLY") + " "
+	} else {
+		beginning = " P2P:        " + style.Red.Render("NO") + " "
+	}
+
 	// Check metrics to confirm config
 	hasWSData := (m.Data.Metrics.TX != 0 || m.Data.Metrics.RX != 0)
 	hasP2PData := (m.Data.Metrics.TXP2P != 0 || m.Data.Metrics.RXP2P != 0)
@@ -122,7 +123,7 @@ func (m StatusViewModel) View() string {
 		end = style.Red.Render("Network/Config Mismatch") + " "
 	} else {
 		// Otherwise show peer count
-		end = "Peers: "
+		end = "  Peers: "
 		if isP2PHybridEnabled {
 			end += fmt.Sprintf(" % 4d WS | % 4d P2P ", m.Data.Metrics.PeersWS, m.Data.Metrics.PeersP2P)
 		} else if isP2PEnabled {
@@ -134,11 +135,11 @@ func (m StatusViewModel) View() string {
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
+	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
 	if m.Data.Status.State != algod.StableState {
-		roundTime = "--"
+		tps = "--"
 	}
-	beginning = style.Blue.Render(" Round time: ") + roundTime
+	beginning = style.Blue.Render(" TPS:        ") + tps
 	end = "Tx: "
 	if isP2PHybridEnabled {
 		end += fmt.Sprintf("% 8s | % 8s ", getBitRate(m.Data.Metrics.TX), getBitRate(m.Data.Metrics.TXP2P))
@@ -150,11 +151,11 @@ func (m StatusViewModel) View() string {
 	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 	row4 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	tps := fmt.Sprintf("%.2f", m.Data.Metrics.TPS)
+	roundTime := fmt.Sprintf("%.2fs", float64(m.Data.Metrics.RoundTime)/float64(time.Second))
 	if m.Data.Status.State != algod.StableState {
-		tps = "--"
+		roundTime = "--"
 	}
-	beginning = style.Blue.Render(" TPS: ") + tps
+	beginning = style.Blue.Render(" Round time: ") + roundTime
 	end = "Rx: "
 	if isP2PHybridEnabled {
 		end += fmt.Sprintf("% 8s | % 8s ", getBitRate(m.Data.Metrics.RX), getBitRate(m.Data.Metrics.RXP2P))
