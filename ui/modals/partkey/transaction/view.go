@@ -75,7 +75,7 @@ func (m ViewModel) Body() string {
 			lipgloss.Center,
 			render,
 			"",
-			style.Bold("Note: Transction fee set to 2 ALGO (opting in to rewards)"),
+			style.Bold("Note: Transaction fee set to 2 ALGO (opting in to rewards)"),
 		)
 	}
 
