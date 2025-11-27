@@ -110,13 +110,14 @@ func (m StatusViewModel) View() string {
 	// Check metrics to confirm config
 	hasWSData := (m.Data.Metrics.TX != 0 || m.Data.Metrics.RX != 0)
 	hasP2PData := (m.Data.Metrics.TXP2P != 0 || m.Data.Metrics.RXP2P != 0)
-	if isP2PHybridEnabled && (hasWSData && !hasP2PData) || (hasP2PData && !hasWSData) {
+	hasSomeData := hasWSData || hasP2PData
+	if isP2PHybridEnabled && hasSomeData && (!hasP2PData || !hasWSData) {
 		// Should be P2P and WS
 		end = style.Red.Render("Network/Config Mismatch") + " "
-	} else if isP2PEnabled && (!hasP2PData || (hasP2PData && hasWSData)) {
+	} else if isP2PEnabled && hasSomeData && (!hasP2PData || hasP2PData) {
 		// Should be ONLY P2P
 		end = style.Red.Render("Network/Config Mismatch") + " "
-	} else if (!isP2PHybridEnabled && !isP2PEnabled) && (!hasWSData || (hasWSData && hasP2PData)) {
+	} else if (!isP2PHybridEnabled && !isP2PEnabled) && hasSomeData && (!hasWSData || hasP2PData) {
 		// Should be ONLY WS
 		end = style.Red.Render("Network/Config Mismatch") + " "
 	} else {
