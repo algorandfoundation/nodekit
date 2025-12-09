@@ -115,7 +115,7 @@ func (m StatusViewModel) View() string {
 	if isP2PHybridEnabled && hasSomeData && (!hasP2PData || !hasWSData) {
 		// Should be P2P and WS
 		end = style.Red.Render("Network/Config Mismatch") + " "
-	} else if isP2PEnabled && hasSomeData && (!hasP2PData || hasP2PData) {
+	} else if isP2PEnabled && hasSomeData && (!hasP2PData || hasWSData) {
 		// Should be ONLY P2P
 		end = style.Red.Render("Network/Config Mismatch") + " "
 	} else if (!isP2PHybridEnabled && !isP2PEnabled) && hasSomeData && (!hasWSData || hasP2PData) {
