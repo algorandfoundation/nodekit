@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
@@ -16,7 +17,6 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
-	"strings"
 )
 
 // DebugInfo represents diagnostic information about
@@ -75,7 +75,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 
 		path, _ := exec.LookPath("algod")
 
-		dataDir, err := algod.GetDataDir("")
+		dataDir, err := algod.GetDataDir(algodData)
 		if err != nil {
 			return err
 		}
@@ -102,7 +102,7 @@ var debugCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		info := DebugInfo{
 			Version:     cmd.Root().Version,
 			InPath:      system.CmdExists("algod"),
-			IsRunning:   algod.IsRunning(),
+			IsRunning:   algod.IsRunning(dataDir),
 			IsService:   algod.IsService(),
 			IsInstalled: algod.IsInstalled(),
 			Algod:       path,

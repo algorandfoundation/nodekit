@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
@@ -24,7 +25,7 @@ var startLong = lipgloss.JoinVertical(
 )
 
 // startCmd is a Cobra command used to start the Algod service on the system, ensuring necessary checks are performed beforehand.
-var startCmd = &cobra.Command{
+var startCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	Use:              "start",
 	Short:            startShort,
 	Long:             startLong,
@@ -40,7 +41,7 @@ var startCmd = &cobra.Command{
 		}
 		log.Info(style.Green.Render("Algorand started successfully 🎉"))
 	},
-}
+}, &algodData)
 
 // init initializes the `force` flag for the `start` command, allowing the node to start forcefully when specified.
 func init() {

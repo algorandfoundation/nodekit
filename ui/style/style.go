@@ -2,10 +2,11 @@ package style
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/ansi"
 	"regexp"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 var (
@@ -40,6 +41,9 @@ var (
 	Bold = lipgloss.NewStyle().
 		Bold(true).
 		Render
+	Underline = lipgloss.NewStyle().
+			Underline(true).
+			Render
 	BoldUnderline = lipgloss.NewStyle().
 			Bold(true).
 			Underline(true).
@@ -209,14 +213,16 @@ const BANNER_NODE = `
 ████   ██ ██    ██ ██   ██ ██      
 ██ ██  ██ ██    ██ ██   ██ █████   
 ██  ██ ██ ██    ██ ██   ██ ██      
-██   ████  ██████  ██████  ███████ `
+██   ████  ██████  ██████  ███████ 
+                                   `
+
 const BANNER_KIT = `
 ██╗  ██╗██╗████████╗
 ██║ ██╔╝██║╚══██╔══╝
 █████╔╝ ██║   ██║   
 ██╔═██╗ ██║   ██║   
 ██║  ██╗██║   ██║   
-╚═╝  ╚═╝╚═╝   ╚═╝`
+╚═╝  ╚═╝╚═╝   ╚═╝   `
 
 var BANNER string
 

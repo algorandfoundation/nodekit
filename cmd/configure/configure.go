@@ -3,17 +3,17 @@ package configure
 import (
 	"bytes"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
-	"github.com/algorandfoundation/nodekit/internal/algod"
-	"github.com/algorandfoundation/nodekit/internal/algod/utils"
-	"github.com/algorandfoundation/nodekit/ui/style"
-	"github.com/charmbracelet/lipgloss"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 	"text/template"
 
+	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
+	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/ui/style"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +33,8 @@ var long = lipgloss.JoinVertical(
 	style.Yellow.Render(explanations.ExperimentalWarning),
 )
 
+var algodData = ""
+
 var Cmd = &cobra.Command{
 	Use:   "configure",
 	Short: short,
@@ -42,6 +44,7 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(serviceCmd)
 	Cmd.AddCommand(telemetryCmd)
+	Cmd.AddCommand(algodCmd)
 }
 
 const RunningErrorMsg = "algorand is currently running. Please stop the node with *node stop* before configuring"
@@ -50,7 +53,7 @@ const RunningErrorMsg = "algorand is currently running. Please stop the node wit
 func configureNode() error {
 	var systemServiceConfigure bool
 
-	if algod.IsRunning() {
+	if algod.IsRunning(algodData) {
 		return fmt.Errorf(RunningErrorMsg)
 	}
 
@@ -140,9 +143,7 @@ func configureNode() error {
 				}
 				os.Exit(0)
 			}
-
 		} else {
-
 			if promptWrapperYes("Do you want to set one of these directories as the new data directory? (y/N)") {
 
 				selectedPath := promptWrapperSelection("Select an Algorand data directory", paths)
@@ -200,7 +201,6 @@ func editAlgorandServiceFile(dataDirectoryPath string) {
 }
 
 func editLaunchdAlgorandServiceFile(dataDirectoryPath string) {
-
 	algodPath, err := exec.LookPath("algod")
 	if err != nil {
 		fmt.Printf("Failed to find algod binary: %v\n", err)
@@ -253,7 +253,7 @@ func editLaunchdAlgorandServiceFile(dataDirectoryPath string) {
 	}
 
 	// Write the override content to the file
-	err = os.WriteFile(overwriteFilePath, overwriteContent.Bytes(), 0644)
+	err = os.WriteFile(overwriteFilePath, overwriteContent.Bytes(), 0o644)
 	if err != nil {
 		fmt.Printf("Failed to write override file: %v\n", err)
 		os.Exit(1)
@@ -282,7 +282,6 @@ func editLaunchdAlgorandServiceFile(dataDirectoryPath string) {
 
 // Update the algorand.service file
 func editSystemdAlgorandServiceFile(dataDirectoryPath string) {
-
 	algodPath, err := exec.LookPath("algod")
 	if err != nil {
 		fmt.Printf("Failed to find algod binary: %v\n", err)
@@ -294,7 +293,7 @@ func editSystemdAlgorandServiceFile(dataDirectoryPath string) {
 	overrideFilePath := "/etc/systemd/system/algorand.service.d/override.conf"
 
 	// Create the override directory if it doesn't exist
-	err = os.MkdirAll("/etc/systemd/system/algorand.service.d", 0755)
+	err = os.MkdirAll("/etc/systemd/system/algorand.service.d", 0o755)
 	if err != nil {
 		fmt.Printf("Failed to create override directory: %v\n", err)
 		os.Exit(1)
@@ -328,7 +327,7 @@ ExecStart={{.AlgodPath}} -d {{.DataDirectoryPath}}`
 	}
 
 	// Write the override content to the file
-	err = os.WriteFile(overrideFilePath, overrideContent.Bytes(), 0644)
+	err = os.WriteFile(overrideFilePath, overrideContent.Bytes(), 0o644)
 	if err != nil {
 		fmt.Printf("Failed to write override file: %v\n", err)
 		os.Exit(1)

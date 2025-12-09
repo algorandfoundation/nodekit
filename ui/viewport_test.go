@@ -2,12 +2,12 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/nodekit/internal/test"
-	"github.com/algorandfoundation/nodekit/ui/app"
-	uitest "github.com/algorandfoundation/nodekit/ui/internal/test"
 	"testing"
 	"time"
 
+	"github.com/algorandfoundation/nodekit/internal/test"
+	"github.com/algorandfoundation/nodekit/ui/app"
+	uitest "github.com/algorandfoundation/nodekit/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/exp/teatest"
 )
@@ -15,6 +15,7 @@ import (
 func Test_ViewportViewRender(t *testing.T) {
 	client := test.GetClient(false)
 	state := uitest.GetState(client)
+	state.Config.EnableP2PHybridMode = func(b bool) *bool { return &b }(true)
 	// Create the Model
 	m, err := NewViewportViewModel(state)
 	if err != nil {

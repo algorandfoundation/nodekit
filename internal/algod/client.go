@@ -4,45 +4,41 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/api"
-	"github.com/algorandfoundation/nodekit/internal/algod/utils"
-	"github.com/charmbracelet/log"
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 	"os"
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/charmbracelet/log"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 
 const InvalidDataDirMsg = "invalid data directory"
 const ClientTimeoutMsg = "timed out while waiting for the node"
 
 func GetDataDir(dataDir string) (string, error) {
-	envDataDir := os.Getenv("ALGORAND_DATA")
-
-	var defaultDataDir string
-	switch runtime.GOOS {
-	case "darwin":
-		defaultDataDir = filepath.Join(os.Getenv("HOME"), ".algorand")
-	case "linux":
-		defaultDataDir = "/var/lib/algorand"
-	default:
-		return "", errors.New(UnsupportedOSError)
-	}
-
-	var resolvedDir string
-
+	// Priority:
+	// 1. Use provided `-d` directory
+	// 2. Use environment variable `ALGORAND_DATA`
+	// 3. Use default given by nodekit
 	if dataDir == "" {
-		if envDataDir == "" {
-			resolvedDir = defaultDataDir
-		} else {
-			resolvedDir = envDataDir
+		dataDir = os.Getenv("ALGORAND_DATA")
+
+		if dataDir == "" {
+			switch runtime.GOOS {
+			case "darwin":
+				dataDir = filepath.Join(os.Getenv("HOME"), ".algorand")
+			case "linux":
+				dataDir = "/var/lib/algorand"
+			default:
+				return "", errors.New(UnsupportedOSError)
+			}
 		}
-	} else {
-		resolvedDir = dataDir
 	}
 
-	return resolvedDir, nil
+	return dataDir, nil
 }
 
 // GetClient initializes and returns a new API client configured with the provided endpoint and access token.

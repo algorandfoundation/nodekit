@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"runtime"
+
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/catchup"
 	"github.com/algorandfoundation/nodekit/cmd/configure"
@@ -10,6 +12,7 @@ import (
 	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	algodutils "github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/algorandfoundation/nodekit/ui"
 	"github.com/algorandfoundation/nodekit/ui/app"
@@ -18,7 +21,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"runtime"
 )
 
 var (
@@ -74,7 +76,7 @@ func NeedsToBeRunning(cmd *cobra.Command, args []string) {
 	if !algod.IsInstalled() {
 		log.Fatal(explanations.NotInstalledErrorMsg)
 	}
-	if !algod.IsRunning() {
+	if !algod.IsRunning(algodData) {
 		log.Fatal(explanations.NotRunningErrorMsg)
 	}
 }
@@ -87,7 +89,7 @@ func NeedsToBeStopped(cmd *cobra.Command, args []string) {
 	if !algod.IsInstalled() {
 		log.Fatal(explanations.NotInstalledErrorMsg)
 	}
-	if algod.IsRunning() {
+	if algod.IsRunning(algodData) {
 		log.Fatal(explanations.RunningErrorMsg)
 	}
 }
@@ -119,7 +121,7 @@ func Execute(version string, needsUpgrade bool) error {
 	return RootCmd.Execute()
 }
 
-func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version string) error {
+func runTUI(cmd *cobra.Command, algodData string, incentivesFlag bool, version string) error {
 	if cmd == nil {
 		return fmt.Errorf("cmd is nil")
 	}
@@ -127,11 +129,16 @@ func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version str
 	ctx := context.Background()
 	httpPkg := new(api.HttpPkg)
 	t := new(system.Clock)
+
+	dataDir, err := algod.GetDataDir(algodData)
+	if err != nil {
+		log.Fatal(err)
+	}
 	client, err := algod.GetClient(dataDir)
 	cobra.CheckErr(err)
 
 	// Fetch the state and handle any creation errors
-	state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, incentivesFlag, version)
+	state, stateResponse, err := algod.NewStateModel(ctx, client, httpPkg, incentivesFlag, version, dataDir)
 	utils.WithInvalidResponsesExplanations(err, stateResponse, cmd.UsageString())
 	cobra.CheckErr(err)
 	// Construct the TUI Model from the State
@@ -151,8 +158,18 @@ func runTUI(cmd *cobra.Command, dataDir string, incentivesFlag bool, version str
 		// Check if the instance is lagging
 		lagging, err := algod.IsLagging(httpPkg, state.Status.LastRound, state.Status.Network)
 		if err != nil {
-			cobra.CheckErr(err)
+			if err != api.ErrInvalidNetwork {
+				cobra.CheckErr(err)
+			}
 		}
+
+		// Display Hybrid Notice on launch
+		// Only shown if EnableP2PHybridMode is unset/false and hasn't already been set to "do not show again"
+		hybridEnabled := m.Data.Config != nil && m.Data.Config.EnableP2PHybridMode != nil && *m.Data.Config.EnableP2PHybridMode
+		if !hybridEnabled && algodutils.ShowHybridPopUp() {
+			p.Send(app.HybridModal)
+		}
+
 		state.Watch(func(status *algod.StateModel, err error) {
 			// Handle Fast Catchup
 			if state.Status.State == algod.FastCatchupState {

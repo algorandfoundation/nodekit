@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"time"
+
+	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
-	"time"
-
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,8 @@ var stopLong = lipgloss.JoinVertical(
 	"",
 	style.Yellow.Render("This requires the daemon to be installed on your system."),
 )
-var stopCmd = &cobra.Command{
+
+var stopCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	Use:              "stop",
 	Short:            stopShort,
 	Long:             stopLong,
@@ -52,13 +54,13 @@ var stopCmd = &cobra.Command{
 		}
 		time.Sleep(StopTimeout)
 
-		if algod.IsRunning() {
+		if algod.IsRunning(algodData) {
 			log.Fatal(StopFailureMsg)
 		}
 
 		log.Info(style.Green.Render(StopSuccessMsg))
 	},
-}
+}, &algodData)
 
 func init() {
 	stopCmd.Flags().BoolVarP(&force, "force", "f", false, style.Yellow.Render("forcefully stop the node"))

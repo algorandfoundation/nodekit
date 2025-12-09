@@ -17,6 +17,7 @@ func (m ViewModel) Init() tea.Cmd {
 		m.catchupModal.Init(),
 		m.laggingModal.Init(),
 		m.generateModal.Init(),
+		m.hybridModal.Init(),
 	)
 }
 
@@ -171,6 +172,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			m.laggingModal, cmd = m.laggingModal.HandleMessage(msg)
 		case app.GenerateModal:
 			m.generateModal, cmd = m.generateModal.HandleMessage(msg)
+		case app.HybridModal:
+			m.hybridModal, cmd = m.hybridModal.HandleMessage(msg)
 		}
 		// Exit early and don't apply twice
 		cmds = append(cmds, cmd)
@@ -191,6 +194,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	m.generateModal, cmd = m.generateModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.hybridModal, cmd = m.hybridModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)

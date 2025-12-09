@@ -26,6 +26,8 @@ func (m ViewModel) View() string {
 		render = m.generateModal.View()
 	case app.ExceptionModal:
 		render = m.exceptionModal.View()
+	case app.HybridModal:
+		render = m.hybridModal.View()
 	}
 
 	return style.WithOverlay(render, m.Parent)

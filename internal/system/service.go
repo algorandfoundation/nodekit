@@ -3,7 +3,7 @@ package system
 // Interface defines methods for managing and interacting with a system service.
 type Interface interface {
 	IsInstalled() bool
-	IsRunning() bool
+	IsRunning(dataDir string) bool
 	IsService() bool
 	SetNetwork(network string) error
 	Install() error

@@ -1,6 +1,8 @@
 package configure
 
 import (
+	"time"
+
 	cmdutils "github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -12,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var dataDir = ""
 var telemetryEndpoint string
 var telemetryName string
 var telemetryDisable bool
@@ -42,7 +43,7 @@ var telemetryCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	PersistentPreRunE: cmdutils.IsSudoCmd,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
-		resolvedDir, err := algod.GetDataDir(dataDir)
+		resolvedDir, err := algod.GetDataDir(algodData)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -110,13 +111,19 @@ var telemetryCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// Wait 1 second.
+		// Calling stop & start too quickly on Mac (launchctl) appears to
+		// result in a false successfully start. Haven't investigated why.
+		time.Sleep(1 * time.Second)
+
 		err = algod.Start()
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Debug("Node restarted successfully.")
 	},
-}, &dataDir)
+}, &algodData)
 
 func init() {
 	telemetryCmd.Flags().BoolVarP(&telemetryDisable, "disable", "", false, "Disables telemetry")

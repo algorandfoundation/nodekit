@@ -2,17 +2,19 @@ package algod
 
 import (
 	"context"
-	"github.com/algorandfoundation/nodekit/internal/algod/participation"
-	"github.com/algorandfoundation/nodekit/internal/system"
 	"time"
 
 	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/internal/algod/config"
+	"github.com/algorandfoundation/nodekit/internal/algod/participation"
+	"github.com/algorandfoundation/nodekit/internal/algod/utils"
+	"github.com/algorandfoundation/nodekit/internal/system"
+	"github.com/charmbracelet/log"
 )
 
 // StateModel represents the state of the application,
 // including status, metrics, accounts, keys, and other configurations.
 type StateModel struct {
-
 	// Version indicates the version of the application.
 	Version string
 
@@ -55,11 +57,15 @@ type StateModel struct {
 	// deadlines, and request-scoped values in StateModel operations.
 	// TODO: implement more of the context
 	Context context.Context
+
+	// Algod Config
+	Config  *config.Config
+	DataDir string
 }
 
 // NewStateModel initializes and returns a new StateModel instance
 // along with an API response and potential error.
-func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface, incentivesDisabled bool, version string) (*StateModel, api.ResponseInterface, error) {
+func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface, httpPkg api.HttpPkgInterface, incentivesDisabled bool, version string, dataDir string) (*StateModel, api.ResponseInterface, error) {
 	// Preload the node status
 	status, response, err := NewStatus(ctx, client, httpPkg)
 	if err != nil {
@@ -72,6 +78,14 @@ func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface,
 	}
 
 	partKeys, partkeysResponse, err := participation.GetList(ctx, client)
+	if err != nil {
+		log.Errorf("Failed to fetch participation keys from node: %s", err)
+	}
+
+	algodConfig, err := utils.GetConfigFromDataDir(dataDir)
+	if err != nil {
+		log.Errorf("Unable to open config.json: %s", err)
+	}
 
 	return &StateModel{
 		Status:            status,
@@ -86,6 +100,8 @@ func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface,
 		Client:  client,
 		HttpPkg: httpPkg,
 		Context: ctx,
+		Config:  algodConfig,
+		DataDir: dataDir,
 
 		IncentivesDisabled: incentivesDisabled,
 	}, partkeysResponse, nil

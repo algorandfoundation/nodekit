@@ -6,6 +6,9 @@ const SudoWarningMsg = "(You may be prompted for your password)"
 // PermissionErrorMsg is a constant string that indicates a command requires super-user privileges (sudo) to be executed.
 const PermissionErrorMsg = "this command must be run with super-user privileges (sudo)"
 
+// AlgorandPermissionErrorMsg is a constant string that indicates a command requires additional permissions to be executed.
+const AlgorandPermissionErrorMsg = "this command requires additional permissions, run with super-user (sudo) and if you're on Linux consider adding your account to the 'algorand' group after"
+
 // NotInstalledErrorMsg is the error message displayed when the algod software is not installed on the system.
 const NotInstalledErrorMsg = "algod is not installed. please run the *install* command"
 
