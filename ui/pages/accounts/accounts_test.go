@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"time"
 
@@ -47,6 +48,41 @@ func Test_New(t *testing.T) {
 	m.makeRows()
 	if m.Data.Status.State != algod.SyncingState {
 
+	}
+}
+
+func Test_Nickname(t *testing.T) {
+	state := test.GetState(nil)
+
+	// Pick the lexicographically first address (the order makeRows sorts by).
+	var first string
+	for addr := range state.Accounts {
+		if first == "" || addr < first {
+			first = addr
+		}
+	}
+	if first == "" {
+		t.Fatal("expected at least one account in test state")
+	}
+
+	state.Nicknames = map[string]string{first: "my-node"}
+
+	m := New(state)
+	m, _ = m.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
+
+	rows, addresses := m.makeRows()
+	if len(addresses) == 0 || addresses[0] != first {
+		t.Fatalf("expected first sorted address %q, got %v", first, addresses)
+	}
+	if want := "my-node"; !strings.Contains(rows[0][0], want) {
+		t.Errorf("expected Account column to contain nickname %q, got %q", want, rows[0][0])
+	}
+
+	// The cursor starts at row 0; selection must still resolve to the account
+	// even though the displayed column is now a nickname rather than the address.
+	acc := m.SelectedAccount()
+	if acc == nil || acc.Address != first {
+		t.Errorf("expected SelectedAccount to resolve to %q, got %#v", first, acc)
 	}
 }
 

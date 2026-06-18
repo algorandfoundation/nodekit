@@ -31,6 +31,9 @@ const (
 
 	// HybridModal represents a modal type used for displaying information to the user about new P2P Hybrid configurations.
 	HybridModal ModalType = "hybrid"
+
+	// RenameModal represents a modal type used for assigning a local nickname to an account.
+	RenameModal ModalType = "rename"
 )
 
 // EmitShowModal creates a command to emit a modal message of the specified ModalType.

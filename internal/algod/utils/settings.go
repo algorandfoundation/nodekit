@@ -14,6 +14,9 @@ type Settings struct {
 	DismissedNotices struct {
 		HybridAvailable bool `json:",omitempty"`
 	}
+	// AccountNicknames maps an account address to a user-defined local nickname.
+	// These are a display convenience only and never leave the local machine.
+	AccountNicknames map[string]string `json:",omitempty"`
 }
 
 func GetNodekitSettings() (Settings, error) {

@@ -30,6 +30,10 @@ type StateModel struct {
 	// This map is derived from the list of the type api.ParticipationKey
 	Accounts map[string]Account
 
+	// Nicknames holds a mapping of account address to user-defined local nickname.
+	// It is loaded from the NodeKit settings file and is a display convenience only.
+	Nicknames map[string]string
+
 	// ParticipationKeys is a slice of participation keys used by the node
 	// to interact with the blockchain and consensus protocol.
 	ParticipationKeys participation.List
@@ -87,10 +91,16 @@ func NewStateModel(ctx context.Context, client api.ClientWithResponsesInterface,
 		log.Errorf("Unable to open config.json: %s", err)
 	}
 
+	nicknames, err := utils.GetNicknames()
+	if err != nil {
+		log.Errorf("Unable to load account nicknames: %s", err)
+	}
+
 	return &StateModel{
 		Status:            status,
 		Metrics:           metrics,
 		Accounts:          ParticipationKeysToAccounts(partKeys),
+		Nicknames:         nicknames,
 		ParticipationKeys: partKeys,
 
 		Admin:    true,

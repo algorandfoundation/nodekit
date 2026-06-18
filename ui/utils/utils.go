@@ -9,6 +9,16 @@ import (
 
 func toPtr[T any](constVar T) *T { return &constVar }
 
+// ShortAddress abbreviates an Algorand address to its first and last four
+// characters joined by an ellipsis (e.g. "ABCD…WXYZ"). Addresses shorter than
+// nine characters are returned unchanged.
+func ShortAddress(address string) string {
+	if len(address) < 9 {
+		return address
+	}
+	return fmt.Sprintf("%s…%s", address[0:4], address[len(address)-4:])
+}
+
 func Base64EncodeBytesPtrOrNil(b []byte) *string {
 	if b == nil || len(b) == 0 || isZeros(b) {
 		return nil

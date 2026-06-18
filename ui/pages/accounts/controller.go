@@ -20,7 +20,9 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case *algod.StateModel:
 		m.Data = msg
-		m.table.SetRows(*m.makeRows())
+		rows, addresses := m.makeRows()
+		m.sortedAddresses = addresses
+		m.table.SetRows(rows)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
@@ -29,6 +31,15 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 				return m, tea.Sequence(
 					app.EmitAccountSelected(selAcc),
 					app.EmitShowPage(app.KeysPage),
+				)
+			}
+			return m, nil
+		case "n":
+			selAcc := m.SelectedAccount()
+			if selAcc != nil {
+				return m, tea.Sequence(
+					app.EmitAccountSelected(selAcc),
+					app.EmitShowModal(app.RenameModal),
 				)
 			}
 			return m, nil

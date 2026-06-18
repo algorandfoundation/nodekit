@@ -1,8 +1,10 @@
 package accounts
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
+	"github.com/algorandfoundation/nodekit/ui/utils"
 	"sort"
 	"strconv"
 	"time"
@@ -25,6 +27,11 @@ type ViewModel struct {
 	Height      int
 
 	table table.Model
+
+	// sortedAddresses holds the account addresses in the same order as the
+	// table rows, so the selected row can be mapped back to an account even
+	// when the displayed Account column shows a nickname instead of the address.
+	sortedAddresses []string
 }
 
 func New(state *algod.StateModel) ViewModel {
@@ -34,13 +41,15 @@ func New(state *algod.StateModel) ViewModel {
 		Height:      0,
 		BorderColor: "6",
 		Data:        state,
-		Controls:    "( (g)enerate | (enter) to select )",
+		Controls:    "( (g)enerate | (n)ickname | (enter) to select )",
 		Navigation:  "| -> | " + style.Green.Render("accounts") + " | keys |",
 	}
 
+	rows, addresses := m.makeRows()
+	m.sortedAddresses = addresses
 	m.table = table.New(
 		table.WithColumns(m.makeColumns(0)),
-		table.WithRows(*m.makeRows()),
+		table.WithRows(rows),
 		table.WithFocused(true),
 	)
 	s := table.DefaultStyles()
@@ -59,10 +68,11 @@ func New(state *algod.StateModel) ViewModel {
 
 func (m ViewModel) SelectedAccount() *algod.Account {
 	var account *algod.Account
-	var selectedRow = m.table.SelectedRow()
-	if selectedRow != nil {
-		selectedAccount := m.Data.Accounts[selectedRow[0]]
-		account = &selectedAccount
+	idx := m.table.Cursor()
+	if idx >= 0 && idx < len(m.sortedAddresses) {
+		if selectedAccount, ok := m.Data.Accounts[m.sortedAddresses[idx]]; ok {
+			account = &selectedAccount
+		}
 	}
 	return account
 }
@@ -77,10 +87,20 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 	}
 }
 
-func (m ViewModel) makeRows() *[]table.Row {
+// makeRows builds the table rows and returns the account addresses in the same
+// order, so a selected row can be mapped back to its account.
+func (m ViewModel) makeRows() ([]table.Row, []string) {
 	rows := make([]table.Row, 0)
 
+	// Stable, address-sorted ordering so the rows and the returned address
+	// slice line up regardless of map iteration order.
+	addresses := make([]string, 0, len(m.Data.Accounts))
 	for addr := range m.Data.Accounts {
+		addresses = append(addresses, addr)
+	}
+	sort.Strings(addresses)
+
+	for _, addr := range addresses {
 		expired := false
 		var expires = "N/A"
 		if m.Data.Accounts[addr].Expires != nil {
@@ -133,16 +153,20 @@ func (m ViewModel) makeRows() *[]table.Row {
 			}
 		}
 
+		// Display the local nickname (with a shortened address) when one is set,
+		// otherwise fall back to the full address.
+		accountColumn := m.Data.Accounts[addr].Address
+		if name := m.Data.Nicknames[addr]; name != "" {
+			accountColumn = fmt.Sprintf("%s (%s)", name, utils.ShortAddress(addr))
+		}
+
 		rows = append(rows, table.Row{
-			m.Data.Accounts[addr].Address,
+			accountColumn,
 			status,
 			incentiveLevel,
 			expires,
 			strconv.Itoa(m.Data.Accounts[addr].Balance),
 		})
 	}
-	sort.SliceStable(rows, func(i, j int) bool {
-		return rows[i][0] < rows[j][0]
-	})
-	return &rows
+	return rows, addresses
 }
