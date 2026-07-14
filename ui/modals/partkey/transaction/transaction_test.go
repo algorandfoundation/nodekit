@@ -13,16 +13,6 @@ import (
 	"time"
 )
 
-func Test_New(t *testing.T) {
-	model := New(test.GetState(nil))
-	model.Participation = &mock.Keys[0]
-	model.Participation.Address = "ALGO123456789"
-	addr := model.FormatedAddress()
-	if addr != "ALGO...6789" {
-		t.Errorf("Expected ALGO123456789, got %s", addr)
-	}
-	model.Participation.Address = "ABC"
-}
 func Test_Snapshot(t *testing.T) {
 	t.Run("NotVisible", func(t *testing.T) {
 		model := New(test.GetState(nil))

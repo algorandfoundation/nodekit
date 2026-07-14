@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"fmt"
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod"
@@ -28,10 +27,6 @@ type ViewModel struct {
 
 	// QR Code
 	ATxn *encoder.AUrlTxn
-}
-
-func (m ViewModel) FormatedAddress() string {
-	return fmt.Sprintf("%s...%s", m.Participation.Address[0:4], m.Participation.Address[len(m.Participation.Address)-4:])
 }
 
 func (m ViewModel) IsQREnabled() bool {

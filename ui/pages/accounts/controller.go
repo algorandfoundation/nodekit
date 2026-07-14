@@ -23,6 +23,15 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		rows, addresses := m.makeRows()
 		m.sortedAddresses = addresses
 		m.table.SetRows(rows)
+	case app.OverlayEventType:
+		// When an overlay closes (e.g. after setting a nickname via the rename
+		// modal), rebuild the rows so the change is reflected immediately rather
+		// than only after the next state tick.
+		if msg == app.OverlayEventClose {
+			rows, addresses := m.makeRows()
+			m.sortedAddresses = addresses
+			m.table.SetRows(rows)
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":

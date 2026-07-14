@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/algorandfoundation/nodekit/internal/algod"
+	"github.com/algorandfoundation/nodekit/ui/app"
 	"github.com/algorandfoundation/nodekit/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
@@ -83,6 +84,38 @@ func Test_Nickname(t *testing.T) {
 	acc := m.SelectedAccount()
 	if acc == nil || acc.Address != first {
 		t.Errorf("expected SelectedAccount to resolve to %q, got %#v", first, acc)
+	}
+}
+
+func Test_NicknameRefreshOnOverlayClose(t *testing.T) {
+	state := test.GetState(nil)
+
+	// Pick the lexicographically first address (the order makeRows sorts by).
+	var first string
+	for addr := range state.Accounts {
+		if first == "" || addr < first {
+			first = addr
+		}
+	}
+	if first == "" {
+		t.Fatal("expected at least one account in test state")
+	}
+
+	m := New(state)
+	m, _ = m.HandleMessage(tea.WindowSizeMsg{Width: 80, Height: 40})
+
+	// No nickname yet: the Account column shows the raw address.
+	if got := m.table.Rows()[0][0]; strings.Contains(got, "my-node") {
+		t.Fatalf("did not expect nickname before it was set, got %q", got)
+	}
+
+	// Simulate the rename modal mutating the shared state in place, then closing
+	// the overlay. The table must refresh without waiting for the next tick.
+	state.Nicknames = map[string]string{first: "my-node"}
+	m, _ = m.HandleMessage(app.OverlayEventClose)
+
+	if got := m.table.Rows()[0][0]; !strings.Contains(got, "my-node") {
+		t.Errorf("expected table to reflect nickname after overlay close, got %q", got)
 	}
 }
 
