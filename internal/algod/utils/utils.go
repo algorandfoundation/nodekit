@@ -328,3 +328,38 @@ func DontShowHybridPopUp() error {
 
 	return WriteNodekitSettings(settings)
 }
+
+// GetNicknames returns the map of account address to local nickname from the
+// NodeKit settings. It always returns a non-nil map.
+func GetNicknames() (map[string]string, error) {
+	settings, err := GetNodekitSettings()
+	if err != nil {
+		return map[string]string{}, err
+	}
+	if settings.AccountNicknames == nil {
+		return map[string]string{}, nil
+	}
+	return settings.AccountNicknames, nil
+}
+
+// SetNickname assigns a local nickname to an account address and persists it.
+// Passing an empty (or whitespace-only) nickname removes any existing nickname
+// for that address.
+func SetNickname(address string, nickname string) error {
+	settings, err := GetNodekitSettings()
+	if err != nil {
+		return err
+	}
+	if settings.AccountNicknames == nil {
+		settings.AccountNicknames = map[string]string{}
+	}
+
+	nickname = strings.TrimSpace(nickname)
+	if nickname == "" {
+		delete(settings.AccountNicknames, address)
+	} else {
+		settings.AccountNicknames[address] = nickname
+	}
+
+	return WriteNodekitSettings(settings)
+}

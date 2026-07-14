@@ -13,6 +13,7 @@ import (
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/generate"
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/info"
 	"github.com/algorandfoundation/nodekit/ui/modals/partkey/transaction"
+	"github.com/algorandfoundation/nodekit/ui/modals/rename"
 )
 
 type ViewModel struct {
@@ -46,6 +47,7 @@ type ViewModel struct {
 	generateModal    generate.ViewModel
 	exceptionModal   exception.ViewModel
 	hybridModal      hybrid.ViewModel
+	renameModal      rename.ViewModel
 
 	// Current Component Data
 	title       string
@@ -99,6 +101,7 @@ func New(parent string, open bool, state *algod.StateModel) ViewModel {
 		generateModal:    generate.New("", state),
 		exceptionModal:   exception.New(""),
 		hybridModal:      hybrid.New(state),
+		renameModal:      rename.New(state),
 
 		Type:        app.InfoModal,
 		controls:    "",

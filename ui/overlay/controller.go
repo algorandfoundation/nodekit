@@ -18,6 +18,7 @@ func (m ViewModel) Init() tea.Cmd {
 		m.laggingModal.Init(),
 		m.generateModal.Init(),
 		m.hybridModal.Init(),
+		m.renameModal.Init(),
 	)
 }
 
@@ -46,6 +47,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.State = msg
 		m.transactionModal.State = msg
 		m.infoModal.State = msg
+		m.renameModal.State = msg
 
 		// Get the existing account from the state
 		acct, ok := msg.Accounts[m.Address]
@@ -150,10 +152,15 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case app.ModalType:
 		m.Open = true
 		m.SetType(msg)
+		// Prefill the rename modal with the currently selected account so it
+		// targets the right address and shows any existing nickname.
+		if msg == app.RenameModal {
+			m.renameModal.SetAddress(m.Address)
+		}
 
 	// Only trigger KeyMsgs when the modal is active
 	case tea.KeyMsg:
-		if msg.String() == "q" && m.Type != app.GenerateModal && m.Open {
+		if msg.String() == "q" && m.Type != app.GenerateModal && m.Type != app.RenameModal && m.Open {
 			return m, tea.Quit
 		}
 		// Only trigger modal commands when they are active
@@ -174,6 +181,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 			m.generateModal, cmd = m.generateModal.HandleMessage(msg)
 		case app.HybridModal:
 			m.hybridModal, cmd = m.hybridModal.HandleMessage(msg)
+		case app.RenameModal:
+			m.renameModal, cmd = m.renameModal.HandleMessage(msg)
 		}
 		// Exit early and don't apply twice
 		cmds = append(cmds, cmd)
@@ -196,6 +205,8 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	m.exceptionModal, cmd = m.exceptionModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.hybridModal, cmd = m.hybridModal.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+	m.renameModal, cmd = m.renameModal.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
