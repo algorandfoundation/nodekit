@@ -10,7 +10,7 @@ import (
 type CatchPointUrl string
 
 const (
-	FNet    CatchPointUrl = "https://fnet-catchpoints.algorand.green/latest"
+	FNet    CatchPointUrl = "https://fnet-catchpoints.algorand.tech/latest"
 	BetaNet CatchPointUrl = "https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/betanet/latest.catchpoint"
 	TestNet CatchPointUrl = "https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/testnet/latest.catchpoint"
 	MainNet CatchPointUrl = "https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/mainnet/latest.catchpoint"

@@ -28,7 +28,7 @@ func (r GenesisFileResponse) Status() string {
 func GetGenesis(key GenesisFileKey) {
 	var url string
 	if key == FnetGenesisKey {
-		url = "http://relay-eu-no-1.algorand.green:8184/genesis"
+		url = "http://relay-eu-no-1.fnet.algorand.tech:8184/genesis"
 	} else {
 		url = fmt.Sprintf("https://raw.githubusercontent.com/algorand/go-algorand/master/installer/genesis/%s/genesis.json", key)
 	}
