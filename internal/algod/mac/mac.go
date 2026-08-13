@@ -24,6 +24,17 @@ const MustBeServiceMsg = "service must be installed to be able to manage it"
 // HomeBrewNotFoundMsg is the error message returned when Homebrew is not detected on the system during execution.
 const HomeBrewNotFoundMsg = "brew not found. please go to https://brew.sh to install Homebrew before trying again"
 
+// trustTap marks the Algorand tap as trusted, as required by Homebrew 6.0's
+// tap trust policy before formulae from third-party taps can be loaded.
+// The trust command was introduced in Homebrew 5.1.15, so failures on older
+// versions are logged and ignored.
+func trustTap() {
+	output, err := system.Run([]string{"brew", "trust", "algorandfoundation/node"})
+	if err != nil {
+		log.Debug(fmt.Sprintf("brew trust not applied: %v: %s", err, strings.TrimSpace(output)))
+	}
+}
+
 // IsService check if Algorand service has been created with launchd (macOS)
 // Note that it needs to be run in super-user privilege mode to
 // be able to view the root level services.
@@ -45,6 +56,14 @@ func Install() error {
 
 	err := system.RunAll(system.CmdsList{
 		{"brew", "tap", "algorandfoundation/homebrew-node"},
+	})
+	if err != nil {
+		return err
+	}
+
+	trustTap()
+
+	err = system.RunAll(system.CmdsList{
 		{"brew", "install", "algorand"},
 		{"brew", "--prefix", "algorand", "--installed"},
 	})
@@ -98,6 +117,7 @@ func Uninstall(force bool) error {
 	if !system.CmdExists("brew") && !force {
 		return errors.New("homebrew is not installed")
 	} else {
+		trustTap()
 		cmds = append(cmds, []string{"brew", "uninstall", "algorand"})
 	}
 
@@ -114,6 +134,9 @@ func Upgrade(force bool) error {
 	if !system.CmdExists("brew") {
 		return errors.New("homebrew is not installed")
 	}
+
+	trustTap()
+
 	err := system.RunAll(system.CmdsList{
 		{"brew", "--prefix", "algorand", "--installed"},
 		{"brew", "update"},
