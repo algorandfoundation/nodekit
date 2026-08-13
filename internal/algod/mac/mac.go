@@ -117,6 +117,7 @@ func Uninstall(force bool) error {
 	if !system.CmdExists("brew") && !force {
 		return errors.New("homebrew is not installed")
 	} else {
+		trustTap()
 		cmds = append(cmds, []string{"brew", "uninstall", "algorand"})
 	}
 
