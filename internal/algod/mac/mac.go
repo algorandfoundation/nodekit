@@ -31,7 +31,7 @@ const HomeBrewNotFoundMsg = "brew not found. please go to https://brew.sh to ins
 func trustTap() {
 	output, err := system.Run([]string{"brew", "trust", "algorandfoundation/node"})
 	if err != nil {
-		log.Debug(fmt.Sprintf("brew trust not applied: %s", strings.TrimSpace(output)))
+		log.Debug(fmt.Sprintf("brew trust not applied: %v: %s", err, strings.TrimSpace(output)))
 	}
 }
 
