@@ -125,6 +125,9 @@ func Uninstall(force bool) error {
 	}
 
 	if system.CmdExists("brew") {
+		// trustTap must run before isBrewManaged: Homebrew 6 refuses to load
+		// formulae from untrusted taps, so checking first would misreport a
+		// brew-managed install with an untrusted tap as not managed.
 		trustTap()
 		if isBrewManaged() {
 			cmds = append(cmds, []string{"brew", "uninstall", "algorand"})
@@ -151,6 +154,9 @@ func Upgrade(force bool) error {
 		return errors.New("homebrew is not installed")
 	}
 
+	// trustTap must run before isBrewManaged: Homebrew 6 refuses to load
+	// formulae from untrusted taps, so checking first would misreport a
+	// brew-managed install with an untrusted tap as not managed.
 	trustTap()
 
 	if !isBrewManaged() {
