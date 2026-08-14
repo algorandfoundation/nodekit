@@ -60,7 +60,7 @@ func Upgrade(http api.HttpPkgInterface) error {
 
 	// Backup the exising command
 	backupPath := filepath.Join(executableDir, fmt.Sprintf(".%s.bak", executableName))
-	log.Debug(fmt.Sprintf("backing up to %s", tmpPath))
+	log.Debug(fmt.Sprintf("backing up to %s", backupPath))
 	_ = os.Remove(backupPath)
 	err = os.Rename(pathName, backupPath)
 	if err != nil {
