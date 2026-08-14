@@ -24,6 +24,16 @@ const MustBeServiceMsg = "service must be installed to be able to manage it"
 // HomeBrewNotFoundMsg is the error message returned when Homebrew is not detected on the system during execution.
 const HomeBrewNotFoundMsg = "brew not found. please go to https://brew.sh to install Homebrew before trying again"
 
+// NotBrewInstalledMsg is the error message returned when algod exists on the
+// system but was not installed through the Homebrew formula nodekit manages.
+const NotBrewInstalledMsg = "algod is not managed by Homebrew. upgrade it with the same method used to install it (e.g. ./update.sh for updater-based installs)"
+
+// isBrewManaged reports whether the algorand formula is installed with Homebrew.
+func isBrewManaged() bool {
+	_, err := system.Run([]string{"brew", "--prefix", "algorand", "--installed"})
+	return err == nil
+}
+
 // trustTap marks the Algorand tap as trusted, as required by Homebrew 6.0's
 // tap trust policy before formulae from third-party taps can be loaded.
 // The trust command was introduced in Homebrew 5.1.15, so failures on older
@@ -114,11 +124,15 @@ func Uninstall(force bool) error {
 		cmds = append(cmds, []string{"sudo", "launchctl", "unload", "/Library/LaunchDaemons/com.algorand.algod.plist"})
 	}
 
-	if !system.CmdExists("brew") && !force {
-		return errors.New("homebrew is not installed")
-	} else {
+	if system.CmdExists("brew") {
 		trustTap()
-		cmds = append(cmds, []string{"brew", "uninstall", "algorand"})
+		if isBrewManaged() {
+			cmds = append(cmds, []string{"brew", "uninstall", "algorand"})
+		} else if !force {
+			return errors.New("algod is not managed by Homebrew. remove it with the same method used to install it")
+		}
+	} else if !force {
+		return errors.New("homebrew is not installed")
 	}
 
 	if force {
@@ -137,8 +151,11 @@ func Upgrade(force bool) error {
 
 	trustTap()
 
+	if !isBrewManaged() {
+		return errors.New(NotBrewInstalledMsg)
+	}
+
 	err := system.RunAll(system.CmdsList{
-		{"brew", "--prefix", "algorand", "--installed"},
 		{"brew", "update"},
 		{"brew", "upgrade", "algorand", "--formula"},
 	})
