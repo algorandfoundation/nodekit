@@ -53,7 +53,7 @@ var upgradeCmd = &cobra.Command{
 		// TODO: Check Version from S3 against the local binary
 		err := algod.Update()
 		if err != nil {
-			log.Error(err)
+			log.Fatal(err)
 		}
 
 		time.Sleep(5 * time.Second)
