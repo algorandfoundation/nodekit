@@ -1,6 +1,6 @@
 module github.com/algorandfoundation/nodekit
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/algorandfoundation/algourl v0.0.0-20241023193235-8bbf72ad0b37
