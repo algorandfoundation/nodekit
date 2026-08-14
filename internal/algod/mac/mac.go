@@ -136,7 +136,9 @@ func Uninstall(force bool) error {
 	}
 
 	if force {
-		cmds = append(cmds, []string{"sudo", "rm", "-rf", strings.Join(utils.GetKnownDataPaths(), " ")})
+		if dataPaths := utils.GetKnownDataPaths(); len(dataPaths) > 0 {
+			cmds = append(cmds, append([]string{"sudo", "rm", "-rf"}, dataPaths...))
+		}
 		cmds = append(cmds, []string{"sudo", "rm", "-rf", "/Library/LaunchDaemons/com.algorand.algod.plist"})
 	}
 
