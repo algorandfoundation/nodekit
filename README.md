@@ -35,6 +35,7 @@ nodekit [flags]
 * [nodekit configure](/man/nodekit_configure.md)	 - Change settings on the system (WIP)
 * [nodekit debug](/man/nodekit_debug.md)	 - Display debugging information
 * [nodekit install](/man/nodekit_install.md)	 - Install the node daemon
+* [nodekit restart](/man/nodekit_restart.md)	 - Restart the node daemon
 * [nodekit start](/man/nodekit_start.md)	 - Start the node daemon
 * [nodekit stop](/man/nodekit_stop.md)	 - Stop the node daemon
 * [nodekit telemetry](/man/nodekit_telemetry.md)	 - Configure telemetry profile

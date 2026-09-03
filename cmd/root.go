@@ -104,6 +104,7 @@ func init() {
 		RootCmd.AddCommand(bootstrapCmd)
 		RootCmd.AddCommand(debugCmd)
 		RootCmd.AddCommand(installCmd)
+		RootCmd.AddCommand(restartCmd)
 		RootCmd.AddCommand(startCmd)
 		RootCmd.AddCommand(stopCmd)
 		RootCmd.AddCommand(uninstallCmd)

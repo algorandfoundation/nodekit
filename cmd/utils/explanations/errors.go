@@ -18,5 +18,8 @@ const RunningErrorMsg = "algod is running, please run the *stop* command"
 // NotRunningErrorMsg is the error message displayed when the algod service is not currently running on the system.
 const NotRunningErrorMsg = "algod is not running"
 
+// NotRunningStartErrorMsg is the error message displayed when algod needs to already be running and has to be started first.
+const NotRunningStartErrorMsg = "algod is not running, please run the *start* command"
+
 // NotSuperUserErrorMsg is the error message displayed when a non-superuser tries to execute a command requiring root privileges.
 const NotSuperUserErrorMsg = "you need to be root to run this command. Please run this command with sudo"
