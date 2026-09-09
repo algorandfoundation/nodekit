@@ -27,7 +27,7 @@ func GetBlockMetrics(ctx context.Context, client api.ClientWithResponsesInterfac
 	// Rounds are unsigned. A window wider than the current height would
 	// underflow into an enormous round rather than an obviously-bogus one,
 	// so reject it here instead of relying on every caller to pre-check.
-	if window < 0 || round < uint64(window) {
+	if window <= 0 || round < uint64(window) {
 		return avgs, nil, errors.New(InvalidWindow)
 	}
 
