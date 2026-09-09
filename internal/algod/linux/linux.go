@@ -2,6 +2,7 @@ package linux
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,6 +19,26 @@ import (
 
 // PackageManagerNotFoundMsg is an error message indicating the absence of a supported package manager for uninstalling Algorand.
 const PackageManagerNotFoundMsg = "could not find a package manager to uninstall Algorand"
+
+// NotPackageManagedMsg is the error message returned when algod exists on the
+// system but was not installed through the package manager nodekit manages.
+const NotPackageManagedMsg = "algod is not managed by a package manager. upgrade it with the same method used to install it (e.g. ./update.sh for updater-based installs)"
+
+// isPackageManaged reports whether the algorand package is installed with the
+// system package manager (deb or rpm based).
+func isPackageManaged() bool {
+	if system.CmdExists("dpkg") {
+		if _, err := system.Run([]string{"dpkg", "-s", "algorand"}); err == nil {
+			return true
+		}
+	}
+	if system.CmdExists("rpm") {
+		if _, err := system.Run([]string{"rpm", "-q", "algorand"}); err == nil {
+			return true
+		}
+	}
+	return false
+}
 
 // Algod represents an implementation of the system.Interface tailored for managing the Algod service.
 // It includes details about the service's executable path and associated data directory.
@@ -129,6 +150,10 @@ func Uninstall() error {
 		return fmt.Errorf(PackageManagerNotFoundMsg)
 	}
 
+	if !isPackageManaged() {
+		return errors.New("algod is not managed by a package manager. remove it with the same method used to install it")
+	}
+
 	// Commands to clear systemd algorand.service and any other files, like the configuration override
 	unInstallCmds = append(unInstallCmds, []string{"sudo", "bash", "-c", "rm -rf /etc/systemd/system/algorand*"})
 	unInstallCmds = append(unInstallCmds, []string{"sudo", "systemctl", "daemon-reload"})
@@ -139,6 +164,9 @@ func Uninstall() error {
 // Upgrade updates Algorand and its dev tools using an approved package
 // manager if available, otherwise returns an error.
 func Upgrade() error {
+	if (system.CmdExists("apt-get") || system.CmdExists("dnf")) && !isPackageManaged() {
+		return errors.New(NotPackageManagedMsg)
+	}
 	if system.CmdExists("apt-get") {
 		return system.RunAll(system.CmdsList{
 			{"sudo", "apt-get", "update"},
