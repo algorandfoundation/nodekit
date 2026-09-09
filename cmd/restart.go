@@ -51,7 +51,7 @@ var restartCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 		log.Info(style.Green.Render(StoppingAlgodMsg))
-		err := algod.Stop()
+		err := algod.Stop(force)
 		if err != nil {
 			log.Fatal(StopFailureMsg)
 		}
