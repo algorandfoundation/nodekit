@@ -6,5 +6,18 @@ build:
 	CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" -o bin/nodekit .
 test:
 	go test -coverprofile=coverage.out -coverpkg=./... -covermode=atomic ./...
+# Resolve the highest-versioned go-algorand release tagged -stable. Sorted by
+# version rather than publish date, so a late backport on an older line (say
+# v4.7.5-stable shipped after v5.0.1-stable) cannot win. Pin a specific release
+# with ALGOD_VERSION=v5.0.1-stable. Note that specs older than v4.7.4-stable
+# predate the uint64 round types nodekit now uses and will not compile.
+ALGOD_RELEASES_URL = https://api.github.com/repos/algorand/go-algorand/releases?per_page=100
+# Run the codegen version pinned in go.mod. Do NOT use a bare `oapi-codegen`:
+# go-algorand developers often have the algorand/oapi-codegen v1 fork on PATH,
+# which cannot parse this v2-style generate.yaml.
+OAPI_CODEGEN = go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1
 generate:
-	oapi-codegen -config generate.yaml https://raw.githubusercontent.com/algorand/go-algorand/v3.26.0-stable/daemon/algod/api/algod.oas3.yml
+	@version="$${ALGOD_VERSION:-$$(curl -fsSL '$(ALGOD_RELEASES_URL)' | grep -o '"tag_name": *"[^"]*-stable"' | cut -d'"' -f4 | sort -V | tail -n 1)}"; \
+	if [ -z "$$version" ]; then echo "could not resolve the latest stable go-algorand release" >&2; exit 1; fi; \
+	echo "Generating API client from go-algorand $$version"; \
+	$(OAPI_CODEGEN) -config generate.yaml "https://raw.githubusercontent.com/algorand/go-algorand/$$version/daemon/algod/api/algod.oas3.yml"

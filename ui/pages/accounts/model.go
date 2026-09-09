@@ -13,8 +13,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var minEligibleBalance = 30_000
-var maxEligibleBalance = 70_000_000
+var minEligibleBalance uint64 = 30_000
+var maxEligibleBalance uint64 = 70_000_000
 
 type ViewModel struct {
 	Data *algod.StateModel
@@ -165,7 +165,7 @@ func (m ViewModel) makeRows() ([]table.Row, []string) {
 			status,
 			incentiveLevel,
 			expires,
-			strconv.Itoa(m.Data.Accounts[addr].Balance),
+			strconv.FormatUint(m.Data.Accounts[addr].Balance, 10),
 		})
 	}
 	return rows, addresses

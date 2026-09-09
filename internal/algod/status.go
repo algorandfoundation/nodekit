@@ -38,12 +38,12 @@ type Status struct {
 	Network string `json:"network"`
 
 	// Consensus upgrade voting related fields
-	UpgradeVoteRounds    int `json:"upgradeVoteRounds"`
-	UpgradeYesVotes      int `json:"upgradeYesVotes"`
-	UpgradeNoVotes       int `json:"upgradeNoVotes"`
-	UpgradeVotes         int `json:"upgradeVotes"`
-	UpgradeVotesRequired int `json:"upgradeVotesRequired"`
-	NextVersionRound     int `json:"nextVersionRound"`
+	UpgradeVoteRounds    uint64 `json:"upgradeVoteRounds"`
+	UpgradeYesVotes      uint64 `json:"upgradeYesVotes"`
+	UpgradeNoVotes       uint64 `json:"upgradeNoVotes"`
+	UpgradeVotes         uint64 `json:"upgradeVotes"`
+	UpgradeVotesRequired uint64 `json:"upgradeVotesRequired"`
+	NextVersionRound     uint64 `json:"nextVersionRound"`
 
 	// NeedsUpdate indicates whether the system requires an update based on the current version and available release data.
 	NeedsUpdate bool `json:"needsUpdate"`
@@ -56,16 +56,17 @@ type Status struct {
 
 	// Catchpoint is a pointer to a string that identifies the current catchpoint for node synchronization or fast catchup.
 	Catchpoint                  *string `json:"catchpoint"`
-	CatchpointAccountsTotal     int     `json:"catchpointAccountsTotal"`
-	CatchpointAccountsProcessed int     `json:"catchpointAccountsProcessed"`
-	CatchpointAccountsVerified  int     `json:"catchpointAccountsVerified"`
-	CatchpointKeyValueTotal     int     `json:"catchpointKeyValueTotal"`
-	CatchpointKeyValueProcessed int     `json:"catchpointKeyValueProcessed"`
-	CatchpointKeyValueVerified  int     `json:"catchpointKeyValueVerified"`
-	CatchpointBlocksTotal       int     `json:"catchpointTotalBlocks"`
-	CatchpointBlocksAcquired    int     `json:"catchpointAcquiredBlocks"`
+	CatchpointAccountsTotal     uint64  `json:"catchpointAccountsTotal"`
+	CatchpointAccountsProcessed uint64  `json:"catchpointAccountsProcessed"`
+	CatchpointAccountsVerified  uint64  `json:"catchpointAccountsVerified"`
+	CatchpointKeyValueTotal     uint64  `json:"catchpointKeyValueTotal"`
+	CatchpointKeyValueProcessed uint64  `json:"catchpointKeyValueProcessed"`
+	CatchpointKeyValueVerified  uint64  `json:"catchpointKeyValueVerified"`
+	CatchpointBlocksTotal       uint64  `json:"catchpointTotalBlocks"`
+	CatchpointBlocksAcquired    uint64  `json:"catchpointAcquiredBlocks"`
 
-	SyncTime int `json:"syncTime"`
+	// SyncTime is algod's catchup-time, in nanoseconds.
+	SyncTime int64 `json:"syncTime"`
 
 	// Client provides methods for interacting with the API, adhering to ClientWithResponsesInterface specifications.
 	Client api.ClientWithResponsesInterface `json:"-"`
@@ -119,7 +120,7 @@ func (s Status) Update(status Status) Status {
 // It interacts with the client's WaitForBlockWithResponse method and handles any errors or invalid status codes.
 // Returns the updated Status, the response object, or an error if the operation fails.
 func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error) {
-	response, err := s.Client.WaitForBlockWithResponse(ctx, int(s.LastRound))
+	response, err := s.Client.WaitForBlockWithResponse(ctx, s.LastRound)
 	if err != nil {
 		return s, response, err
 	}
@@ -130,23 +131,36 @@ func (s Status) Wait(ctx context.Context) (Status, api.ResponseInterface, error)
 	return s.Merge(*response.JSON200), response, nil
 }
 
+// deref returns the value behind p, or the zero value when the field was
+// omitted. Every optional field of api.StatusLike is an `omitempty` pointer,
+// and which of them algod actually sends varies with node state -- at the
+// start of a fast catchup it reports a catchpoint several rounds before it
+// reports any of the catchpoint counters.
+func deref[T any](p *T) T {
+	if p == nil {
+		var zero T
+		return zero
+	}
+	return *p
+}
+
 // Merge updates the current Status with data from a given StatusLike instance and adjusts fields based on defined conditions.
 func (s Status) Merge(res api.StatusLike) Status {
-	s.LastRound = uint64(res.LastRound)
+	s.LastRound = res.LastRound
 	s.LastProtocolVersion = res.LastVersion
 	catchpoint := res.Catchpoint
 	if catchpoint != nil && *catchpoint != "" {
 		s.State = FastCatchupState
 		s.Catchpoint = catchpoint
 		s.SyncTime = res.CatchupTime
-		s.CatchpointAccountsTotal = *res.CatchpointTotalAccounts
-		s.CatchpointAccountsProcessed = *res.CatchpointProcessedAccounts
-		s.CatchpointAccountsVerified = *res.CatchpointVerifiedAccounts
-		s.CatchpointKeyValueTotal = *res.CatchpointTotalKvs
-		s.CatchpointKeyValueProcessed = *res.CatchpointProcessedKvs
-		s.CatchpointKeyValueVerified = *res.CatchpointVerifiedKvs
-		s.CatchpointBlocksAcquired = *res.CatchpointAcquiredBlocks
-		s.CatchpointBlocksTotal = *res.CatchpointTotalBlocks
+		s.CatchpointAccountsTotal = deref(res.CatchpointTotalAccounts)
+		s.CatchpointAccountsProcessed = deref(res.CatchpointProcessedAccounts)
+		s.CatchpointAccountsVerified = deref(res.CatchpointVerifiedAccounts)
+		s.CatchpointKeyValueTotal = deref(res.CatchpointTotalKvs)
+		s.CatchpointKeyValueProcessed = deref(res.CatchpointProcessedKvs)
+		s.CatchpointKeyValueVerified = deref(res.CatchpointVerifiedKvs)
+		s.CatchpointBlocksAcquired = deref(res.CatchpointAcquiredBlocks)
+		s.CatchpointBlocksTotal = deref(res.CatchpointTotalBlocks)
 	} else if res.CatchupTime > 0 {
 		s.SyncTime = res.CatchupTime
 		s.State = SyncingState
@@ -155,11 +169,11 @@ func (s Status) Merge(res api.StatusLike) Status {
 	}
 
 	if res.UpgradeNextProtocolVoteBefore != nil {
-		s.UpgradeVoteRounds = *res.UpgradeVoteRounds
-		s.UpgradeYesVotes = *res.UpgradeYesVotes
-		s.UpgradeNoVotes = *res.UpgradeNoVotes
-		s.UpgradeVotes = *res.UpgradeVotes
-		s.UpgradeVotesRequired = *res.UpgradeVotesRequired
+		s.UpgradeVoteRounds = deref(res.UpgradeVoteRounds)
+		s.UpgradeYesVotes = deref(res.UpgradeYesVotes)
+		s.UpgradeNoVotes = deref(res.UpgradeNoVotes)
+		s.UpgradeVotes = deref(res.UpgradeVotes)
+		s.UpgradeVotesRequired = deref(res.UpgradeVotesRequired)
 		s.NextVersionRound = res.NextVersionRound
 	} else {
 		s.UpgradeVoteRounds = 0
