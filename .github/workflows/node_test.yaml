@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - "cmd/**"
+      - "internal/algod/logs/**"
 
 jobs:
   ubuntu:
@@ -33,11 +34,24 @@ jobs:
           ./nodekit stop
           ./nodekit upgrade
           ./nodekit debug
+          sudo -E ./nodekit logs --lines 20
+          sudo -E ./nodekit logs --all --lines 5 --json
+          sudo -E ./nodekit logs --since 1h --lines 5
+          # The data directory is owned by the algorand user, so an unprivileged
+          # read must fail with a readable message rather than a panic. Only the
+          # message separates the two, since a panic exits non-zero as well.
+          if ./nodekit logs --lines 5 > unprivileged.out 2>&1; then
+            echo "note: the log was readable without sudo on this runner"
+          else
+            grep -q "permission denied" unprivileged.out || {
+              echo "expected a permission-denied message, got:"; cat unprivileged.out; exit 1; }
+          fi
           sleep 10
           ./nodekit catchup
           ./nodekit catchup debug
           ./nodekit catchup stop
           ./nodekit stop
+          sudo -E ./nodekit logs --lines 5
           ./nodekit uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
           
@@ -68,11 +82,15 @@ jobs:
           ./nodekit stop
           ./nodekit upgrade
           ./nodekit debug
+          ./nodekit logs --lines 20
+          ./nodekit logs --all --lines 5 --json
+          ./nodekit logs --since 1h --lines 5
           sleep 10
           ./nodekit catchup
           ./nodekit catchup debug
           ./nodekit catchup stop
           ./nodekit stop
+          ./nodekit logs --lines 5
           ./nodekit uninstall
           go tool covdata textfmt -i=$GOCOVERDIR -o coverage.txt
           
