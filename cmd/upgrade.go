@@ -17,6 +17,18 @@ import (
 // UpgradeMsg is a constant string used to indicate the start of the Algod upgrade process.
 const UpgradeMsg = "Upgrading Algod"
 
+const NodeKitUpgradeSuccessMsg = "NodeKit upgraded successfully. This will take effect when you next invoke nodekit."
+
+const AlgodUpgradeSuccessMsg = "Algod upgraded successfully."
+
+var (
+	nodeKitUpgrade = system.Upgrade
+	algodUpgrade   = algod.Update
+	algodIsRunning = algod.IsRunning
+	algodStart     = algod.Start
+	upgradeSleep   = time.Sleep
+)
+
 var upgradeShort = "Upgrade the node daemon"
 
 var upgradeLong = lipgloss.JoinVertical(
@@ -40,10 +52,11 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if NeedsUpgrade {
 			log.Info(style.Green.Render("Upgrading NodeKit"))
-			err := system.Upgrade(new(api.HttpPkg))
+			err := nodeKitUpgrade(new(api.HttpPkg))
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Info(style.Green.Render(NodeKitUpgradeSuccessMsg))
 		}
 
 		// TODO: get expected version and check if update is required
@@ -51,20 +64,22 @@ var upgradeCmd = &cobra.Command{
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 		// TODO: Check Version from S3 against the local binary
-		err := algod.Update()
+		err := algodUpgrade()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		time.Sleep(5 * time.Second)
+		upgradeSleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
-		if !algod.IsRunning(algodData) {
-			err = algod.Start()
+		if !algodIsRunning(algodData) {
+			err = algodStart()
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
 			}
 		}
+
+		log.Info(style.Green.Render(AlgodUpgradeSuccessMsg))
 	},
 }
