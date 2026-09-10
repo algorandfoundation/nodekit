@@ -306,10 +306,14 @@ var sinceSlack int64 = 1 << 20
 // is inside the window it was asked for, so searching for the bound would cost
 // it more seeks than the walk saves.
 //
-// The result is a place to start reading and never a filter. Filter.Keep still
-// decides every entry, so an answer that lands too early costs a few pages of
+// The result is a place to start reading. Filter.Keep still decides every entry
+// read from there, so an answer that lands too early costs a few pages of
 // reading and nothing else. Landing too late would lose entries, which is why
 // every step that cannot be decided moves the search downwards.
+//
+// What starting here does decide is the lines below the offset that carry no
+// timestamp, which Keep would have kept: --since bounds the region read, and
+// they are outside it. See .decisions/4-Node-Logs.md.
 //
 // A compressed archive cannot be seeked into and always gets 0. Those are
 // excluded whole, by PruneSources, before a scan ever opens them.

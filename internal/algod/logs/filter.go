@@ -31,6 +31,11 @@ type Filter struct {
 // could not parse at all is kept unless the caller asked for fatal or panic only
 // (plain lines in node.log are overwhelmingly panic dumps and startup output,
 // which is precisely what a post-mortem needs to see).
+//
+// The first exemption is bounded by where the entry sits rather than by this
+// test: a scan under Since reads only the region of the log at or after the
+// bound, so an untimestamped line far below it is never handed here at all.
+// See .decisions/4-Node-Logs.md.
 func (f Filter) Keep(e Entry) bool {
 	if !f.Since.IsZero() && !e.Time.IsZero() && e.Time.Before(f.Since) {
 		return false

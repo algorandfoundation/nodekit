@@ -67,6 +67,18 @@ wants alternation still has a pipe. Taking the text at face value also means the
 looked for in the undecoded line, so `--filter` gets the prescreen's full speedup rather than only the
 subset of patterns that reduce to one literal.
 
+**`--since` bounds a region, not each entry.** Three optimizations decide from where a line sits rather
+than from what it says: the backward walk stops once the oldest line of a chunk is older than the bound,
+a forward stream bisects the file for the first entry at or after it (rewound by a megabyte, since algod
+stamps an entry when it is created and writes it under a lock, so timestamps are ordered but not
+perfectly sorted), and an archive whose modification time predates the bound is never opened, which is
+the only way to skip a compressed one. Together they are the difference between a `--since 15m` that
+reads a few hundred kilobytes and one that decompresses a history of the node. The consequence is that
+`--since` selects a region of the log: `Keep` still never drops an entry whose timestamp cannot be read,
+a panic dump's stack has none, but such an entry is only reached when it lies in the region the bound
+selects. That is also the answer the reader wants. A crash from two hours ago is not part of "the last
+fifteen minutes", and the lines it is written between are what place it in time.
+
 **Say what is being hidden.** The default view is a filtered one, and it prints nothing to distinguish
 "your node logged no warnings" from "you asked for warnings". A single stderr line naming the files
 being read and the filters in force settles that before the first entry, and it is on stderr so a pipe
@@ -87,9 +99,6 @@ that were never JSON are wrapped so the stream stays valid NDJSON.
 
 ## 🚧 Deliberately deferred
 
-- Stopping the backward walk early on `--since`. It cannot be done without changing what `--since` means:
-  `Keep` deliberately never drops an entry with no usable timestamp, so a panic dump older than the bound is
-  shown today, and an early exit would silently stop showing it
 - Showing the date on entries older than today; reading across a rotation makes a bare `15:04:05` ambiguous
 - A logs page in the TUI; `Follow` is context-driven and already has the right shape to feed one
 - Generalising `--json` into an `--output` flag shared by other commands

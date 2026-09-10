@@ -111,6 +111,10 @@ func (s Source) LogFiles() []string {
 // into, and it is what stops a narrow --since from decompressing a history it
 // has no use for. The live log is never dropped: it is where the follow offset
 // comes from, and the file whose absence the caller has to explain.
+//
+// The bound holds for the lines inside that carry no timestamp too, panic
+// output among them: nothing in the file was written after the file itself
+// was.
 func PruneSources(sources []string, since time.Time) []string {
 	if since.IsZero() || len(sources) < 2 {
 		return sources
