@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -97,10 +98,21 @@ func tailFile(path string, size int64, need int, f Filter, pre prescreen, budget
 		pos -= step
 
 		buf := make([]byte, step)
-		if _, err := fh.ReadAt(buf, pos); err != nil && err != io.EOF {
+		n, err := fh.ReadAt(buf, pos)
+		if err != nil && err != io.EOF {
 			return nil, scanned, stopNone, err
 		}
-		scanned += step
+		scanned += int64(n)
+
+		if n < len(buf) {
+			// The file shrank after its size was taken: truncated in place, or
+			// rotated and replaced by a shorter one. Only the bytes actually
+			// read are log content, the remainder of the buffer is zeroes.
+			// What was carried from the chunk above no longer abuts them
+			// either, so it is dropped rather than spliced onto an unrelated
+			// line.
+			buf, partial = buf[:n], nil
+		}
 
 		if len(partial) > 0 {
 			buf = append(buf, partial...)
@@ -152,6 +164,10 @@ func tailFile(path string, size int64, need int, f Filter, pre prescreen, budget
 		// crosses the bound still holds entries above it. A chunk whose oldest
 		// line carries no readable timestamp decides nothing and the walk
 		// continues, which costs a chunk and stays correct.
+		//
+		// Stopping here is what makes --since a bound on the region read, and
+		// so on the untimestamped lines Keep would otherwise never drop. That
+		// is the intended reading of the flag: see .decisions/4-Node-Logs.md.
 		if len(found) < need && !f.Since.IsZero() && len(lines) > 0 {
 			// linesReverse yields newest first, so the last is the oldest line
 			// this chunk holds in full.
@@ -236,35 +252,54 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 
 	pre := newPrescreen(f)
 	reader := bufio.NewReaderSize(fh, followBufferSize)
+
+	// pending holds a line that could not be handed over whole yet: a write
+	// caught in flight, or the head of a line longer than the read buffer.
 	var pending []byte
+
+	// hold appends to pending, keeping at most maxLineBytes and discarding the
+	// excess. Reading the delimiter with ReadSlice and capping here is what
+	// bounds the memory a single line can cost: ReadBytes would buffer a
+	// runaway line in full before any cap could look at it. The excess goes the
+	// same way ParseLine would send it, and forEachLine reads the same way.
+	hold := func(chunk []byte) {
+		if room := maxLineBytes - len(pending); room > 0 && len(chunk) > 0 {
+			if len(chunk) > room {
+				chunk = chunk[:room]
+			}
+			pending = append(pending, chunk...)
+		}
+	}
 
 	// drain consumes every complete line currently available, holding back a
 	// trailing partial write until its newline arrives.
 	drain := func() error {
 		for {
-			chunk, err := reader.ReadBytes('\n')
-			if err == io.EOF {
+			chunk, err := reader.ReadSlice('\n')
+			switch {
+			case errors.Is(err, bufio.ErrBufferFull):
+				// A line longer than the read buffer: keep what fits under the
+				// cap and go back for the rest of it.
+				hold(chunk)
+				continue
+			case errors.Is(err, io.EOF):
 				// An unterminated tail is a write caught in flight, not an
-				// entry. Hold it until its newline arrives, bounded so that a
-				// runaway line cannot grow the buffer without limit.
-				if room := maxLineBytes - len(pending); room > 0 && len(chunk) > 0 {
-					if len(chunk) > room {
-						chunk = chunk[:room]
-					}
-					pending = append(pending, chunk...)
-				}
+				// entry. Hold it until its newline arrives.
+				hold(chunk)
 				return nil
-			}
-			if err != nil {
+			case err != nil:
 				return err
 			}
 
+			// chunk points into the reader's buffer and stays valid until the
+			// next read; match copies what it keeps, and emit runs before then.
 			line := chunk
 			if len(pending) > 0 {
-				line = append(pending, chunk...)
-				pending = nil
+				hold(chunk)
+				line = pending
 			}
 			e, ok := match(line, f, pre)
+			pending = nil
 			if !ok {
 				continue
 			}

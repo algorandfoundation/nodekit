@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -149,6 +150,23 @@ func TestTailFilterOffsetIsFileSize(t *testing.T) {
 	assert.Equal(t, int64(len(content)), result.Offset)
 }
 
+// A stale size, taken before the file was truncated or replaced by a shorter
+// one, leaves the tail of the read buffer zeroed. Those bytes are not log
+// content: charging them invents entries out of the padding and spends the
+// scan budget on a region of the file that no longer exists.
+func TestTailFileWithAStaleSize(t *testing.T) {
+	withChunkSize(t, 128)
+
+	path := writeLog(t, line("warning", "one")+"\n"+line("warning", "two")+"\n")
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+
+	f := Filter{MinLevel: LevelTrace}
+	found, _, _, err := tailFile(path, info.Size()+3*chunkSize, 10, f, newPrescreen(f), maxScanned)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"two", "one"}, messages(found)) // tailFile yields newest first
+}
+
 func TestTailFilterMissingFile(t *testing.T) {
 	_, err := tailFilter(filepath.Join(t.TempDir(), "absent.log"), 10, Filter{})
 	assert.True(t, os.IsNotExist(err))
@@ -244,6 +262,24 @@ func TestFollowHoldsPartialLines(t *testing.T) {
 	appendLine(t, path, complete[20:]+"\n")
 	c.waitFor(t, 1)
 	assert.Equal(t, []string{"split"}, c.messages())
+}
+
+// A single line longer than the read buffer must not be buffered whole: it is
+// capped where ParseLine would have capped it, and the discarded remainder does
+// not disturb the lines after it.
+func TestFollowCapsARunawayLine(t *testing.T) {
+	path := writeLog(t, "")
+	var c collector
+	startFollow(t, path, 0, &c, FollowOptions{Interval: time.Millisecond})
+
+	appendLine(t, path, strings.Repeat("x", maxLineBytes+5000)+"\n")
+	appendLine(t, path, line("warning", "after")+"\n")
+	c.waitFor(t, 2)
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	assert.Equal(t, maxLineBytes, len(c.entries[0].Raw))
+	assert.Equal(t, "after", c.entries[1].Message)
 }
 
 // algod rotates node.log to its archive once LogSizeLimit is reached. Anything
