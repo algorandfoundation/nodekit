@@ -54,8 +54,10 @@ func ToDataFolderConfig(path string) (DataFolderConfig, error) {
 func IsDataDir(path string) bool {
 	info, err := os.Stat(path)
 
-	// Check if the path exists
-	if os.IsNotExist(err) {
+	// Check if the path exists, and that it could be inspected at all. A
+	// permission error leaves info nil, so this must cover every error and not
+	// just os.IsNotExist.
+	if err != nil {
 		return false
 	}
 

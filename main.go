@@ -29,9 +29,14 @@ func main() {
 	if err == nil && resp.ResponseCode >= 200 && resp.ResponseCode < 300 {
 		if version != "dev" && resp.JSON200 != version {
 			needsUpgrade = true
-			// Warn on all commands but version
+			// Warn on all commands but version.
+			//
+			// On stderr rather than through the default logger, which init
+			// points at stdout: this says nothing about the command that was
+			// asked for, and a command whose output is being piped (logs --json
+			// into jq, say) must not have it land in the middle of that stream.
 			if len(os.Args) > 1 && os.Args[1] != "--version" {
-				log.Warn(
+				log.New(os.Stderr).Warn(
 					fmt.Sprintf("nodekit version v%s is available. Upgrade with \"nodekit upgrade\"", resp.JSON200))
 			}
 		}
@@ -40,6 +45,13 @@ func main() {
 	runtime.GOMAXPROCS(1)
 	err = cmd.Execute(version, needsUpgrade)
 	if err != nil {
-		return
+		// Diagnostics belong on stderr: a command whose output is being piped
+		// (logs --json into jq, say) must not have its failure message land in
+		// the middle of that stream.
+		log.SetOutput(os.Stderr)
+		// Commands that return their error rather than exiting themselves rely
+		// on this: without it a failed command prints its message and still
+		// exits 0, which makes it invisible to a shell script or a CI step.
+		log.Fatal(err)
 	}
 }

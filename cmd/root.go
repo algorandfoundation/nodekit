@@ -104,6 +104,7 @@ func init() {
 		RootCmd.AddCommand(bootstrapCmd)
 		RootCmd.AddCommand(debugCmd)
 		RootCmd.AddCommand(installCmd)
+		RootCmd.AddCommand(logsCmd)
 		RootCmd.AddCommand(restartCmd)
 		RootCmd.AddCommand(startCmd)
 		RootCmd.AddCommand(stopCmd)
@@ -119,6 +120,9 @@ func init() {
 func Execute(version string, needsUpgrade bool) error {
 	RootCmd.Version = version
 	NeedsUpgrade = needsUpgrade
+	// The error is reported by main, which is also what makes the process exit
+	// non-zero. Letting cobra print it as well would show every failure twice.
+	RootCmd.SilenceErrors = true
 	return RootCmd.Execute()
 }
 

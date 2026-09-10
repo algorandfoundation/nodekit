@@ -23,3 +23,24 @@ const NotRunningStartErrorMsg = "algod is not running, please run the *start* co
 
 // NotSuperUserErrorMsg is the error message displayed when a non-superuser tries to execute a command requiring root privileges.
 const NotSuperUserErrorMsg = "you need to be root to run this command. Please run this command with sudo"
+
+// LogsNotFoundErrorMsg is the error message displayed when the node's log file does not exist.
+// It takes the resolved path, which is not always inside the data directory.
+const LogsNotFoundErrorMsg = "no log file at %s. algod creates it on first start, please run the *start* command"
+
+// LogsPermissionErrorMsg is the error message displayed when the node's log file cannot be read.
+const LogsPermissionErrorMsg = "cannot read the node's log file: permission denied. The algod data directory is owned by the 'algorand' user, run this command with super-user (sudo) and if you're on Linux consider adding your account to the 'algorand' group after"
+
+// LogsFollowCompressedErrorMsg is the error message displayed when --follow is asked for a
+// compressed archive, which is a rotated file that nothing is appending to.
+const LogsFollowCompressedErrorMsg = "cannot follow a compressed archive: it is a rotated log, not the file the node is writing to. Drop --file to follow the live log, or read this one without --follow"
+
+// LogsToStdoutErrorMsg is the error message displayed when algod is configured to log to
+// standard output instead of a file, which it does when config.json sets LogSizeLimit to 0.
+const LogsToStdoutErrorMsg = "this node is configured to log to stdout, not to a log file (config.json sets LogSizeLimit to 0). On Linux the output goes to the systemd journal, on macOS to /tmp/algod.out"
+
+// LogsEmptyMsg is displayed when the node's log file exists but has no content yet.
+const LogsEmptyMsg = "the log file is empty, the node has not logged anything yet"
+
+// LogsNoMatchMsg is displayed when the log has content but nothing passed the active filters.
+const LogsNoMatchMsg = "no log entries matched. Try *--all* to include every level, or widen *--since*"
