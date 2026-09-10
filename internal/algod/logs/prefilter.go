@@ -264,15 +264,21 @@ func topLevelString(line, key []byte) ([]byte, bool) {
 // Only text that JSON never escapes qualifies: `he said "hi"` is written with
 // escapes in the line but not in the decoded message, so searching the raw
 // bytes for it would miss real matches. The same goes for anything non-ASCII,
-// which may arrive as \uXXXX. Those searches still work, they just pay for a
-// full parse of every line.
+// which may arrive as \uXXXX, and for `<`, `>` and `&`: logrus writes its JSON
+// through Go's encoder with HTML escaping left on, which turns those into
+// \u003c, \u003e and \u0026, so a search for `<nil>` would find nothing in the
+// raw line. Those searches still work, they just pay for a full parse of every
+// line.
 func searchable(text string) []byte {
 	if text == "" {
 		return nil
 	}
 
 	for i := 0; i < len(text); i++ {
-		if c := text[i]; c < 0x20 || c > 0x7e || c == '"' || c == '\\' {
+		switch c := text[i]; {
+		case c < 0x20 || c > 0x7e:
+			return nil
+		case c == '"' || c == '\\' || c == '<' || c == '>' || c == '&':
 			return nil
 		}
 	}

@@ -104,6 +104,8 @@ func TestSearchableOnlyAcceptsEscapeFreeText(t *testing.T) {
 		`round=\d+`,
 		"genesisID=Ω", // non-ASCII may arrive as \uXXXX
 		"a\tb",        // so do control characters
+		"<nil>",       // HTML escaping writes < and > as \u003c and \u003e
+		"a & b",       // and & as \u0026
 		``,
 	}
 	for _, text := range unusable {
@@ -128,6 +130,9 @@ var prescreenCorpus = []string{
 	`{"level":"info","msg":"quoting \"level\":\"error\" inside the message"}`,
 	`{"level":"info","msg":"he said \"connection reset\" once"}`,
 	`{"level":"error","msg":"unicode \u03a9 and a tab \t"}`,
+	// logrus leaves Go's HTML escaping on, so these three bytes never
+	// appear verbatim in a line however plain the message reads.
+	`{"level":"error","msg":"peer \u003cnil\u003e reset \u0026 dropped"}`,
 	`goroutine 1 [running]:`,
 	`panic: runtime error: index out of range ,"level":"info",`,
 	`  {"level":"info","msg":"leading whitespace"}`,
@@ -155,6 +160,8 @@ func TestPrescreenNeverRejectsAKeptLine(t *testing.T) {
 		{MinLevel: LevelTrace, Text: "panic"},
 		{MinLevel: LevelTrace, Text: `he said "connection reset"`},
 		{MinLevel: LevelTrace, Text: "unicode Ω"},
+		{MinLevel: LevelTrace, Text: "<nil>"},
+		{MinLevel: LevelTrace, Text: "reset & dropped"},
 	}
 
 	for _, f := range filters {
