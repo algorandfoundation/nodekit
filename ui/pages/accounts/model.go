@@ -91,6 +91,8 @@ func (m ViewModel) makeColumns(width int) []table.Column {
 // order, so a selected row can be mapped back to its account.
 func (m ViewModel) makeRows() ([]table.Row, []string) {
 	rows := make([]table.Row, 0)
+	now := time.Now()
+	oneWeekFromNow := now.Add(time.Hour * 24 * 7)
 
 	// Stable, address-sorted ordering so the rows and the returned address
 	// slice line up regardless of map iteration order.
@@ -104,17 +106,20 @@ func (m ViewModel) makeRows() ([]table.Row, []string) {
 		expired := false
 		var expires = "N/A"
 		if m.Data.Accounts[addr].Expires != nil {
+			expiresAt := m.Data.Accounts[addr].Expires
 			// This condition will only exist for a split second
 			// until algod deletes the key
-			if m.Data.Accounts[addr].Expires.Before(time.Now()) {
+			if expiresAt.Before(now) {
 				expired = true
 				expires = "EXPIRED"
+			} else if expiresAt.After(oneWeekFromNow) {
+				expires = expiresAt.Format("02 Jan 06")
 			} else {
-				expires = m.Data.Accounts[addr].Expires.Format(time.RFC822)
+				expires = expiresAt.Format(time.RFC822)
 			}
 
 			// Expires within the week
-			if m.Data.Accounts[addr].Expires.Before(time.Now().Add(time.Hour * 24 * 7)) {
+			if expiresAt.Before(oneWeekFromNow) {
 				expires = "⚠ " + expires
 			}
 		}
