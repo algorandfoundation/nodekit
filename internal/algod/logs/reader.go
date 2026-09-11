@@ -242,11 +242,25 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 	}
 	defer func() { _ = fh.Close() }()
 
-	if _, err = fh.Seek(offset, io.SeekStart); err != nil {
-		return err
-	}
 	info, err := fh.Stat()
 	if err != nil {
+		return err
+	}
+
+	// A rotation or a truncation between the scan that produced offset and this
+	// open leaves that offset pointing into a file it was never measured
+	// against. Seeking there would sit past the end of the replacement and wait
+	// for it to grow back to a position that means nothing in it, silently
+	// dropping everything written in the meantime. A file shorter than the
+	// offset can only be such a replacement, so it is read from its start.
+	if info.Size() < offset {
+		offset = 0
+		if opts.OnRotate != nil {
+			opts.OnRotate()
+		}
+	}
+
+	if _, err = fh.Seek(offset, io.SeekStart); err != nil {
 		return err
 	}
 

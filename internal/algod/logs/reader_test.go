@@ -331,6 +331,40 @@ func TestFollowSurvivesTruncation(t *testing.T) {
 	assert.Equal(t, []string{"before truncation", "after truncation"}, c.messages())
 }
 
+// The log can rotate or be truncated between the scan that reported an offset
+// and Follow opening the file. The offset then points past the end of a file it
+// was never measured against, and seeking there would skip everything the
+// replacement already holds and wait for it to grow back to a position that
+// means nothing in it.
+//
+// The poll interval is long enough never to fire: the offset has to be settled
+// when the file is opened, and not by the truncation check a tick later, which
+// only catches this if the new file has not already grown past the stale offset.
+func TestFollowResumesFromTheStartOfAShorterFile(t *testing.T) {
+	path := writeLog(t, line("warning", "written after the rotation")+"\n")
+
+	var c collector
+	rotated := make(chan struct{}, 1)
+	startFollow(t, path, 1<<20, &c, FollowOptions{
+		Interval: time.Hour,
+		OnRotate: func() {
+			select {
+			case rotated <- struct{}{}:
+			default:
+			}
+		},
+	})
+
+	c.waitFor(t, 1)
+	assert.Equal(t, []string{"written after the rotation"}, c.messages())
+
+	select {
+	case <-rotated:
+	case <-time.After(time.Second):
+		t.Error("restarting at the top of a new file is a rotation and must be reported as one")
+	}
+}
+
 func TestFollowReturnsNilOnCancel(t *testing.T) {
 	path := writeLog(t, "")
 	ctx, cancel := context.WithCancel(context.Background())
