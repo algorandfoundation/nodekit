@@ -218,6 +218,34 @@ type FollowOptions struct {
 	OnRotate func()
 }
 
+// openWhenPresent opens path, waiting out a rotation that has momentarily left
+// it absent rather than failing on it.
+//
+// The scan that produced the follow offset has just finished reading this file,
+// so a path missing here is a rename in flight far more often than it is a node
+// that was never started. Failing immediately reports it as the latter: the
+// error reaches the user as "algod creates it on first start, please run the
+// start command", about a node that is running and merely rotated its log. The
+// polling loop already waits out exactly this gap, and this is the initial open
+// agreeing with it.
+//
+// Only absence is waited on. A permission error will not resolve itself by
+// being asked again, and the caller has a better message for it than silence.
+func openWhenPresent(ctx context.Context, path string, interval time.Duration) (*os.File, error) {
+	for {
+		fh, err := os.Open(path)
+		if err == nil || !os.IsNotExist(err) {
+			return fh, err
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, err
+		case <-time.After(interval):
+		}
+	}
+}
+
 // Follow streams entries appended to the log at path from offset onwards,
 // calling emit for each one that passes the filter, until ctx is cancelled.
 //
@@ -236,8 +264,13 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 		interval = defaultFollowInterval
 	}
 
-	fh, err := os.Open(path)
+	fh, err := openWhenPresent(ctx, path, interval)
 	if err != nil {
+		// Waiting for the file to come back was cut short by the user, which
+		// is a cancellation like any other and not a failure to open.
+		if ctx.Err() != nil {
+			return nil
+		}
 		return err
 	}
 	defer func() { _ = fh.Close() }()

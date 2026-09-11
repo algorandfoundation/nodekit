@@ -365,6 +365,42 @@ func TestFollowResumesFromTheStartOfAShorterFile(t *testing.T) {
 	}
 }
 
+func TestFollowWaitsForALogThatIsMidRotation(t *testing.T) {
+	// The live path is absent when Follow opens it, the way it is between the
+	// rename and the create of a rotation. The scan has already read the file
+	// by this point, so this is a rename in flight, not a node that never ran.
+	path := filepath.Join(t.TempDir(), "node.log")
+
+	var c collector
+	startFollow(t, path, 0, &c, FollowOptions{Interval: time.Millisecond})
+	time.Sleep(20 * time.Millisecond)
+
+	require.NoError(t, os.WriteFile(path, []byte(line("warning", "the replacement file")+"\n"), 0o600))
+
+	c.waitFor(t, 1)
+	assert.Equal(t, []string{"the replacement file"}, c.messages())
+}
+
+func TestFollowFailsFastOnAnErrorThatWillNotResolve(t *testing.T) {
+	// A path whose parent is a regular file gives ENOTDIR, standing in for the
+	// class of error that waiting cannot fix. Only absence is worth waiting
+	// out; a permission denied asked again is a permission denied.
+	path := filepath.Join(writeLog(t, ""), "node.log")
+
+	done := make(chan error, 1)
+	go func() {
+		done <- Follow(context.Background(), path, 0, Filter{}, func(Entry) error { return nil }, FollowOptions{Interval: time.Hour})
+	}()
+
+	select {
+	case err := <-done:
+		require.Error(t, err)
+		assert.False(t, os.IsNotExist(err), "the error waited on must be absence and nothing else")
+	case <-time.After(3 * time.Second):
+		t.Fatal("Follow waited on an error that was never going to resolve")
+	}
+}
+
 func TestFollowReturnsNilOnCancel(t *testing.T) {
 	path := writeLog(t, "")
 	ctx, cancel := context.WithCancel(context.Background())
