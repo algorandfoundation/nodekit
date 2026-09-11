@@ -169,6 +169,41 @@ func TestScanStopsAtTheOffsetItReported(t *testing.T) {
 	assert.Equal(t, 1, result.Count)
 }
 
+// A log caught in the middle of a write ends mid-line. The scan shows that
+// fragment, because it is what the file holds and is the tail of a crash dump
+// on a node that died writing it, but Follow has to resume at the start of the
+// line rather than past it: resuming past it would deliver the remainder as a
+// line of its own, and the entry algod was writing would never appear whole.
+func TestScanOffsetRewindsToAnUnterminatedLine(t *testing.T) {
+	dir := t.TempDir()
+	complete := line("warning", "still being written")
+	whole := line("warning", "whole") + "\n"
+	live := writeAt(t, dir, "node.log", whole+complete[:20])
+
+	got, result := collect(t, []string{live}, 0, Filter{MinLevel: LevelWarn})
+	require.Len(t, got, 2, "the fragment is part of the file and is shown")
+	assert.Equal(t, int64(len(whole)), result.Offset)
+
+	// Once the write finishes, a follow from that offset sees the whole line.
+	appendLine(t, live, complete[20:]+"\n")
+
+	var c collector
+	startFollow(t, live, result.Offset, &c, FollowOptions{Interval: time.Millisecond})
+	c.waitFor(t, 1)
+	assert.Equal(t, []string{"still being written"}, c.messages())
+}
+
+// A log that ends the way logrus leaves it needs no rewinding: the offset is
+// the size, and Follow starts on the next line written.
+func TestScanOffsetIsTheSizeOfAWholeLog(t *testing.T) {
+	dir := t.TempDir()
+	content := line("warning", "one") + "\n" + line("warning", "two") + "\n"
+	live := writeAt(t, dir, "node.log", content)
+
+	_, result := collect(t, []string{live}, 0, Filter{MinLevel: LevelWarn})
+	assert.Equal(t, int64(len(content)), result.Offset)
+}
+
 func TestForEachLineHandlesPartialAndOverlongLines(t *testing.T) {
 	// No trailing newline on the last line, and a blank line in between.
 	var got []string

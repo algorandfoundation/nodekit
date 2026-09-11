@@ -16,9 +16,9 @@ import (
 
 // ScanResult reports what a Scan did, beyond the entries it emitted.
 type ScanResult struct {
-	// Offset is the size of the newest source at the moment it was opened.
-	// Passing it to Follow resumes at exactly that point, with no gap and no
-	// repeated line.
+	// Offset is where the newest source ended at the moment it was opened,
+	// rounded back to a line boundary. Passing it to Follow resumes at exactly
+	// that point, with no gap and no line delivered in halves.
 	Offset int64
 
 	// Count is how many entries were emitted.
@@ -69,13 +69,25 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 		return result, fs.ErrNotExist
 	}
 
-	// The live log's size is the follow offset, and it is taken before a byte
-	// is read so that nothing written during the scan is missed or repeated.
+	// The live log's size bounds the read, and it is taken before a byte is
+	// read so that nothing written during the scan is missed or repeated.
 	info, err := os.Stat(sources[0])
 	if err != nil {
 		return result, err
 	}
-	result.Offset = info.Size()
+	size := info.Size()
+
+	// Follow resumes at the last line boundary rather than at that size. A log
+	// whose final line has no newline was caught in the middle of a write, and
+	// resuming past it would hand Follow the remainder of that line as though
+	// it were a line of its own: the entry algod was in the middle of writing
+	// would arrive as a fragment of itself instead of whole. The scan below
+	// still reads to size and shows that fragment, which is the file as it
+	// stands and is the tail of a crash dump when the node died mid-write.
+	result.Offset, err = followOffset(sources[0], size)
+	if err != nil {
+		return result, err
+	}
 
 	counted := func(e Entry) error {
 		result.Count++
@@ -83,7 +95,7 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 	}
 
 	if n > 0 {
-		found, err := tailSources(sources, n, f, result.Offset, &result)
+		found, err := tailSources(sources, n, f, size, &result)
 		if err != nil {
 			return result, err
 		}
@@ -95,7 +107,54 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 		return result, nil
 	}
 
-	return result, streamSources(sources, f, result.Offset, counted, &result)
+	return result, streamSources(sources, f, size, counted, &result)
+}
+
+// followOffset returns the place in the live log a Follow should resume from,
+// given the size the scan read it to.
+//
+// That is the size itself for the ordinary case of a log ending in a newline.
+// A file ending mid-line is a write caught in flight, and the answer is the
+// start of that unterminated line, so the entry arrives whole once algod
+// finishes writing it rather than as the tail end of itself.
+//
+// The search looks back one read buffer and no further: a final line longer
+// than that is already past anything algod writes, and rewinding a scan of a
+// gigabyte log by a megabyte to chase one is the worse trade.
+func followOffset(path string, size int64) (int64, error) {
+	if size <= 0 {
+		return 0, nil
+	}
+
+	fh, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = fh.Close() }()
+
+	window := int64(followBufferSize)
+	if window > size {
+		window = size
+	}
+
+	buf := make([]byte, window)
+	n, err := fh.ReadAt(buf, size-window)
+	if err != nil && !errors.Is(err, io.EOF) && n == 0 {
+		return 0, err
+	}
+	buf = buf[:n]
+
+	// Nothing to rewind past: the log ends where a line ends. A short read
+	// means the file shrank under the scan, and Follow settles that itself.
+	if len(buf) == 0 || buf[len(buf)-1] == '\n' {
+		return size, nil
+	}
+
+	idx := bytes.LastIndexByte(buf, '\n')
+	if idx < 0 {
+		return size, nil
+	}
+	return size - window + int64(idx) + 1, nil
 }
 
 // tailSources collects the n newest matching entries across the history,
