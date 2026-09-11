@@ -35,6 +35,12 @@ func nodeWithArchivedHistory(t *testing.T) string {
 	return dir
 }
 
+func resetLogsFlags() {
+	logsCmd.Flags().Visit(func(f *pflag.Flag) { f.Changed = false })
+	logsDataDir, logsSince, logsFile, logsLevel, logsFilter = "", "", "", "", ""
+	logsFollow, logsAll, logsJSON, logsLines = false, false, false, defaultLogLines
+}
+
 // runLogs invokes the command the way a user would, returning what it wrote to
 // stderr, where every explanation of an empty result goes.
 func runLogs(t *testing.T, args ...string) string {
@@ -43,12 +49,14 @@ func runLogs(t *testing.T, args ...string) string {
 	var out, errOut bytes.Buffer
 	logsCmd.SetOut(&out)
 	logsCmd.SetErr(&errOut)
+
+	// Flags are package state shared by every invocation, so they are cleared
+	// before each one and not only at the end of the test.
+	resetLogsFlags()
 	t.Cleanup(func() {
 		logsCmd.SetOut(nil)
 		logsCmd.SetErr(nil)
-		logsCmd.Flags().Visit(func(f *pflag.Flag) { f.Changed = false })
-		logsDataDir, logsSince, logsFile, logsLevel, logsFilter = "", "", "", "", ""
-		logsFollow, logsAll, logsJSON, logsLines = false, false, false, defaultLogLines
+		resetLogsFlags()
 	})
 
 	// RunE rather than Execute: Execute runs from the root command, which opens
@@ -56,6 +64,40 @@ func runLogs(t *testing.T, args ...string) string {
 	require.NoError(t, logsCmd.ParseFlags(args))
 	require.NoError(t, logsCmd.RunE(logsCmd, nil))
 	return errOut.String()
+}
+
+// nodeWithFloor builds a data directory for a node configured to log at the
+// given BaseLoggerDebugLevel, which is what decides whether the view is
+// genuinely incomplete.
+func nodeWithFloor(t *testing.T, floor uint32) string {
+	t.Helper()
+	dir := t.TempDir()
+
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "genesis.json"), []byte(`{}`), 0o600))
+	config := fmt.Sprintf(`{"LogSizeLimit":1073741824,"BaseLoggerDebugLevel":%d}`, floor)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.json"), []byte(config), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "node.log"), nil, 0o600))
+
+	return dir
+}
+
+// --all names no level: it asks for whatever the log holds. Measuring it
+// against the node's floor fired this on every default node, because --all asks
+// for trace and no algod writes one.
+func TestLogsDoesNotWarnAboutTheFloorWhenAllNamesNoLevel(t *testing.T) {
+	const warning = "lower levels are never written to the log"
+
+	assert.NotContains(t, runLogs(t, "--datadir", nodeWithFloor(t, 5), "--all"), warning,
+		"a node at debug writes everything algod can")
+	assert.NotContains(t, runLogs(t, "--datadir", nodeWithFloor(t, 4), "--all"), warning,
+		"info is algod's default, so this fired on very nearly every node")
+	assert.NotContains(t, runLogs(t, "--datadir", nodeWithFloor(t, 1), "--all"), warning,
+		"even here --all shows all there is; an empty result is explained on its own")
+
+	// A level the user named and the node never writes is what the warning is
+	// for, and still reaches them.
+	assert.Contains(t, runLogs(t, "--datadir", nodeWithFloor(t, 4), "--level", "debug"), warning,
+		"--level debug against an info floor asks for entries that do not exist")
 }
 
 func TestLogsDoesNotCallAnArchivedHistoryAnEmptyLog(t *testing.T) {

@@ -129,7 +129,16 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		// warnings: --level error against an error floor is a complete answer,
 		// and saying otherwise sends the user looking for entries that a
 		// correctly configured node was never going to write.
-		if source.Hides(filter.MinLevel) {
+		//
+		// --all names no level at all. It asks for whatever the log holds, and
+		// the log holds everything the node wrote, so nothing the user asked for
+		// is missing from it and there is no incompleteness to report. Measuring
+		// it against the floor anyway fires this on every default node -- --all
+		// asks for trace, which no algod writes -- on the one run where the
+		// request was for all of it. A node that really is holding levels back
+		// is still explained by reportEmptyLogResult, at the point where that
+		// leaves nothing to show and the user needs to know why.
+		if !logsAll && source.Hides(filter.MinLevel) {
 			if value, ok := source.FloorValue(); ok {
 				floor, _ := source.Floor()
 				fmt.Fprintln(errOut, style.Yellow.Render(fmt.Sprintf(
