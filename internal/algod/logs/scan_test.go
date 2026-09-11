@@ -3,6 +3,7 @@ package logs
 import (
 	"compress/gzip"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -252,6 +253,35 @@ func TestArchiveFilesFindsDatedAndCompressedArchives(t *testing.T) {
 	}
 	assert.Equal(t, []string{newer, older}, source.ArchiveFiles())
 	assert.Equal(t, []string{live, newer, older}, source.LogFiles())
+}
+
+func TestArchiveFilesKeepsAnArchiveItCannotStat(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root reads through directory permissions, so there is nothing here to deny")
+	}
+
+	dir := t.TempDir()
+	live := writeAt(t, dir, "node.log", line("warning", "the live log is readable")+"\n")
+
+	// A separate LogArchiveDir the user cannot enter, beside a live log they
+	// can read. This is the configuration where the two permissions differ.
+	archiveDir := filepath.Join(dir, "archives")
+	require.NoError(t, os.Mkdir(archiveDir, 0o755))
+	archive := writeAt(t, archiveDir, "node.archive.log", line("warning", "older history")+"\n")
+	require.NoError(t, os.Chmod(archiveDir, 0o000))
+	t.Cleanup(func() { _ = os.Chmod(archiveDir, 0o755) })
+
+	source := Source{Path: live, Archive: archive}
+	require.Equal(t, []string{archive}, source.ArchiveFiles(),
+		"an archive that cannot be statted is a gap in the history, not an absence of one")
+
+	// And the gap has to come out as a gap: dropping it above is what would
+	// let the command report a complete history it never read.
+	result, err := Scan(source.LogFiles(), 0, Filter{MinLevel: LevelWarn}, func(Entry) error { return nil })
+	require.NoError(t, err, "an unreadable archive does not cost the readable live log")
+	require.Len(t, result.Skipped, 1)
+	assert.Equal(t, archive, result.Skipped[0].Path)
+	assert.ErrorIs(t, result.Skipped[0].Err, fs.ErrPermission)
 }
 
 func TestArchiveFilesIgnoresWhatIsNotThere(t *testing.T) {

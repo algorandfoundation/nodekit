@@ -163,23 +163,45 @@ func (s Source) ArchiveFiles() []string {
 	}
 
 	type archive struct {
-		path string
-		info os.FileInfo
+		path    string
+		modTime time.Time
 	}
 	var found []archive
 	for _, path := range candidates {
 		if path == s.Path {
 			continue // a misconfigured node can point both at one file
 		}
+
 		info, err := os.Stat(path)
-		if err != nil || !info.Mode().IsRegular() {
+		if err != nil {
+			// A missing archive is the ordinary state of a node that has not
+			// rotated yet and is worth nothing to say. Any other failure is a
+			// hole in the history, and dropping the path here is precisely
+			// what would make that hole invisible: the archive never reaches
+			// the scan, so nothing records it as skipped and the command
+			// reports a complete history it never read. A LogArchiveDir the
+			// user cannot enter is the case that matters, since the live log
+			// beside it can be perfectly readable.
+			//
+			// So the path is kept and left to the read path to fail on, which
+			// puts it in ScanResult.Skipped and gets it warned about. That is
+			// the same choice PruneSources makes for the same reason.
+			if !os.IsNotExist(err) {
+				found = append(found, archive{path: path})
+			}
 			continue
 		}
-		found = append(found, archive{path, info})
+		if !info.Mode().IsRegular() {
+			continue
+		}
+		found = append(found, archive{path, info.ModTime()})
 	}
 
+	// An archive whose age could not be read sorts last: the zero time is
+	// before every real one. Reading it after the archives that can be placed
+	// keeps an unreadable one from reordering the history around it.
 	sort.SliceStable(found, func(i, j int) bool {
-		return found[i].info.ModTime().After(found[j].info.ModTime())
+		return found[i].modTime.After(found[j].modTime)
 	})
 
 	paths := make([]string, 0, len(found))
