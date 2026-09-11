@@ -235,7 +235,7 @@ func resolveLogSource() (logs.Source, error) {
 	if logsFile != "" {
 		if _, err := os.Stat(logsFile); err != nil {
 			if os.IsPermission(err) {
-				return source, errors.New(explanations.LogsPermissionErrorMsg)
+				return source, fmt.Errorf(explanations.LogsFilePermissionErrorMsg, logsFile)
 			}
 			return source, err // the error already names the file
 		}
@@ -288,6 +288,11 @@ func explainLogError(err error, source logs.Source) error {
 	case errors.Is(err, fs.ErrNotExist):
 		return fmt.Errorf(explanations.LogsNotFoundErrorMsg, source.Path)
 	case errors.Is(err, fs.ErrPermission):
+		// A file the user named is their own to explain; the guidance about the
+		// 'algorand' user only applies to the node's own files.
+		if logsFile != "" {
+			return fmt.Errorf(explanations.LogsFilePermissionErrorMsg, source.Path)
+		}
 		return errors.New(explanations.LogsPermissionErrorMsg)
 	default:
 		return err

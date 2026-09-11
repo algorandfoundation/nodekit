@@ -28,8 +28,14 @@ const NotSuperUserErrorMsg = "you need to be root to run this command. Please ru
 // It takes the resolved path, which is not always inside the data directory.
 const LogsNotFoundErrorMsg = "no log file at %s. algod creates it on first start, please run the *start* command"
 
-// LogsPermissionErrorMsg is the error message displayed when the node's log file cannot be read.
-const LogsPermissionErrorMsg = "cannot read the node's log file: permission denied. The algod data directory is owned by the 'algorand' user, run this command with super-user (sudo) and if you're on Linux consider adding your account to the 'algorand' group after"
+// LogsPermissionErrorMsg is the error message displayed when the node's own log
+// file, or the data directory holding it, cannot be read.
+const LogsPermissionErrorMsg = "cannot read the node's log file: permission denied. The node's files are owned by the 'algorand' user, so run this command with super-user (sudo); on Linux you can instead add your account to the 'algorand' group and open a new session for that to take effect"
+
+// LogsFilePermissionErrorMsg is the error message displayed when a file named by
+// --file cannot be read. It takes the path: that file is the user's own choice
+// and has nothing to do with how a node's data directory is owned.
+const LogsFilePermissionErrorMsg = "cannot read %s: permission denied"
 
 // LogsFollowCompressedErrorMsg is the error message displayed when --follow is asked for a
 // compressed archive, which is a rotated file that nothing is appending to.
