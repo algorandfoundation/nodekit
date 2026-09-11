@@ -19,15 +19,7 @@ const UpgradeMsg = "Upgrading Algod"
 
 const NodeKitUpgradeSuccessMsg = "NodeKit upgraded successfully. This will take effect when you next invoke nodekit."
 
-const AlgodUpgradeSuccessMsg = "Algod upgraded successfully."
-
-var (
-	nodeKitUpgrade = system.Upgrade
-	algodUpgrade   = algod.Update
-	algodIsRunning = algod.IsRunning
-	algodStart     = algod.Start
-	upgradeSleep   = time.Sleep
-)
+const AlgorandUpgradeSuccessMsg = "Algorand upgraded successfully."
 
 var upgradeShort = "Upgrade the node daemon"
 
@@ -52,7 +44,7 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if NeedsUpgrade {
 			log.Info(style.Green.Render("Upgrading NodeKit"))
-			err := nodeKitUpgrade(new(api.HttpPkg))
+			err := system.Upgrade(new(api.HttpPkg))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -64,22 +56,21 @@ var upgradeCmd = &cobra.Command{
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 		// TODO: Check Version from S3 against the local binary
-		err := algodUpgrade()
+		err := algod.Update()
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Info(style.Green.Render(AlgorandUpgradeSuccessMsg))
 
-		upgradeSleep(5 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		// If it's not running, start the daemon (can happen)
-		if !algodIsRunning(algodData) {
-			err = algodStart()
+		if !algod.IsRunning(algodData) {
+			err = algod.Start()
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
 			}
 		}
-
-		log.Info(style.Green.Render(AlgodUpgradeSuccessMsg))
 	},
 }
