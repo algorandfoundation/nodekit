@@ -104,6 +104,28 @@ func TestRenderCollapsesNewlines(t *testing.T) {
 	assert.Contains(t, got, "502 Bad Gateway")
 }
 
+// The same guarantee, on the other side of the line. A field value is not run
+// through collapseNewlines; it is quoted, which escapes the newline instead.
+func TestRenderKeepsAFieldWithAControlCharacterOnOneLine(t *testing.T) {
+	// No space and no equals sign, so nothing but the control character itself
+	// can be what triggers the quoting.
+	e := ParseLine([]byte(`{"level":"warning","msg":"m","detail":"first\nsecond","crlf":"a\r\nb"}`))
+	got := plain(e)
+
+	assert.NotContains(t, got, "\n")
+	assert.NotContains(t, got, "\r")
+	assert.Contains(t, got, `detail="first\nsecond"`)
+	assert.Contains(t, got, `crlf="a\r\nb"`)
+}
+
+func TestRenderQuotesValuesThatWouldNotReadBackWhole(t *testing.T) {
+	e := ParseLine([]byte(`{"level":"info","msg":"m","quoted":"say\"what\"","path":"C:\\algod\\node.log"}`))
+	got := plain(e)
+
+	assert.Contains(t, got, `quoted="say\"what\""`)
+	assert.Contains(t, got, `path="C:\\algod\\node.log"`)
+}
+
 func TestRenderLargeNumbersAreNotScientific(t *testing.T) {
 	e := ParseLine([]byte(`{"level":"info","msg":"m","Round":48291043}`))
 	got := plain(e)

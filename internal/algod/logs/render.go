@@ -117,11 +117,22 @@ func renderFields(fields map[string]any) string {
 }
 
 // scalar renders a field value, reporting false for objects, arrays and nulls.
-// Strings containing spaces or equals signs are quoted so pairs stay separable.
+// Strings containing spaces or equals signs are quoted so pairs stay separable,
+// and strings containing a control character are quoted so that one entry stays
+// one line.
+//
+// The newline case is the reason the test is not only about separability. No
+// field algod writes to node.log carries a newline today: a stack trace goes
+// into the message, where collapseNewlines already handles it, and the one
+// structurally multi-line field is built by a telemetry hook on a copy of the
+// entry that never reaches the file. But Render's one-line guarantee is a
+// property of Render, not of algod's vocabulary, and --file points the command
+// at whatever file the user names. %q escapes CR, LF, quotes and backslashes
+// together, so the guarantee stops depending on the producer.
 func scalar(v any) (string, bool) {
 	switch t := v.(type) {
 	case string:
-		if strings.ContainsAny(t, " =") {
+		if strings.ContainsAny(t, " =\"\\\r\n") {
 			return fmt.Sprintf("%q", t), true
 		}
 		return t, true
