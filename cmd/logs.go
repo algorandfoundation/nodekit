@@ -116,8 +116,11 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 
 		// What is about to be read, before any of it is read. Archives that
 		// cannot hold anything as new as --since are dropped first, so that the
-		// status line names the files the scan will really open.
-		sources := logs.PruneSources(source.LogFiles(), filter.Since)
+		// status line names the files the scan will really open. The unpruned
+		// list is kept: whether a history exists is a different question from
+		// whether this search has any use for it.
+		history := source.LogFiles()
+		sources := logs.PruneSources(history, filter.Since)
 		writeLogStatus(errOut, sources, filter, lines)
 
 		// A node whose floor sits above the level being asked for never records
@@ -167,7 +170,7 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		}
 
 		if !logsFollow {
-			reportEmptyLogResult(errOut, source, filter, result, len(sources))
+			reportEmptyLogResult(errOut, source, filter, result, len(history))
 			return nil
 		}
 
@@ -358,14 +361,19 @@ func writeLogEntry(out io.Writer, entry logs.Entry) {
 // reportEmptyLogResult explains an empty result, distinguishing a log that has
 // nothing in it from one whose entries were all filtered out, and from a node
 // that never records the level that was asked for.
-func reportEmptyLogResult(errOut io.Writer, source logs.Source, filter logs.Filter, result logs.ScanResult, sources int) {
+//
+// history is the number of log files the node has, counted before --since
+// pruned any of them away. Counting what the scan opened instead would let a
+// --since newer than every archive turn a node with a year of rotated logs
+// into one that has never written a line.
+func reportEmptyLogResult(errOut io.Writer, source logs.Source, filter logs.Filter, result logs.ScanResult, history int) {
 	if result.Count > 0 {
 		return
 	}
 
 	// Offset is the size of the live log, so this is only an empty log when
 	// there was no archive behind it to hold anything either.
-	if result.Offset == 0 && sources == 1 {
+	if result.Offset == 0 && history == 1 {
 		fmt.Fprintln(errOut, style.Yellow.Render(explanations.LogsEmptyMsg))
 		return
 	}
