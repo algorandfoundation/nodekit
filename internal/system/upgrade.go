@@ -3,13 +3,37 @@ package system
 import (
 	"bytes"
 	"fmt"
-	"github.com/algorandfoundation/nodekit/api"
-	"github.com/charmbracelet/log"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/algorandfoundation/nodekit/api"
+	"github.com/charmbracelet/log"
 )
+
+const reexecEnv = "NODEKIT_REEXEC"
+
+// Reexec starts the specified executable with args after a successful self-upgrade.
+// The child inherits the terminal streams so its output remains visible to the user.
+func Reexec(executable string, args []string) error {
+	return reexecCommand(executable, args, os.Environ()).Start()
+}
+
+func reexecCommand(executable string, args []string, environment []string) *exec.Cmd {
+	cmd := exec.Command(executable, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(environment, reexecEnv+"=1")
+	return cmd
+}
+
+// IsReexec reports whether this process was started by Reexec.
+func IsReexec() bool {
+	return os.Getenv(reexecEnv) == "1"
+}
 
 func Upgrade(http api.HttpPkgInterface) error {
 	// File Permissions
