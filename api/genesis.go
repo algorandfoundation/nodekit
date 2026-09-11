@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"net/http"
 )
 
 type GenesisFileKey string
@@ -32,7 +31,7 @@ func GetGenesis(key GenesisFileKey) {
 	} else {
 		url = fmt.Sprintf("https://raw.githubusercontent.com/algorand/go-algorand/master/installer/genesis/%s/genesis.json", key)
 	}
-	resp, err := http.Get(url)
+	resp, err := Http.Get(url)
 	if err != nil {
 		panic(err)
 	}

@@ -56,7 +56,9 @@ func GetClient(dataDir string) (*api.ClientWithResponses, error) {
 	if err != nil {
 		return nil, err
 	}
-	return api.NewClientWithResponses(config.Endpoint, api.WithRequestEditorFn(apiToken.Intercept))
+	return api.NewClientWithResponses(config.Endpoint,
+		api.WithRequestEditorFn(apiToken.Intercept),
+		api.WithRequestEditorFn(api.UserAgentEditor))
 }
 
 func WaitForClient(ctx context.Context, dataDir string, interval time.Duration, timeout time.Duration) (*api.ClientWithResponses, error) {
