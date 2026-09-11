@@ -26,11 +26,17 @@ type Filter struct {
 
 // Keep reports whether an entry passes the filter.
 //
-// Checks run cheapest and most selective first. Two deliberate exemptions:
-// an entry with no usable timestamp is never dropped by Since, and an entry we
-// could not parse at all is kept unless the caller asked for fatal or panic only
-// (plain lines in node.log are overwhelmingly panic dumps and startup output,
-// which is precisely what a post-mortem needs to see).
+// Checks run cheapest and most selective first. Two deliberate exemptions: an
+// entry with no usable timestamp is never dropped by Since, and an entry with
+// no readable level is never dropped by MinLevel.
+//
+// The second is what the command promises, that a line which is not a valid log
+// entry is always shown. Plain lines in node.log are overwhelmingly panic dumps
+// and startup output, and the dump is the answer precisely when someone reaches
+// for --level fatal or --level panic: a runtime panic is written by the Go
+// runtime and not through logrus, so it carries no level field at all and an
+// exception at the top of the scale would leave a node that died of a nil
+// dereference showing nothing.
 //
 // The first exemption is bounded by where the entry sits rather than by this
 // test: a scan under Since reads only the region of the log at or after the
@@ -41,11 +47,7 @@ func (f Filter) Keep(e Entry) bool {
 		return false
 	}
 
-	if e.Level == LevelUnknown {
-		if f.MinLevel > LevelError {
-			return false
-		}
-	} else if e.Level < f.MinLevel {
+	if e.Level != LevelUnknown && e.Level < f.MinLevel {
 		return false
 	}
 

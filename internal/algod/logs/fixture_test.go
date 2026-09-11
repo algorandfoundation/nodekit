@@ -42,6 +42,23 @@ func TestFixtureAllLevels(t *testing.T) {
 	assert.Greater(t, len(all.Entries), len(warnOnly.Entries))
 }
 
+// The flag a post-mortem reaches for. The fixture's node died of a nil
+// dereference, which the Go runtime wrote as plain text, so a view that judged
+// those lines by their missing level would answer this with nothing at all.
+func TestFixturePanicDumpSurvivesTheTopLevels(t *testing.T) {
+	for _, level := range []Level{LevelFatal, LevelPanic} {
+		result, err := tailFilter(fixture, 0, Filter{MinLevel: level})
+		require.NoError(t, err)
+
+		var dump []string
+		for _, e := range result.Entries {
+			dump = append(dump, e.Message)
+		}
+		assert.Contains(t, dump, "panic: runtime error: invalid memory address or nil pointer dereference",
+			"--level %s must still show the crash output", level)
+	}
+}
+
 func TestFixtureEntriesAreChronological(t *testing.T) {
 	result, err := tailFilter(fixture, 0, Filter{MinLevel: LevelTrace})
 	require.NoError(t, err)

@@ -15,7 +15,7 @@ type Level int8
 const (
 	// LevelUnknown is used for lines that could not be parsed, or whose "level"
 	// field was missing or unrecognised. These are never filtered out by
-	// severity alone, see Filter.Keep.
+	// severity, at any floor, see Filter.Keep.
 	LevelUnknown Level = iota
 	LevelTrace
 	LevelDebug

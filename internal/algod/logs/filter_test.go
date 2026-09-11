@@ -29,17 +29,19 @@ func TestFilterKeepLevels(t *testing.T) {
 	}
 }
 
-// Unparseable lines have no level to compare, and are usually panic output.
-// They are kept unless the user narrowed to fatal or panic.
-func TestFilterKeepsUnknownLevelExceptAtTheTop(t *testing.T) {
-	unknown := Entry{Level: LevelUnknown, Message: "panic: boom"}
+// Unparseable lines have no level to compare, and are usually panic output, so
+// no floor drops them. --level panic above all: a runtime panic is written by
+// the Go runtime rather than through logrus, so the dump someone reaches that
+// flag for carries no level field of its own.
+func TestFilterKeepsUnknownLevelAtEveryFloor(t *testing.T) {
+	unknown := Entry{Level: LevelUnknown, Message: "panic: runtime error: invalid memory address"}
 
-	for _, level := range []Level{LevelTrace, LevelDebug, LevelInfo, LevelWarn, LevelError} {
+	for _, level := range []Level{LevelTrace, LevelDebug, LevelInfo, LevelWarn, LevelError, LevelFatal, LevelPanic} {
 		assert.True(t, Filter{MinLevel: level}.Keep(unknown), "min %s", level)
 	}
-	for _, level := range []Level{LevelFatal, LevelPanic} {
-		assert.False(t, Filter{MinLevel: level}.Keep(unknown), "min %s", level)
-	}
+
+	// The other filters still apply to it: only the level is exempt.
+	assert.False(t, Filter{MinLevel: LevelPanic, Text: "connection reset"}.Keep(unknown))
 }
 
 func TestFilterSince(t *testing.T) {
