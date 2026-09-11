@@ -2,9 +2,11 @@ package config
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func ptr[T any](v T) *T { return &v }
@@ -92,4 +94,53 @@ func TestLogsToStdout(t *testing.T) {
 
 	var nilConfig *Config
 	assert.False(t, nilConfig.LogsToStdout())
+}
+
+// IsEqual and MergeAlgodConfigs have to know about every field of Config. One
+// they do not handle makes two configs that differ compare equal, so `configure
+// algod` decides there is nothing to do, and a value passed to the merge is
+// dropped before it can be written.
+//
+// The fields are walked by reflection rather than listed, so that a field added
+// to Config is covered here without anyone having to remember this test.
+func TestIsEqualAndMergeCoverEveryField(t *testing.T) {
+	fields := reflect.VisibleFields(reflect.TypeOf(Config{}))
+	require.NotEmpty(t, fields)
+
+	for _, field := range fields {
+		t.Run(field.Name, func(t *testing.T) {
+			require.Equal(t, reflect.Pointer, field.Type.Kind(),
+				"every field is optional, so that absent and set to the zero value stay distinct")
+
+			// Set to a pointer to the zero value: absent and present-but-zero
+			// are different configs, and algod's defaults are not all zero.
+			var set Config
+			reflect.ValueOf(&set).Elem().FieldByIndex(field.Index).Set(reflect.New(field.Type.Elem()))
+
+			var absent Config
+			assert.False(t, absent.IsEqual(set), "IsEqual does not compare %s", field.Name)
+			assert.False(t, set.IsEqual(absent), "IsEqual does not compare %s", field.Name)
+
+			merged := MergeAlgodConfigs(absent, set)
+			assert.False(t, reflect.ValueOf(merged).FieldByIndex(field.Index).IsNil(),
+				"MergeAlgodConfigs drops %s", field.Name)
+			assert.True(t, merged.IsEqual(set))
+
+			kept := MergeAlgodConfigs(set, absent)
+			assert.True(t, kept.IsEqual(set), "a field the override leaves unset must keep its value")
+		})
+	}
+}
+
+// The shape `configure algod` uses: the current config on disk, and an override
+// built from the flags the user actually passed.
+func TestMergeAlgodConfigsOverridesOnlyWhatIsSet(t *testing.T) {
+	current := Config{EnableP2P: ptr(true), LogFileDir: ptr(filepath.Join("var", "log", "algorand"))}
+	override := Config{LogFileDir: ptr(filepath.Join("mnt", "logs"))}
+
+	merged := MergeAlgodConfigs(current, override)
+	assert.Equal(t, filepath.Join("mnt", "logs"), *merged.LogFileDir)
+	require.NotNil(t, merged.EnableP2P)
+	assert.True(t, *merged.EnableP2P, "a field the override leaves unset keeps its value")
+	assert.False(t, current.IsEqual(merged), "a config that differs only in a log path is not up to date")
 }

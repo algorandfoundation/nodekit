@@ -85,42 +85,63 @@ func (c *Config) LogsToStdout() bool {
 	return c != nil && c.LogSizeLimit != nil && *c.LogSizeLimit == 0
 }
 
-// IsEqual compares two Config objects and returns true if all their fields have the same values, otherwise false.
+// IsEqual reports whether two configs hold the same values in every field,
+// with a field left out of config.json equal only to one left out of the other.
+//
+// Every field of Config is compared. A field added above has to be added here
+// and to MergeAlgodConfigs, or two configs that differ in it compare equal and
+// a change to it is dropped on the way to being written.
 func (c Config) IsEqual(conf Config) bool {
-	// Check EnableP2P
-	if (c.EnableP2P == nil) != (conf.EnableP2P == nil) {
-		return false
-	}
-	if c.EnableP2P != nil && *c.EnableP2P != *conf.EnableP2P {
-		return false
-	}
-
-	// Check EnableP2PHybridMode
-	if (c.EnableP2PHybridMode == nil) != (conf.EnableP2PHybridMode == nil) {
-		return false
-	}
-	if c.EnableP2PHybridMode != nil && *c.EnableP2PHybridMode != *conf.EnableP2PHybridMode {
-		return false
-	}
-
-	return true
+	return sameOption(c.EnableP2P, conf.EnableP2P) &&
+		sameOption(c.EnableP2PHybridMode, conf.EnableP2PHybridMode) &&
+		sameOption(c.BaseLoggerDebugLevel, conf.BaseLoggerDebugLevel) &&
+		sameOption(c.LogSizeLimit, conf.LogSizeLimit) &&
+		sameOption(c.HotDataDir, conf.HotDataDir) &&
+		sameOption(c.ColdDataDir, conf.ColdDataDir) &&
+		sameOption(c.LogFileDir, conf.LogFileDir) &&
+		sameOption(c.LogArchiveDir, conf.LogArchiveDir) &&
+		sameOption(c.LogArchiveName, conf.LogArchiveName)
 }
 
-// MergeAlgodConfigs merges two Config objects, with non-zero and non-default fields in 'b' overriding those in 'a'.
+// MergeAlgodConfigs merges two Config objects, with every field 'b' sets
+// overriding the one in 'a'. A field 'b' leaves unset keeps a's value, which is
+// what makes it safe to build the override from the flags the user actually
+// passed.
 func MergeAlgodConfigs(a Config, b Config) Config {
+	// Field by field onto a copy of a, rather than onto a fresh Config: a field
+	// added above and forgotten here then keeps a's value instead of being
+	// silently cleared out of the merge.
 	merged := a
 
-	if b.EnableP2P != nil {
-		if a.EnableP2P == nil || *b.EnableP2P != *a.EnableP2P {
-			merged.EnableP2P = b.EnableP2P
-		}
-	}
-
-	if b.EnableP2PHybridMode != nil {
-		if a.EnableP2PHybridMode == nil || *b.EnableP2PHybridMode != *a.EnableP2PHybridMode {
-			merged.EnableP2PHybridMode = b.EnableP2PHybridMode
-		}
-	}
+	merged.EnableP2P = override(a.EnableP2P, b.EnableP2P)
+	merged.EnableP2PHybridMode = override(a.EnableP2PHybridMode, b.EnableP2PHybridMode)
+	merged.BaseLoggerDebugLevel = override(a.BaseLoggerDebugLevel, b.BaseLoggerDebugLevel)
+	merged.LogSizeLimit = override(a.LogSizeLimit, b.LogSizeLimit)
+	merged.HotDataDir = override(a.HotDataDir, b.HotDataDir)
+	merged.ColdDataDir = override(a.ColdDataDir, b.ColdDataDir)
+	merged.LogFileDir = override(a.LogFileDir, b.LogFileDir)
+	merged.LogArchiveDir = override(a.LogArchiveDir, b.LogArchiveDir)
+	merged.LogArchiveName = override(a.LogArchiveName, b.LogArchiveName)
 
 	return merged
+}
+
+// sameOption reports whether two optional fields say the same thing. A field
+// that is absent is not the same as one set to the zero value: algod's own
+// defaults are not all zero, so "not in config.json" means "whatever algod
+// defaults to" and nothing else.
+func sameOption[T comparable](a, b *T) bool {
+	if (a == nil) != (b == nil) {
+		return false
+	}
+	return a == nil || *a == *b
+}
+
+// override returns the value a merge should take for one field: b's when it
+// sets one, and a's otherwise.
+func override[T comparable](a, b *T) *T {
+	if b != nil {
+		return b
+	}
+	return a
 }
