@@ -70,6 +70,8 @@ var logsLong = lipgloss.JoinVertical(
 	style.BoldUnderline("Notes:"),
 	"Every matching entry is shown; --lines N shows only the newest N of them.",
 	"--lines counts entries that match the filters, not raw lines of the file.",
+	"--follow shows the newest 10 before it starts streaming, the way tail -f",
+	"does; --lines N sets that backlog, and --lines 0 shows the whole history.",
 	"The rotated archives are read as well, so the history reaches back past the",
 	"last rotation. Pass --file to read one file on its own instead.",
 	"--filter matches plain text against the message, with no pattern syntax.",
@@ -377,7 +379,7 @@ func reportEmptyLogResult(errOut io.Writer, source logs.Source, filter logs.Filt
 
 func init() {
 	logsCmd.Flags().BoolVarP(&logsFollow, "follow", "f", false, style.LightBlue("Stream new entries as they are written"))
-	logsCmd.Flags().IntVarP(&logsLines, "lines", "n", defaultLogLines, style.LightBlue("Number of newest matching entries to show, 0 for all"))
+	logsCmd.Flags().IntVarP(&logsLines, "lines", "n", defaultLogLines, style.LightBlue("Number of newest matching entries to show, 0 for all (10 with --follow)"))
 	logsCmd.Flags().StringVar(&logsLevel, "level", "", style.LightBlue("Minimum level to show: "+strings.Join(logs.LevelNames, ", ")))
 	logsCmd.Flags().BoolVarP(&logsAll, "all", "a", false, style.LightBlue("Show entries at every level"))
 	logsCmd.Flags().StringVar(&logsSince, "since", "", style.LightBlue("Only entries newer than a duration (15m, 2h) or a timestamp"))
