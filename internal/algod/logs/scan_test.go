@@ -235,6 +235,24 @@ func TestScanPropagatesAnEmitError(t *testing.T) {
 	}
 }
 
+// The stream reads oldest first, so a callback that fails on the first entry it
+// is given fails while an archive is open and the live log has not been reached.
+// Filing that under Skipped loses the error and blames the archive for it: the
+// scan reports a hole in a history it read perfectly well, and returns nil.
+func TestScanPropagatesAnEmitErrorRaisedWhileReadingAnArchive(t *testing.T) {
+	dir := t.TempDir()
+	// Nothing in the live log passes the filter, so the archived entry is the
+	// only one the callback ever sees.
+	live := writeAt(t, dir, "node.log", line("info", "filtered out")+"\n")
+	archive := writeAt(t, dir, "node.archive.log", line("warning", "archived")+"\n")
+	boom := fmt.Errorf("boom")
+
+	result, err := Scan([]string{live, archive}, 0, Filter{MinLevel: LevelWarn}, func(Entry) error { return boom })
+
+	assert.ErrorIs(t, err, boom)
+	assert.Empty(t, result.Skipped, "the archive read fine; the callback is what failed")
+}
+
 func TestArchiveFilesFindsDatedAndCompressedArchives(t *testing.T) {
 	dir := t.TempDir()
 	live := writeAt(t, dir, "node.log", "")

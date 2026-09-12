@@ -289,10 +289,28 @@ func tailCompressed(path string, need int, f Filter, pre prescreen, budget int64
 	return ring, counter.n, stopNone, nil
 }
 
+// emitError marks an error as the caller's rather than the log's.
+//
+// streamOne returns both down one path: a failure to read the file, and a
+// failure inside the callback it hands each entry to. The two want opposite
+// treatment behind the live log, where a source error is skipped over and a
+// callback error has to end the scan, so they cannot stay indistinguishable.
+type emitError struct{ err error }
+
+func (e emitError) Error() string { return e.err.Error() }
+func (e emitError) Unwrap() error { return e.err }
+
 // streamSources emits every match in the history, oldest first, holding no
 // entries in memory.
 func streamSources(sources []string, f Filter, liveSize int64, emit func(Entry) error, result *ScanResult) error {
 	pre := newPrescreen(f)
+
+	tagged := func(e Entry) error {
+		if err := emit(e); err != nil {
+			return emitError{err}
+		}
+		return nil
+	}
 
 	// Oldest source first, so the output stays chronological across a rotation.
 	for i := len(sources) - 1; i >= 0; i-- {
@@ -303,8 +321,19 @@ func streamSources(sources []string, f Filter, liveSize int64, emit func(Entry) 
 			limit = liveSize
 		}
 
-		err := streamOne(sources[i], limit, f, pre, emit)
+		err := streamOne(sources[i], limit, f, pre, tagged)
 		if err != nil {
+			// A callback error is the caller saying stop, and it means the same
+			// thing whichever file was being read when it arrived. Skipping it
+			// would lose a cancellation or a closed pipe, and would go on to
+			// blame the archive for a failure that was never the archive's:
+			// the history would be reported as having a hole in it that it does
+			// not have. The n > 0 path returns this error directly, and the two
+			// halves of Scan have to agree about their own contract.
+			var callback emitError
+			if errors.As(err, &callback) {
+				return callback.err
+			}
 			if i == 0 {
 				return err // the live log: the caller explains this one
 			}
