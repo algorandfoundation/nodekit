@@ -410,6 +410,22 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 
 		// The buffer is empty straight after a drain, so the file offset is the
 		// true read position and shrinkage means truncation in place.
+		//
+		// Size against offset is the whole of the signal, and it only catches a
+		// truncation that is still visible when the poll arrives. A file emptied
+		// and then written back past the old offset inside one interval never
+		// looks short, so the next drain reads new bytes at a stale position:
+		// the replacement's prefix is lost, and a pending fragment of the old
+		// file is spliced onto whatever followed. Polling cannot close that
+		// window. Nothing distinguishes a truncate-and-regrow from an ordinary
+		// append when the inode is unchanged and the length has recovered, so
+		// the alternative is not a better check but a different mechanism --
+		// inotify, or fingerprinting the head of the file on every pass.
+		//
+		// It is left open deliberately. tail -F has the same hole for the same
+		// reason, algod rotates by renaming rather than truncating, and the
+		// window is one interval wide and only reachable while the offset is
+		// small enough for the node to write past it in that time.
 		where, err := fh.Seek(0, io.SeekCurrent)
 		if err != nil {
 			return err

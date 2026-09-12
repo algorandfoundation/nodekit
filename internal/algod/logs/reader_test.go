@@ -323,7 +323,11 @@ func TestFollowSurvivesTruncation(t *testing.T) {
 	c.waitFor(t, 1)
 
 	require.NoError(t, os.Truncate(path, 0))
-	// Give the poller a chance to notice before the file grows again.
+	// The poller sees a truncation by the file being shorter than the offset it
+	// had read to, so it has to look while the file is still short. Growing it
+	// back past that offset first would hide the truncation entirely -- a known
+	// and deliberate limit of polling, recorded at the check in Follow -- and
+	// this test is about the detection that does work, not that window.
 	time.Sleep(20 * time.Millisecond)
 	appendLine(t, path, line("warning", "after truncation")+"\n")
 
