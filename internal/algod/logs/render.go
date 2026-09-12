@@ -111,31 +111,41 @@ func renderFields(fields map[string]any) string {
 		if !ok || value == "" {
 			continue
 		}
-		parts = append(parts, k+"="+value)
+		parts = append(parts, quoteIfNeeded(k)+"="+value)
 	}
 	return strings.Join(parts, " ")
 }
 
-// scalar renders a field value, reporting false for objects, arrays and nulls.
-// Strings containing spaces or equals signs are quoted so pairs stay separable,
-// and strings containing a control character are quoted so that one entry stays
-// one line.
+// quoteIfNeeded quotes a string that would not survive being written into a
+// key=value line bare. Spaces and equals signs are quoted so the pairs stay
+// separable, and CR and LF are quoted so that one entry stays one line.
 //
-// The newline case is the reason the test is not only about separability. No
-// field algod writes to node.log carries a newline today: a stack trace goes
-// into the message, where collapseNewlines already handles it, and the one
-// structurally multi-line field is built by a telemetry hook on a copy of the
-// entry that never reaches the file. But Render's one-line guarantee is a
-// property of Render, not of algod's vocabulary, and --file points the command
-// at whatever file the user names. %q escapes CR, LF, quotes and backslashes
-// together, so the guarantee stops depending on the producer.
+// The newline case is the reason this is not only about separability. No field
+// algod writes to node.log carries a newline today: a stack trace goes into the
+// message, where collapseNewlines already handles it, and the one structurally
+// multi-line field is built by a telemetry hook on a copy of the entry that
+// never reaches the file. But Render's one-line guarantee is a property of
+// Render, not of algod's vocabulary, and --file points the command at whatever
+// file the user names. %q escapes CR, LF, quotes and backslashes together, so
+// the guarantee stops depending on the producer.
+//
+// It applies to keys for the same reason it applies to values. A field name is
+// decoded from the same JSON object the value is, and an object key is allowed
+// to hold anything a JSON string can, newlines included. Escaping one side and
+// concatenating the other raw leaves the guarantee exactly as breakable as it
+// was, just through a different half of the pair.
+func quoteIfNeeded(s string) string {
+	if strings.ContainsAny(s, " =\"\\\r\n") {
+		return fmt.Sprintf("%q", s)
+	}
+	return s
+}
+
+// scalar renders a field value, reporting false for objects, arrays and nulls.
 func scalar(v any) (string, bool) {
 	switch t := v.(type) {
 	case string:
-		if strings.ContainsAny(t, " =\"\\\r\n") {
-			return fmt.Sprintf("%q", t), true
-		}
-		return t, true
+		return quoteIfNeeded(t), true
 	case json.Number:
 		return t.String(), true
 	case bool:

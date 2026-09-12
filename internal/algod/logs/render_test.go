@@ -118,6 +118,19 @@ func TestRenderKeepsAFieldWithAControlCharacterOnOneLine(t *testing.T) {
 	assert.Contains(t, got, `crlf="a\r\nb"`)
 }
 
+// A field name is decoded from the same JSON object the value is, so it can
+// hold anything a JSON string can. Quoting values alone left the one-line
+// guarantee breakable through the other half of the pair.
+func TestRenderKeepsAFieldWhoseNameHasAControlCharacterOnOneLine(t *testing.T) {
+	e := ParseLine([]byte(`{"level":"warning","msg":"m","detail\ncontinued":"x","a b":"y"}`))
+	got := plain(e)
+
+	assert.NotContains(t, got, "\n")
+	assert.NotContains(t, got, "\r")
+	assert.Contains(t, got, `"detail\ncontinued"=x`)
+	assert.Contains(t, got, `"a b"=y`)
+}
+
 func TestRenderQuotesValuesThatWouldNotReadBackWhole(t *testing.T) {
 	e := ParseLine([]byte(`{"level":"info","msg":"m","quoted":"say\"what\"","path":"C:\\algod\\node.log"}`))
 	got := plain(e)
