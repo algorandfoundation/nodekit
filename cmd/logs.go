@@ -74,7 +74,8 @@ var logsLong = lipgloss.JoinVertical(
 	"does; --lines N sets that backlog, and --lines 0 shows the whole history.",
 	"The rotated archives are read as well, so the history reaches back past the",
 	"last rotation. Pass --file to read one file on its own instead.",
-	"--filter matches plain text against the message, with no pattern syntax.",
+	"--filter matches plain text in the message and the fields shown beside it,",
+	"such as Round=49291042, with no pattern syntax.",
 	"A node only writes entries at or above its configured level, so asking for a",
 	"lower level than the node records will find nothing.",
 	"",
@@ -405,7 +406,7 @@ func init() {
 	logsCmd.Flags().StringVar(&logsLevel, "level", "", style.LightBlue("Minimum level to show: "+strings.Join(logs.LevelNames, ", ")))
 	logsCmd.Flags().BoolVarP(&logsAll, "all", "a", false, style.LightBlue("Show entries at every level"))
 	logsCmd.Flags().StringVar(&logsSince, "since", "", style.LightBlue("Only entries newer than a duration (15m, 2h) or a timestamp"))
-	logsCmd.Flags().StringVar(&logsFilter, "filter", "", style.LightBlue("Only entries whose message contains this text"))
+	logsCmd.Flags().StringVar(&logsFilter, "filter", "", style.LightBlue("Only entries whose message or shown fields contain this text"))
 	logsCmd.Flags().BoolVar(&logsJSON, "json", false, style.LightBlue("Emit the raw JSON log entries"))
 	logsCmd.Flags().StringVarP(&logsFile, "file", "F", "", style.LightBlue("Read this log file instead of the node's own"))
 

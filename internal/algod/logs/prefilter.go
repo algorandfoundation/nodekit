@@ -3,6 +3,7 @@ package logs
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -35,12 +36,12 @@ var (
 // LevelUnknown handling in Filter.Keep.
 type prescreen struct {
 	minLevel Level
-	textLit  []byte
+	textLits [][]byte
 }
 
 // newPrescreen derives the cheap checks from f once, outside the scan loop.
 func newPrescreen(f Filter) prescreen {
-	return prescreen{minLevel: f.MinLevel, textLit: searchable(f.Text)}
+	return prescreen{minLevel: f.MinLevel, textLits: searchableParts(f.Text)}
 }
 
 // rejects reports whether line can be discarded without parsing it.
@@ -48,13 +49,16 @@ func (p prescreen) rejects(line []byte) bool {
 	// The search text goes first: it is the cheaper of the two checks and,
 	// when the user supplied one, by far the more selective.
 	//
-	// The decoded message is a byte-for-byte substring of the raw line whenever
-	// the text needs no JSON escaping, so its absence from the line means it
-	// cannot match the message. Note the converse does not hold: the text may
-	// appear in a field the filter does not look at, such as "function", which
-	// is why this only prefilters and Filter.Keep still runs on the entry.
-	if p.textLit != nil && !bytes.Contains(line, p.textLit) {
-		return true
+	// The decoded message, keys and values are byte-for-byte substrings of the
+	// raw line whenever the text needs no JSON escaping, so the absence of a
+	// part from the line means the text cannot match. Note the converse does not
+	// hold: the text may appear in a field the filter does not look at, such as
+	// "function", which is why this only prefilters and Filter.Keep still runs
+	// on the entry.
+	for _, lit := range p.textLits {
+		if !bytes.Contains(line, lit) {
+			return true
+		}
 	}
 
 	// At the lowest floor no level can fall below it, so there is nothing to
@@ -258,8 +262,29 @@ func topLevelString(line, key []byte) ([]byte, bool) {
 	return found, seen
 }
 
+// searchableParts returns byte sequences that must all appear verbatim in a raw
+// line for text to match the entry, or nil when nothing can be required.
+//
+// A field is matched as key=value, and that "=" is not in the line, which
+// writes "Round":49291042. So the text is split at each "=" and every part is
+// required on its own: wherever a match falls, in the message, inside one key
+// or value, or across a key and its value, each part lies whole within a
+// message, key or value, all of which the line holds verbatim. A part that
+// JSON may escape cannot be required, and is left out rather than failing the
+// whole prescreen, since dropping a requirement only ever rejects less.
+func searchableParts(text string) [][]byte {
+	var parts [][]byte
+	for _, part := range strings.Split(text, "=") {
+		if lit := searchable(part); lit != nil {
+			parts = append(parts, lit)
+		}
+	}
+	return parts
+}
+
 // searchable returns the bytes that must appear verbatim in a raw line for text
-// to match the decoded message, or nil when there is no such sequence.
+// to lie within its decoded message, a key or a value, or nil when there is no
+// such sequence.
 //
 // Only text that JSON never escapes qualifies: `he said "hi"` is written with
 // escapes in the line but not in the decoded message, so searching the raw

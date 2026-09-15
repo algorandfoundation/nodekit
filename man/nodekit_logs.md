@@ -22,7 +22,8 @@ Every matching entry is shown; --lines N shows only the newest N of them.
 does; --lines N sets that backlog, and --lines 0 shows the whole history.    
 The rotated archives are read as well, so the history reaches back past the  
 last rotation. Pass --file to read one file on its own instead.              
---filter matches plain text against the message, with no pattern syntax.     
+--filter matches plain text in the message and the fields shown beside it,   
+such as Round=49291042, with no pattern syntax.                              
 A node only writes entries at or above its configured level, so asking for a 
 lower level than the node records will find nothing.                         
                                                                              
@@ -37,7 +38,7 @@ nodekit logs [flags]
   -a, --all              Show entries at every level
   -d, --datadir string   Data directory for the node
   -F, --file string      Read this log file instead of the node's own
-      --filter string    Only entries whose message contains this text
+      --filter string    Only entries whose message or shown fields contain this text
   -f, --follow           Stream new entries as they are written
   -h, --help             help for logs
       --json             Emit the raw JSON log entries

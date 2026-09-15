@@ -14,13 +14,22 @@ type Filter struct {
 	// Since, when non-zero, drops entries older than this instant.
 	Since time.Time
 
-	// Text, when non-empty, keeps only entries whose message contains it.
+	// Text, when non-empty, keeps only entries whose message contains it, or
+	// one of whose shown fields does, written as key=value.
+	//
+	// The fields searched are the ones Render prints. Round numbers and peer and
+	// account addresses live in fields rather than in the message, and they are
+	// what people search for, but a hidden field such as "function" names the
+	// Go package that logged the entry: searching it would keep a line for a
+	// reason the line does not show. A field is matched as decoded, unquoted
+	// key=value text, so "49291042", "Round" and "Round=49291042" all find
+	// the entry rendered with Round=49291042.
 	//
 	// The match is literal and case-sensitive: what the user typed is what is
 	// searched for. A log line is full of characters a pattern language would
 	// claim (round=4829, 1.2.3.4:4160, [::1]), so taking the search text at
-	// face value is both less surprising and, since the same bytes can then be
-	// looked for in the undecoded line, considerably faster.
+	// face value is both less surprising and, since its pieces between each
+	// "=" can then be looked for in the undecoded line, considerably faster.
 	Text string
 }
 
@@ -51,11 +60,26 @@ func (f Filter) Keep(e Entry) bool {
 		return false
 	}
 
-	if f.Text != "" && !strings.Contains(e.Message, f.Text) {
+	if f.Text != "" && !f.matchesText(e) {
 		return false
 	}
 
 	return true
+}
+
+// matchesText reports whether the entry's message or one of its shown fields
+// contains f.Text.
+func (f Filter) matchesText(e Entry) bool {
+	if strings.Contains(e.Message, f.Text) {
+		return true
+	}
+	for k, v := range e.Fields {
+		value, ok := shownValue(k, v)
+		if ok && strings.Contains(k+"="+value, f.Text) {
+			return true
+		}
+	}
+	return false
 }
 
 // sinceLayouts are the absolute timestamp formats accepted by ParseSince, tried

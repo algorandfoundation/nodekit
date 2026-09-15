@@ -12,7 +12,7 @@ are the ones most likely to be revisited, recorded so they are not re-argued fro
 - **SHOULD** treat `--lines` as a count of matching entries, not of raw lines
 - **SHOULD** show every match by default, with `--lines N` for the newest N
 - **SHOULD** read the rotated archives as part of one history, with `--file` to read one file alone
-- **SHOULD** match `--filter` as plain text against the message, not as a regular expression
+- **SHOULD** match `--filter` as plain text against the message and shown fields, not as a regular expression
 - **SHOULD** say on stderr, before the first entry, which files are being read and what is being hidden
 - **SHOULD** poll while following, rather than watching the file with inotify/kqueue
 - **SHOULD** emit the original log lines verbatim for `--json`
@@ -63,9 +63,19 @@ so, and those are decompressed on the way past. A compressed archive cannot be w
 **Plain text, not patterns.** A log line is dense with characters a regular expression would claim:
 `round=48291043`, `1.2.3.4:4160`, `[::1]`, `error: connection reset (*Service).mainLoop`. A search that
 silently reinterprets those is a worse default than one that cannot express alternation, and anyone who
-wants alternation still has a pipe. Taking the text at face value also means the same bytes can be
-looked for in the undecoded line, so `--filter` gets the prescreen's full speedup rather than only the
-subset of patterns that reduce to one literal.
+wants alternation still has a pipe. Taking the text at face value also means its bytes can be looked
+for in the undecoded line, a piece at a time between each `=`, so `--filter` gets the prescreen's speedup
+rather than only the subset of patterns that reduce to literals.
+
+**Search what is shown.** Round numbers and peer and account addresses are what people search for, and
+algod writes them as fields rather than into the message, so `--filter 49291042` matched nothing on the
+entry rendered with `Round=49291042`. The search covers the message and each field `Render` prints,
+matched as decoded, unquoted `key=value`, so the value, the key or the pair all find it. A value Render
+quotes is searched without its quotes: `peer=a b` finds the entry shown as `peer="a b"`, and the quoted
+form does not. Hidden fields are left out on purpose: `function` names the Go package, and searching it
+would keep an entry for a reason the rendered line does not show. The prescreen stays one-sided by
+requiring each `=`-separated part of the text on its own, since the line writes that pair as
+`"Round":49291042`.
 
 **`--since` bounds a region, not each entry.** Three optimizations decide from where a line sits rather
 than from what it says: the backward walk stops once the oldest line of a chunk is older than the bound,

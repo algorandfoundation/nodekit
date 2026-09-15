@@ -133,6 +133,8 @@ var prescreenCorpus = []string{
 	// logrus leaves Go's HTML escaping on, so these three bytes never
 	// appear verbatim in a line however plain the message reads.
 	`{"level":"error","msg":"peer \u003cnil\u003e reset \u0026 dropped"}`,
+	`{"Round":49291042,"level":"warning","msg":"fetch failed","peer":"1.2.3.4:4160"}`,
+	`{"a=b":"c=d","level":"info","msg":"equals signs in a key and a value"}`,
 	`goroutine 1 [running]:`,
 	`panic: runtime error: index out of range ,"level":"info",`,
 	`  {"level":"info","msg":"leading whitespace"}`,
@@ -162,6 +164,12 @@ func TestPrescreenNeverRejectsAKeptLine(t *testing.T) {
 		{MinLevel: LevelTrace, Text: "unicode Ω"},
 		{MinLevel: LevelTrace, Text: "<nil>"},
 		{MinLevel: LevelTrace, Text: "reset & dropped"},
+		{MinLevel: LevelTrace, Text: "49291042"},
+		{MinLevel: LevelWarn, Text: "Round=49291042"},
+		{MinLevel: LevelTrace, Text: "peer=1.2.3.4"},
+		{MinLevel: LevelTrace, Text: "b=c=d"},
+		{MinLevel: LevelTrace, Text: "="},
+		{MinLevel: LevelTrace, Text: `"x"=4160`},
 	}
 
 	for _, f := range filters {
@@ -186,6 +194,12 @@ func TestPrescreenRejectsTheCommonCase(t *testing.T) {
 	text := newPrescreen(Filter{MinLevel: LevelTrace, Text: "connection reset"})
 	assert.True(t, text.rejects([]byte(`{"level":"info","msg":"Sync round set to 48291043"}`)))
 	assert.False(t, text.rejects([]byte(`{"level":"error","msg":"peer error: connection reset by peer"}`)))
+
+	// A pair is written with a colon in the line, so each side is looked for
+	// on its own.
+	pair := newPrescreen(Filter{MinLevel: LevelTrace, Text: "Round=49291042"})
+	assert.False(t, pair.rejects([]byte(`{"Round":49291042,"level":"info","msg":"m"}`)))
+	assert.True(t, pair.rejects([]byte(`{"Round":49291043,"level":"info","msg":"m"}`)))
 }
 
 // A filtered read must return exactly what a straight forward scan of the file
@@ -203,6 +217,7 @@ func TestTailFilterMatchesUnfilteredScanOfFixture(t *testing.T) {
 		{MinLevel: LevelTrace, Text: "502"},
 		{MinLevel: LevelTrace, Text: "round"},
 		{MinLevel: LevelWarn, Text: "Bad Gateway"},
+		{MinLevel: LevelTrace, Text: "round=48291044"},
 	}
 
 	for _, f := range filters {
@@ -231,6 +246,7 @@ func FuzzPrescreenNeverRejectsAKeptLine(f *testing.F) {
 		f.Add(line, uint8(LevelWarn), "connection reset")
 	}
 	f.Add(`{"level":"info","msg":"x"}`, uint8(LevelTrace), `"`)
+	f.Add(`{"Round":49291042,"level":"info","msg":"x"}`, uint8(LevelTrace), "Round=49291042")
 
 	f.Fuzz(func(t *testing.T, line string, minLevel uint8, text string) {
 		if strings.ContainsAny(line, "\n\r") {

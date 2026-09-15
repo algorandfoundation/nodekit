@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,17 +58,57 @@ func TestFilterSince(t *testing.T) {
 	assert.True(t, f.Keep(entryAt(LevelInfo, "no timestamp", time.Time{})))
 }
 
-func TestFilterTextMatchesMessageOnly(t *testing.T) {
+func TestFilterTextMatchesMessage(t *testing.T) {
 	f := Filter{MinLevel: LevelTrace, Text: "catchup"}
 
 	assert.True(t, f.Keep(entryAt(LevelInfo, "catchup service started", time.Time{})))
 	assert.False(t, f.Keep(entryAt(LevelInfo, "unrelated", time.Time{})))
 
-	// Matching the raw line instead of the message would make a search for a
+	// Matching the raw line instead of what is shown would make a search for a
 	// level name match every single entry.
 	self := Filter{MinLevel: LevelTrace, Text: "info"}
 	e := ParseLine([]byte(`{"level":"info","msg":"nothing to see"}`))
 	assert.False(t, self.Keep(e))
+}
+
+// Round numbers and addresses live in fields, and they are what people search
+// for. A field is matched as decoded, unquoted key=value text.
+func TestFilterTextMatchesShownFields(t *testing.T) {
+	e := ParseLine([]byte(`{"Round":49291042,"file":"catchup/service.go","function":"catchup.(*Service).fetch",` +
+		`"level":"info","msg":"fetched block","peer":"1.2.3.4:4160","quoted":"a \"b\" c","ok":true}`))
+	shown := ansi.Strip(Render(e))
+
+	for _, text := range []string{"49291042", "Round", "Round=49291042", "und=4929", "1.2.3.4:4160", "peer=1.2", `a "b" c`, "ok=true"} {
+		assert.True(t, Filter{MinLevel: LevelTrace, Text: text}.Keep(e), "text %q, shown %q", text, shown)
+	}
+
+	// Hidden fields are not searched: the line would be kept for a reason it
+	// does not show.
+	for _, text := range []string{"catchup", "service.go", "file="} {
+		assert.False(t, Filter{MinLevel: LevelTrace, Text: text}.Keep(e), "text %q, shown %q", text, shown)
+		assert.NotContains(t, shown, text)
+	}
+
+	// Pairs are matched one at a time, so a search cannot run from one field
+	// into the next.
+	assert.False(t, Filter{MinLevel: LevelTrace, Text: "4160 quoted"}.Keep(e))
+
+	// A value Render quotes is matched as decoded, not as it is quoted.
+	spaced := ParseLine([]byte(`{"level":"info","msg":"m","peer":"a b"}`))
+	require.Contains(t, ansi.Strip(Render(spaced)), `peer="a b"`)
+	assert.True(t, Filter{MinLevel: LevelTrace, Text: "peer=a b"}.Keep(spaced))
+	assert.False(t, Filter{MinLevel: LevelTrace, Text: `peer="a b"`}.Keep(spaced))
+}
+
+// Only the fields Render prints are searched, so a scalar nested in an object
+// and an empty string, neither of which is shown, match nothing.
+func TestFilterTextSkipsFieldsNotShown(t *testing.T) {
+	e := ParseLine([]byte(`{"details":{"Round":1},"level":"info","msg":"m","x":""}`))
+	shown := ansi.Strip(Render(e))
+
+	for _, text := range []string{"Round", "details", "x=", "x"} {
+		assert.False(t, Filter{MinLevel: LevelTrace, Text: text}.Keep(e), "text %q, shown %q", text, shown)
+	}
 }
 
 // The text is taken literally, which is the whole point of it not being a

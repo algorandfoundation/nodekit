@@ -98,22 +98,33 @@ func renderFields(fields map[string]any) string {
 
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
-		if hiddenFields[k] {
-			continue
-		}
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	parts := make([]string, 0, len(keys))
 	for _, k := range keys {
-		value, ok := scalar(fields[k])
-		if !ok || value == "" {
+		value, ok := shownValue(k, fields[k])
+		if !ok {
 			continue
 		}
-		parts = append(parts, quoteIfNeeded(k)+"="+value)
+		parts = append(parts, quoteIfNeeded(k)+"="+quoteIfNeeded(value))
 	}
 	return strings.Join(parts, " ")
+}
+
+// shownValue returns a field's value as decoded, unquoted text, reporting false
+// for a field the rendered line leaves out. Render and Filter.Keep both decide
+// visibility here, so that --filter searches exactly the fields a user can see.
+func shownValue(key string, v any) (string, bool) {
+	if hiddenFields[key] {
+		return "", false
+	}
+	value, ok := scalar(v)
+	if !ok || value == "" {
+		return "", false
+	}
+	return value, true
 }
 
 // quoteIfNeeded quotes a string that would not survive being written into a
@@ -141,11 +152,12 @@ func quoteIfNeeded(s string) string {
 	return s
 }
 
-// scalar renders a field value, reporting false for objects, arrays and nulls.
+// scalar returns a field value as text, reporting false for objects, arrays and
+// nulls. Strings come back decoded; quoting is the renderer's concern.
 func scalar(v any) (string, bool) {
 	switch t := v.(type) {
 	case string:
-		return quoteIfNeeded(t), true
+		return t, true
 	case json.Number:
 		return t.String(), true
 	case bool:
