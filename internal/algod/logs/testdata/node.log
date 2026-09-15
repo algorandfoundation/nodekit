@@ -1,0 +1,15 @@
+{"file":"server.go","function":"github.com/algorand/go-algorand/daemon/algod.(*Server).Start","level":"info","line":324,"msg":"Trying to start an Algorand node","time":"2026-09-09T14:16:10.100000+02:00"}
+{"file":"wsNetwork.go","function":"github.com/algorand/go-algorand/network.(*WebsocketNetwork).Start","level":"info","line":768,"msg":"serving genesisID=mainnet-v1.0 on \"\" with RandomID=3dtECmSleKd8mA==","name":"","time":"2026-09-09T14:16:10.200000+02:00"}
+{"details":{"Version":"5.0.0","CommitHash":"da5946a1","Branch":"rel/stable","Channel":"stable","Overrides":[{"Name":"MaxAcctLookback","Value":96}]},"file":"telemetry.go","function":"github.com/algorand/go-algorand/logging.(*telemetryState).logTelemetry","instanceName":"8STBXgLdn/9m4irm","level":"info","line":230,"msg":"/ApplicationState/Startup","session":"","time":"2026-09-09T14:16:10.300000+02:00","v":"5.0.0"}
+{"file":"service.go","function":"github.com/algorand/go-algorand/catchup.(*Service).fetchRound","level":"warning","line":852,"msg":"fetchRound could not acquire block, fetcher errored out: ledger already has block","time":"2026-09-09T14:16:11.000000+02:00"}
+{"Context":"sync","file":"universalFetcher.go","function":"github.com/algorand/go-algorand/catchup.(*HTTPFetcher).getBlockBytes","level":"warning","line":257,"msg":"HTTPFetcher.getBlockBytes: response status code 502 from '/v1/mainnet-v1.0/block/12mk9q'. Response body '<html>\r\n<body>502 Bad Gateway</body>\r\n</html>\r\n' ","name":"","time":"2026-09-09T14:16:12.000000+02:00"}
+{"Context":"Agreement","Hash":"3W4KN","ObjectPeriod":0,"ObjectRound":48291043,"ObjectStep":0,"Period":0,"Round":48291043,"Sender":"7WRCIU2B","Step":1,"Type":"VoteBroadcast","Weight":3,"WeightTotal":25,"file":"agreementService.go","level":"info","line":114,"msg":"vote broadcast","time":"2026-09-09T14:16:13.000000+02:00"}
+{"file":"wsPeer.go","function":"github.com/algorand/go-algorand/network.(*wsPeer).readLoop","level":"warning","line":565,"msg":"wsPeer readLoop: received a TS response for a stale request from 204.13.234.146:4160. 85953 bytes discarded","name":"","time":"2026-09-09T14:16:14.000000+02:00"}
+{"file":"ledger.go","function":"github.com/algorand/go-algorand/ledger.(*Ledger).blockQInit","level":"error","line":312,"msg":"could not initialize the block queue: database is locked","round":48291044,"time":"2026-09-09T14:16:15.000000+02:00"}
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x4a1b2c]
+
+goroutine 1 [running]:
+github.com/algorand/go-algorand/ledger.(*Ledger).blockQInit(0x0)
+	/go-algorand/ledger/ledger.go:312 +0x2c
+{"file":"server.go","function":"github.com/algorand/go-algorand/daemon/algod.(*Server).Start","level":"info","line":333,"msg":"Successfully started an Algorand node.","time":"2026-09-09T14:16:16.000000+02:00"}
