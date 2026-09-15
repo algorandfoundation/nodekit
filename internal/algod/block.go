@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// InvalidWindow indicates the requested metrics window extends before the start of the chain.
+const InvalidWindow = "invalid window"
+
 // BlockMetrics represents metrics of a blockchain segment, including average block time and transactions per second.
 type BlockMetrics struct {
 	AvgTime time.Duration
@@ -21,8 +24,15 @@ func GetBlockMetrics(ctx context.Context, client api.ClientWithResponsesInterfac
 	}
 	var format api.GetBlockParamsFormat = "json"
 
+	// Rounds are unsigned. A window wider than the current height would
+	// underflow into an enormous round rather than an obviously-bogus one,
+	// so reject it here instead of relying on every caller to pre-check.
+	if window <= 0 || round < uint64(window) {
+		return avgs, nil, errors.New(InvalidWindow)
+	}
+
 	// Current Block
-	currentBlockResponse, err := client.GetBlockWithResponse(ctx, int(round), &api.GetBlockParams{
+	currentBlockResponse, err := client.GetBlockWithResponse(ctx, round, &api.GetBlockParams{
 		Format: &format,
 	})
 	if err != nil {
@@ -33,7 +43,7 @@ func GetBlockMetrics(ctx context.Context, client api.ClientWithResponsesInterfac
 	}
 
 	// Previous Block Response
-	previousBlockResponse, err := client.GetBlockWithResponse(ctx, int(round)-window, &api.GetBlockParams{
+	previousBlockResponse, err := client.GetBlockWithResponse(ctx, round-uint64(window), &api.GetBlockParams{
 		Format: &format,
 	})
 	if err != nil {

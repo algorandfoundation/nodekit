@@ -161,13 +161,15 @@ func Start() error {
 }
 
 // Stop shuts down the Algorand algod system process based on the current operating system.
+// When force is set, the stop is attempted even if algod is not registered as a
+// service, matching the --force flag on the stop and restart commands.
 // Returns an error if the operation fails or the operating system is unsupported.
-func Stop() error {
+func Stop(force bool) error {
 	switch runtime.GOOS {
 	case "linux":
 		return linux.Stop()
 	case "darwin":
-		return mac.Stop(false)
+		return mac.Stop(force)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}
