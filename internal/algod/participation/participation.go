@@ -195,9 +195,9 @@ type OnlineShortLinkBody struct {
 	VoteKeyB64       string `json:"voteKeyB64"`
 	SelectionKeyB64  string `json:"selectionKeyB64"`
 	StateProofKeyB64 string `json:"stateProofKeyB64"`
-	VoteFirstValid   int    `json:"voteFirstValid"`
-	VoteLastValid    int    `json:"voteLastValid"`
-	KeyDilution      int    `json:"keyDilution"`
+	VoteFirstValid   uint64 `json:"voteFirstValid"`
+	VoteLastValid    uint64 `json:"voteLastValid"`
+	KeyDilution      uint64 `json:"keyDilution"`
 	Network          string `json:"network"`
 }
 

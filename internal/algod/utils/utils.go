@@ -95,13 +95,18 @@ func GetKnownDataPaths() []string {
 // GetExpiresTime calculates and returns the expiration time of a vote based on rounds and time duration information.
 // If the lastRound and roundTime are not zero, it computes the expiration using round difference and duration.
 // Returns nil if the expiration time cannot be determined.
-func GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration, voteLastValid int) *time.Time {
+func GetExpiresTime(t system.Time, lastRound uint64, roundTime time.Duration, voteLastValid uint64) *time.Time {
 	now := t.Now()
 	var expires time.Time
 	if lastRound != 0 &&
 		roundTime != 0 {
-		roundDiff := max(0, voteLastValid-lastRound)
-		distance := int(roundTime) * roundDiff
+		// Rounds are unsigned, so clamp before subtracting rather than after:
+		// an already-expired key would otherwise underflow instead of yielding 0.
+		var roundDiff uint64
+		if voteLastValid > lastRound {
+			roundDiff = voteLastValid - lastRound
+		}
+		distance := int(roundTime) * int(roundDiff)
 		expires = now.Add(time.Duration(distance))
 		return &expires
 	}
