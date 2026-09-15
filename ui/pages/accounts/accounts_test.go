@@ -119,6 +119,45 @@ func Test_NicknameRefreshOnOverlayClose(t *testing.T) {
 	}
 }
 
+func Test_ExpirationFormatting(t *testing.T) {
+	farFuture := time.Now().Add(8 * 24 * time.Hour)
+	nearFuture := time.Now().Add(2 * 24 * time.Hour)
+	past := time.Now().Add(-time.Hour)
+	state := &algod.StateModel{
+		Status: algod.Status{State: algod.StableState},
+		Accounts: map[string]algod.Account{
+			"far": {
+				Address: "far",
+				Expires: &farFuture,
+			},
+			"near": {
+				Address: "near",
+				Expires: &nearFuture,
+			},
+			"past": {
+				Address: "past",
+				Expires: &past,
+			},
+		},
+	}
+
+	rows, addresses := ViewModel{Data: state}.makeRows()
+	expiresByAddress := make(map[string]string, len(addresses))
+	for i, address := range addresses {
+		expiresByAddress[address] = rows[i][3]
+	}
+
+	if got, want := expiresByAddress["far"], farFuture.Format("02 Jan 06"); got != want {
+		t.Errorf("far-future expiry = %q, want date-only %q", got, want)
+	}
+	if got, want := expiresByAddress["near"], "⚠ "+nearFuture.Format(time.RFC822); got != want {
+		t.Errorf("near expiry = %q, want timestamp %q", got, want)
+	}
+	if got, want := expiresByAddress["past"], "⚠ EXPIRED"; got != want {
+		t.Errorf("past expiry = %q, want %q", got, want)
+	}
+}
+
 func Test_Snapshot(t *testing.T) {
 	t.Run("Visible", func(t *testing.T) {
 		model := New(test.GetState(nil))
