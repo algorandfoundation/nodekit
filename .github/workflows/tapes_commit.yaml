@@ -1,0 +1,58 @@
+name: Regenerate Tapes
+
+# On merge to main of TUI/tape changes, regenerate the committed gifs from the
+# deterministic `statewalker stage demo` network and auto-commit them if they
+# changed. Loop guards: the paths filter excludes assets/tapes (so the bot
+# commit cannot retrigger), plus an explicit skip marker check.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ui/**"
+      - ".tapes/**"
+      - "internal/**"
+
+concurrency:
+  group: tapes-commit-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: "!contains(github.event.head_commit.message, '[skip tapes]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Install goal/algod
+        run: |
+          curl -fsSL -o update.sh https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh
+          chmod +x update.sh
+          ./update.sh -i -c stable -p "$HOME/algorand" -d "$HOME/algorand/data" -n
+          echo "$HOME/algorand" >> "$GITHUB_PATH"
+
+      - name: Render tapes from the staged demo network
+        run: make tapes
+
+      - name: Commit regenerated gifs if changed
+        run: |
+          rm -f update.sh
+          if git diff --quiet -- assets/tapes; then
+            echo "Tapes are unchanged; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/tapes
+          git commit -m "chore: regenerate tapes [skip tapes]"
+          git push

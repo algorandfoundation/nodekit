@@ -123,6 +123,24 @@ The full command for reference
 oapi-codegen -config generate.yaml https://raw.githubusercontent.com/algorand/go-algorand/v3.26.0-stable/daemon/algod/api/algod.oas3.yml
 ```
 
+# E2E Testing and Tapes
+
+End-to-end scenarios are driven by [`tools/statewalker`](tools/statewalker/README.md),
+which provisions private test networks and walks algod through the states the
+TUI distinguishes. The same Makefile targets run locally and in CI:
+
+```bash
+make e2e-fast    # PR fast suite: staged private network, partkey states, upgrade vote
+make e2e-full    # adds the containerized end-user journey, fast catchup and localnet paths
+make tapes       # regenerate assets/tapes/*.gif from a deterministic staged network
+```
+
+On pull requests CI runs the fast suite automatically (`.github/workflows/e2e_test.yaml`).
+Add the `run-full-e2e` label when your change touches long-running paths such
+as catchup, install or upgrade. PRs touching `ui/` or `.tapes/` also upload
+regenerated tape gifs as artifacts, and merges to main auto-commit changed
+gifs (`.github/workflows/tapes_commit.yaml`).
+
 # Submitting Changes
 
 This project follows [GitHub flow](https://githubflow.github.io/). 

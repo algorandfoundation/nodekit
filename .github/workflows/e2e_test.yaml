@@ -1,0 +1,134 @@
+name: E2E Test
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Nightly full suite; catches upstream release-channel breakage early
+    - cron: "0 6 * * *"
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "ui/**"
+      - ".tapes/**"
+      - "tools/statewalker/**"
+      - "Makefile"
+      - ".github/workflows/e2e_test.yaml"
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast suite on every matching PR: statewalker stage e2e against a private
+  # network with accelerated rounds (network, partkey states, syncing walk,
+  # upgrade vote, liveness invariant). Target: under ~8 minutes.
+  fast:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Install goal/algod
+        run: |
+          curl -fsSL -o update.sh https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh
+          chmod +x update.sh
+          ./update.sh -i -c stable -p "$HOME/algorand" -d "$HOME/algorand/data" -n
+          echo "$HOME/algorand" >> "$GITHUB_PATH"
+
+      - name: Run the fast e2e suite
+        run: make e2e-fast
+
+  # Full suite: adds the containerized end-user journey (install.sh -> pinned
+  # old nodekit -> fast catchup -> go online -> real nodekit/algod upgrade ->
+  # partkey regeneration), the fast-catchup walk and the localnet+traffic
+  # path. Runs on the `run-full-e2e` PR label, manual dispatch and nightly.
+  full:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-full-e2e'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Install goal/algod
+        run: |
+          curl -fsSL -o update.sh https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh
+          chmod +x update.sh
+          ./update.sh -i -c stable -p "$HOME/algorand" -d "$HOME/algorand/data" -n
+          echo "$HOME/algorand" >> "$GITHUB_PATH"
+
+      - name: Install algokit
+        run: pipx install algokit
+
+      - name: Run the full e2e suite
+        run: make e2e-full
+
+      - name: Dump journey container logs on failure
+        if: failure()
+        run: |
+          docker ps -a || true
+          docker logs statewalker-journey --tail 200 2>&1 || true
+
+  # Tape rendering on PRs that touch the TUI or the tapes: stages the demo
+  # network and uploads the regenerated gifs as artifacts for visual review.
+  # Committing happens separately on merge to main (tapes_commit.yaml).
+  tapes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Check for TUI/tape changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            tapes:
+              - 'ui/**'
+              - '.tapes/**'
+              - 'internal/**'
+
+      - name: Setup Go
+        if: steps.filter.outputs.tapes == 'true'
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Install goal/algod
+        if: steps.filter.outputs.tapes == 'true'
+        run: |
+          curl -fsSL -o update.sh https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh
+          chmod +x update.sh
+          ./update.sh -i -c stable -p "$HOME/algorand" -d "$HOME/algorand/data" -n
+          echo "$HOME/algorand" >> "$GITHUB_PATH"
+
+      - name: Render tapes from the staged demo network
+        if: steps.filter.outputs.tapes == 'true'
+        run: make tapes
+
+      - name: Upload gifs as artifacts
+        if: steps.filter.outputs.tapes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tapes
+          path: assets/tapes/*.gif

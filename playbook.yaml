@@ -19,4 +19,6 @@
       command: nodekit stop
     - name: Run Start
       command: nodekit start
-      # TODO: start a private network, fund TUI account and run TUI integration
+      # Realized by tools/statewalker: `statewalker stage demo|e2e|journey`
+      # starts a private network, funds accounts and drives TUI-observable
+      # states end to end (see tools/statewalker/README.md).

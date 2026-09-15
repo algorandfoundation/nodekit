@@ -1,5 +1,10 @@
 Output ../assets/tapes/tui.gif
 
+# The TUI is recorded against the deterministic `statewalker stage demo`
+# network (long-validity online key, near-expiry key, zombie key, upgrade
+# vote in progress). Run via `make tapes`, which stages the network and
+# exports DATADIR before invoking vhs.
+
 Require nodekit
 
 Set Framerate 30
@@ -12,13 +17,19 @@ Set FontSize 10
 Set Width 1280
 Set Height 640
 
-Type "nodekit" Sleep 500ms Enter
+# Status view: RUNNING node with the upgrade vote panel populated
+Type `nodekit -d "$DATADIR"` Sleep 500ms Enter
 
+# Accounts view: seeded online, near-expiry and zombie keys
 Sleep 3s Enter
 
-Sleep 500ms Down  Sleep 1s Enter
+# Dismiss the informational modal so the account list is visible
+Sleep 1s Enter
 
-Sleep 1s Type "o"
+Sleep 2s Down Sleep 1s
+
+# Participation keys of the selected account
+Enter
 
 Sleep 5s
 
