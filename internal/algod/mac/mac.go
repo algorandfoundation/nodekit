@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/charmbracelet/log"
@@ -303,7 +303,7 @@ func handleDataDirMac() error {
 	log.Info("Downloading mainnet genesis.json file to ~/.algorand/genesis.json")
 
 	// Download the genesis.json file
-	resp, err := http.Get("https://raw.githubusercontent.com/algorand/go-algorand/db7f1627e4919b05aef5392504e48b93a90a0146/installer/genesis/mainnet/genesis.json")
+	resp, err := api.Http.Get("https://raw.githubusercontent.com/algorand/go-algorand/db7f1627e4919b05aef5392504e48b93a90a0146/installer/genesis/mainnet/genesis.json")
 	if err != nil {
 		return err
 	}
