@@ -24,14 +24,14 @@ func (r GenesisFileResponse) StatusCode() int {
 func (r GenesisFileResponse) Status() string {
 	return r.ResponseStatus
 }
-func GetGenesis(key GenesisFileKey) {
+func GetGenesis(http HttpPkgInterface, key GenesisFileKey) {
 	var url string
 	if key == FnetGenesisKey {
 		url = "http://relay-eu-no-1.fnet.algorand.tech:8184/genesis"
 	} else {
 		url = fmt.Sprintf("https://raw.githubusercontent.com/algorand/go-algorand/master/installer/genesis/%s/genesis.json", key)
 	}
-	resp, err := Http.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		panic(err)
 	}
