@@ -12,6 +12,10 @@ import (
 var version = "dev"
 
 func init() {
+	// Outbound requests identify themselves as "Nodekit v<version>"; without
+	// this they report the placeholder "dev" the linker did not overwrite.
+	api.SetVersion(version)
+
 	// TODO: handle log files
 	// Log as JSON instead of the default ASCII formatter.
 	//log.SetFormatter(log.JSONFormatter)

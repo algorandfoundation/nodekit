@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/ui/style"
@@ -52,7 +53,7 @@ var installCmd = &cobra.Command{
 		}
 
 		// Run the installation
-		err := algod.Install()
+		err := algod.Install(new(api.HttpPkg))
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
