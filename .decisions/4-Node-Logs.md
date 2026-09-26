@@ -11,6 +11,7 @@ are the ones most likely to be revisited, recorded so they are not re-argued fro
 - **SHOULD** show warnings and errors by default, with `--all` for every level
 - **SHOULD** treat `--lines` as a count of matching entries, not of raw lines
 - **SHOULD** show every match by default, with `--lines N` for the newest N
+- **SHOULD** keep the same `--lines` default with `--follow`, rather than `tail -f`'s backlog of ten
 - **SHOULD** read the rotated archives as part of one history, with `--file` to read one file alone
 - **SHOULD** match `--filter` as plain text against the message and shown fields, not as a regular expression
 - **SHOULD** say on stderr, before the first entry, which files are being read and what is being hidden
@@ -49,6 +50,13 @@ oldest source instead of walking backwards: the same bytes are read, but entries
 and none are held. On a 692 MiB log that is a million entries at 58 MiB of memory, against 4.7 GiB for the
 same request buffered. The budget still applies to `--lines N`, which is the search that can fail to find
 what it is looking for.
+
+**One default for `--lines`, with or without `--follow`.** `--follow` first borrowed `tail -f`'s backlog of
+ten, but that gave `-n` two meanings: `-n 0 -f` asked for the whole history where `tail -n 0 -f` asks for
+none of it. `--follow` now replays the same set the command shows without it, `--lines N` shortens that
+backlog, and a stream that begins at now is `--since 0s`, which the bisection below makes cheap. The cost
+is that a bare `-f` reads the whole history before the first new entry arrives, as the command without it
+already does, and `--all -f` prints all of it.
 
 **Archives are part of the history.** The live log only goes back to the last rotation, which on a busy
 node is hours. The archive path was already resolved, so reading it is the difference between "the last
