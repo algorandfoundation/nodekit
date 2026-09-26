@@ -163,7 +163,7 @@ var bootstrapCmd = &cobra.Command{
 			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 			// Run the installer
-			err := algod.Install()
+			err := algod.Install(new(api.HttpPkg))
 			if err != nil {
 				return err
 			}
