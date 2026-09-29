@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod/linux"
 	"github.com/algorandfoundation/nodekit/internal/algod/mac"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
@@ -85,12 +86,12 @@ func SetNetwork(network string) error {
 
 // Install installs Algorand software based on the host OS
 // and returns an error if the installation fails or is unsupported.
-func Install() error {
+func Install(httpPkg api.HttpPkgInterface) error {
 	switch runtime.GOOS {
 	case "linux":
 		return linux.Install()
 	case "darwin":
-		return mac.Install()
+		return mac.Install(httpPkg)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}
