@@ -57,7 +57,13 @@ func (m ProtocolViewModel) HandleMessage(msg tea.Msg) (ProtocolViewModel, tea.Cm
 }
 
 func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
-	roundDelta := status.NextVersionRound - int(status.LastRound)
+	// Rounds are unsigned. The only caller guards on NextVersionRound being
+	// ahead of LastRound, but clamp so a future one cannot underflow this into
+	// an enormous delta.
+	var roundDelta uint64
+	if status.NextVersionRound > status.LastRound {
+		roundDelta = status.NextVersionRound - status.LastRound
+	}
 	eta := time.Duration(roundDelta) * metrics.RoundTime
 	minutes := int(eta.Minutes()) % 60
 	hours := int(eta.Hours()) % 24
@@ -76,11 +82,14 @@ func formatScheduledUpgrade(status algod.Status, metrics algod.Metrics) string {
 }
 
 func formatProtocolVote(status algod.Status, metrics algod.Metrics) string {
-	if status.NextVersionRound > int(status.LastRound)+1 {
+	if status.NextVersionRound > status.LastRound+1 {
 		return formatScheduledUpgrade(status, metrics)
 	}
 
-	voting := status.UpgradeYesVotes > 0 || status.UpgradeNoVotes > 0
+	// UpgradeVoteRounds is the denominator for percentageProgress below, and
+	// algod omits it entirely when no upgrade is being voted on.
+	voting := status.UpgradeVoteRounds > 0 &&
+		(status.UpgradeYesVotes > 0 || status.UpgradeNoVotes > 0)
 	if !voting {
 		return "No"
 	}
@@ -101,7 +110,13 @@ func formatProtocolVote(status algod.Status, metrics algod.Metrics) string {
 	if passing {
 		statusString = statusString + ", will pass"
 	}
-	failThreshold := status.UpgradeVoteRounds - status.UpgradeVotesRequired
+	// Vote counts are unsigned, so clamp before subtracting: a required count
+	// at or above the total rounds would otherwise wrap into an unreachable
+	// threshold and silently suppress the "will fail" state.
+	var failThreshold uint64
+	if status.UpgradeVoteRounds > status.UpgradeVotesRequired {
+		failThreshold = status.UpgradeVoteRounds - status.UpgradeVotesRequired
+	}
 	if status.UpgradeNoVotes > failThreshold {
 		statusString = statusString + ", will fail"
 	}

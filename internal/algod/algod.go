@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod/linux"
 	"github.com/algorandfoundation/nodekit/internal/algod/mac"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
@@ -85,12 +86,12 @@ func SetNetwork(network string) error {
 
 // Install installs Algorand software based on the host OS
 // and returns an error if the installation fails or is unsupported.
-func Install() error {
+func Install(httpPkg api.HttpPkgInterface) error {
 	switch runtime.GOOS {
 	case "linux":
 		return linux.Install()
 	case "darwin":
-		return mac.Install()
+		return mac.Install(httpPkg)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}
@@ -161,13 +162,15 @@ func Start() error {
 }
 
 // Stop shuts down the Algorand algod system process based on the current operating system.
+// When force is set, the stop is attempted even if algod is not registered as a
+// service, matching the --force flag on the stop and restart commands.
 // Returns an error if the operation fails or the operating system is unsupported.
-func Stop() error {
+func Stop(force bool) error {
 	switch runtime.GOOS {
 	case "linux":
 		return linux.Stop()
 	case "darwin":
-		return mac.Stop(false)
+		return mac.Stop(force)
 	default:
 		return fmt.Errorf(UnsupportedOSError)
 	}

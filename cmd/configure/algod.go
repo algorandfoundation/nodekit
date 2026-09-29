@@ -113,7 +113,7 @@ var algodCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 
 		if restartRequired {
 			log.Debug("Restarting node...")
-			err = algod.Stop()
+			err = algod.Stop(false)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -6,6 +6,12 @@ generate:
   embedded-spec: false
 output-options:
   client-type-name: Algod
+  # See codegen-overlay.yaml for why this is needed.
+  overlay:
+    path: codegen-overlay.yaml
+    # Older specs (<= v3.26.0-stable) carry no x-go-type at all, and a strict
+    # overlay fails when an action matches nothing.
+    strict: false
   include-operation-ids:
     - Metrics
     - GetStatus

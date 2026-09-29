@@ -29,14 +29,14 @@ func Test_StatusModel(t *testing.T) {
 	}
 
 	catchpoint := "catchpoint"
-	accountsTotal := 1000000
-	processedAccounts := 0
-	verifiedAccounts := 0
-	keyValueTotal := 1000
-	keyValueProcessed := 0
-	keyValueVerified := 0
-	acquiredBlocks := 1000000
-	blocksTotal := 10000000
+	var accountsTotal uint64 = 1000000
+	var processedAccounts uint64 = 0
+	var verifiedAccounts uint64 = 0
+	var keyValueTotal uint64 = 1000
+	var keyValueProcessed uint64 = 0
+	var keyValueVerified uint64 = 0
+	var acquiredBlocks uint64 = 1000000
+	var blocksTotal uint64 = 10000000
 	m = m.Merge(api.StatusLike{
 		LastRound:                   10,
 		Catchpoint:                  &catchpoint,

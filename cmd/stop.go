@@ -48,7 +48,7 @@ var stopCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
-		err := algod.Stop()
+		err := algod.Stop(force)
 		if err != nil {
 			log.Fatal(StopFailureMsg)
 		}

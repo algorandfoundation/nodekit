@@ -1,0 +1,28 @@
+# go-algorand's algod spec annotates fields with `x-go-type: basics.*`
+# (basics.Round, basics.Address, basics.AppIndex, basics.AssetIndex,
+# basics.Micros) but ships no matching `x-go-type-import`. oapi-codegen honours
+# the annotation verbatim, so the generated client references a `basics` package
+# it never imports and fails to compile. Honouring them properly would mean
+# taking a dependency on go-algorand itself, which nodekit deliberately avoids.
+#
+# Map each to the plain Go type it wraps in go-algorand. The spec's other
+# x-go-type values (uint64, int64) are already plain Go types and are left
+# alone -- do NOT blanket-strip x-go-type, that silently widens/narrows those.
+#
+# These annotations appeared between v3.26.0-stable and v4.7.4-stable. The spec
+# URL was pinned at v3.26.0-stable before this, which is why it was never hit.
+overlay: 1.0.0
+info:
+  title: Map go-algorand basics.* x-go-type to plain Go types
+  version: 1.0.0
+actions:
+  - target: $..[?(@.x-go-type=="basics.Round")]
+    update: {x-go-type: uint64}
+  - target: $..[?(@.x-go-type=="basics.AppIndex")]
+    update: {x-go-type: uint64}
+  - target: $..[?(@.x-go-type=="basics.AssetIndex")]
+    update: {x-go-type: uint64}
+  - target: $..[?(@.x-go-type=="basics.Micros")]
+    update: {x-go-type: uint64}
+  - target: $..[?(@.x-go-type=="basics.Address")]
+    update: {x-go-type: string}

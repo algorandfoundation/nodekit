@@ -78,7 +78,7 @@ func (m ViewModel) Body() string {
 		fmt.Sprintf("Key Values Verified:  %d / %d", m.State.Status.CatchpointKeyValueVerified, m.State.Status.CatchpointKeyValueTotal),
 		fmt.Sprintf("Downloaded blocks:    %d / %d", m.State.Status.CatchpointBlocksAcquired, m.State.Status.CatchpointBlocksTotal),
 		"",
-		fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int(time.Second)),
+		fmt.Sprintf("Sync Time: %ds", m.State.Status.SyncTime/int64(time.Second)),
 	))
 
 }

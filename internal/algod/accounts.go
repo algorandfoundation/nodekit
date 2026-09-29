@@ -28,7 +28,7 @@ type Account struct {
 	// Balance is the current holdings in ALGO for the address.
 	// the balance should be tracked infrequently and use an appropriate distance from the
 	// LastModified value.
-	Balance int
+	Balance uint64
 	// A count of how many participation Keys exist on this node for this Account
 	Keys int
 	// Expires is the date the participation key will expire
@@ -116,7 +116,7 @@ func (a Account) Merge(rpcAccount api.Account) Account {
 
 // GetExpiresTime calculates the expiration time of the account's participation key based on round differences and duration.
 // Returns nil if the account has no participation or if the expiration time cannot be determined.
-func (a Account) GetExpiresTime(t system.Time, lastRound int, roundTime time.Duration) *time.Time {
+func (a Account) GetExpiresTime(t system.Time, lastRound uint64, roundTime time.Duration) *time.Time {
 	if a.Participation == nil {
 		return nil
 	}
@@ -126,7 +126,7 @@ func (a Account) GetExpiresTime(t system.Time, lastRound int, roundTime time.Dur
 // UpdateExpiredTime updates the account's expiration time and identifies if the account has a non-resident participation key.
 // It checks if the account is offline or if its local participation key matches one of the provided keys.
 // The method recalculates the expiration time based on the last round and round duration.
-func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, lastRound int, roundTime time.Duration) Account {
+func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, lastRound uint64, roundTime time.Duration) Account {
 	var nonResidentKey = true
 	for _, key := range keys {
 		// We have the key locally, update the residency
@@ -140,7 +140,7 @@ func (a Account) UpdateExpiredTime(t system.Time, keys []api.ParticipationKey, l
 }
 
 // PatchOnlineStatus updates the account's status to "Offline" if its participation key has expired for the given round.
-func (a Account) PatchOnlineStatus(acct api.Account, lastRound int) Account {
+func (a Account) PatchOnlineStatus(acct api.Account, lastRound uint64) Account {
 	// Check if the account is online but expired,
 	// can happen when a node is offline when the key expired
 	if acct.Status == "Online" && acct.Participation != nil && acct.Participation.VoteLastValid < lastRound {

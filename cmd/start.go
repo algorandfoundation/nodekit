@@ -10,6 +10,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// StartingAlgodMsg is a constant string message indicating that Algod is being started.
+const StartingAlgodMsg = "Starting Algod 🚀"
+
+// StartSuccessMsg is a constant string message indicating that Algod has been started successfully.
+const StartSuccessMsg = "Algorand started successfully 🎉"
+
 var startShort = "Start the node daemon"
 
 var startLong = lipgloss.JoinVertical(
@@ -32,14 +38,14 @@ var startCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 	SilenceUsage:     true,
 	PersistentPreRun: NeedsToBeStopped,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info(style.Green.Render("Starting Algod 🚀"))
+		log.Info(style.Green.Render(StartingAlgodMsg))
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 		err := algod.Start()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Info(style.Green.Render("Algorand started successfully 🎉"))
+		log.Info(style.Green.Render(StartSuccessMsg))
 	},
 }, &algodData)
 
