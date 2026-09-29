@@ -1,11 +1,15 @@
 package system
 
 import (
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"testing"
 )
+
+const reexecTestHelperEnv = "NODEKIT_REEXEC_TEST_HELPER"
 
 func TestReexecCommand(t *testing.T) {
 	args := []string{"upgrade", "--no-incentives"}
@@ -26,6 +30,22 @@ func TestReexecCommandStartFailure(t *testing.T) {
 	cmd := reexecCommand(filepath.Join(t.TempDir(), "missing-nodekit"), nil, nil)
 	if err := cmd.Start(); err == nil {
 		t.Error("starting a missing executable succeeded")
+	}
+}
+
+func TestReexecWaitsForChild(t *testing.T) {
+	if os.Getenv(reexecTestHelperEnv) == "1" {
+		os.Exit(42)
+	}
+
+	t.Setenv(reexecTestHelperEnv, "1")
+	err := Reexec(os.Args[0], []string{"-test.run=^TestReexecWaitsForChild$"})
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("Reexec() error = %v, want child exit error", err)
+	}
+	if exitErr.ExitCode() != 42 {
+		t.Errorf("child exit code = %d, want 42", exitErr.ExitCode())
 	}
 }
 

@@ -15,10 +15,10 @@ import (
 
 const reexecEnv = "NODEKIT_REEXEC"
 
-// Reexec starts the specified executable with args after a successful self-upgrade.
+// Reexec runs the specified executable with args after a successful self-upgrade.
 // The child inherits the terminal streams so its output remains visible to the user.
 func Reexec(executable string, args []string) error {
-	return reexecCommand(executable, args, os.Environ()).Start()
+	return reexecCommand(executable, args, os.Environ()).Run()
 }
 
 func reexecCommand(executable string, args []string, environment []string) *exec.Cmd {
