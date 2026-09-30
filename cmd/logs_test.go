@@ -170,7 +170,8 @@ func nodeWithBacklog(t *testing.T, filler int) string {
 // --follow used to substitute a backlog of its own when --lines was not given,
 // which left -n meaning one thing alone and another beside -f: `-n 0 -f` asked
 // for the whole history where `tail -n 0 -f` asks for none of it. The default is
-// the same in both now, and a stream that begins at now is spelled with --since.
+// the same in both now, and a stream that skips the history is spelled with
+// --since.
 func TestLogsFollowReplaysTheWholeHistoryByDefault(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -187,8 +188,33 @@ func TestLogsFollowReplaysTheWholeHistoryByDefault(t *testing.T) {
 	assert.NotContains(t, got, "oldest warning", "--lines 2 asks for two entries")
 	assert.Contains(t, got, "newest warning")
 
-	// And --since is how a stream is started from now, with no backlog at all.
+	// And --since is how the timestamped history is skipped.
 	got, _ = runLogsStreams(t, ctx, "--datadir", dir, "--follow", "--since", "0s")
 	assert.NotContains(t, got, "oldest warning")
 	assert.NotContains(t, got, "newest warning", "every entry in the fixture is older than the bound")
+}
+
+// --since 0s skips the timestamped history but not a plain-text line near the
+// end of the log: Keep never drops a line without a timestamp, and --since
+// bounds the region read rather than each line in it. A crash is what such a
+// line usually is, so the help text says it may still be shown rather than
+// promising a stream that starts empty.
+func TestLogsSinceNowStillShowsPlainTextNearTheEnd(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	dir := nodeWithBacklog(t, 20)
+	log, err := os.OpenFile(filepath.Join(dir, "node.log"), os.O_APPEND|os.O_WRONLY, 0o600)
+	require.NoError(t, err)
+	_, err = log.WriteString("panic: runtime error: invalid memory address or nil pointer dereference\n" +
+		fmt.Sprintf(`{"level":"warning","msg":"after the panic","time":%q}`, time.Now().Add(-time.Minute).Format(time.RFC3339)) + "\n")
+	require.NoError(t, err)
+	require.NoError(t, log.Close())
+
+	for _, args := range [][]string{{"--since", "0s"}, {"--since", "0s", "--follow"}} {
+		got, _ := runLogsStreams(t, ctx, append([]string{"--datadir", dir}, args...)...)
+		assert.Contains(t, got, "panic: runtime error", "%v: a line with no timestamp is not dropped by --since", args)
+		assert.NotContains(t, got, "newest warning", "%v", args)
+		assert.NotContains(t, got, "after the panic", "%v", args)
+	}
 }

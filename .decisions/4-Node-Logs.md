@@ -54,9 +54,11 @@ what it is looking for.
 **One default for `--lines`, with or without `--follow`.** `--follow` first borrowed `tail -f`'s backlog of
 ten, but that gave `-n` two meanings: `-n 0 -f` asked for the whole history where `tail -n 0 -f` asks for
 none of it. `--follow` now replays the same set the command shows without it, `--lines N` shortens that
-backlog, and a stream that begins at now is `--since 0s`, which the bisection below makes cheap. The cost
-is that a bare `-f` reads the whole history before the first new entry arrives, as the command without it
-already does, and `--all -f` prints all of it.
+backlog, and `--since 0s` skips the timestamped history, which the bisection below makes cheap. It does
+not make the backlog empty: `--since` bounds a region rather than each entry, as below, so crash output
+and other plain-text lines near the end of the log can still be replayed. The cost is that a bare `-f`
+reads the whole history before the first new entry arrives, as the command without it already does, and
+`--all -f` prints all of it.
 
 **Archives are part of the history.** The live log only goes back to the last rotation, which on a busy
 node is hours. The archive path was already resolved, so reading it is the difference between "the last

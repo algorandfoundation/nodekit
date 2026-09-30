@@ -20,7 +20,8 @@ Every matching entry is shown; --lines N shows only the newest N of them.
 --lines counts entries that match the filters, not raw lines of the file.    
 --follow shows that same set before it starts streaming, so it replays the   
 whole history by default; --lines N shortens the backlog, and --since sets   
-where it starts: --since 0s streams from now on, --since 15m from 15m ago.   
+where it starts: --since 0s skips the timestamped history, but crash output  
+and other plain-text lines near the end of the log may still be shown.       
 The rotated archives are read as well, so the history reaches back past the  
 last rotation. Pass --file to read one file on its own instead.              
 --filter matches plain text in the message and the fields shown beside it,   
