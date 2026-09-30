@@ -18,8 +18,10 @@ Lines that are not valid log entries, such as crash output, are always shown.
 Notes:                                                                       
 Every matching entry is shown; --lines N shows only the newest N of them.    
 --lines counts entries that match the filters, not raw lines of the file.    
---follow shows the newest 10 before it starts streaming, the way tail -f     
-does; --lines N sets that backlog, and --lines 0 shows the whole history.    
+--follow shows that same set before it starts streaming, so it replays the   
+whole history by default; --lines N shortens the backlog, and --since sets   
+where it starts: --since 0s skips the timestamped history, but crash output  
+and other plain-text lines near the end of the log may still be shown.       
 The rotated archives are read as well, so the history reaches back past the  
 last rotation. Pass --file to read one file on its own instead.              
 --filter matches plain text in the message and the fields shown beside it,   
@@ -43,7 +45,7 @@ nodekit logs [flags]
   -h, --help             help for logs
       --json             Emit the raw JSON log entries
       --level string     Minimum level to show: trace, debug, info, warn, error, fatal, panic
-  -n, --lines int        Number of newest matching entries to show, 0 for all (10 with --follow)
+  -n, --lines int        Number of newest matching entries to show, 0 for all
       --since string     Only entries newer than a duration (15m, 2h) or a timestamp
 ```
 

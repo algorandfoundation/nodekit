@@ -53,21 +53,15 @@ const (
 	stopSince
 )
 
-// tailFile walks the file at path backwards from size, collecting up to need
-// matching entries, newest first. A negative size means the whole file.
+// tailFile walks fh backwards from size, collecting up to need matching
+// entries, newest first. A negative size means the whole file.
 //
 // The file is walked backwards in chunks rather than scanned from the start:
 // node.log is commonly hundreds of megabytes, and the entries anyone wants are
 // almost always near the end. budget bounds how far back it will read; the walk
 // stops there and says so, and it returns what it did read so that a caller
 // covering several files can share one budget.
-func tailFile(path string, size int64, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
-	fh, err := os.Open(path)
-	if err != nil {
-		return nil, 0, stopNone, err
-	}
-	defer func() { _ = fh.Close() }()
-
+func tailFile(fh *os.File, size int64, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
 	if size < 0 {
 		info, err := fh.Stat()
 		if err != nil {
@@ -105,12 +99,12 @@ func tailFile(path string, size int64, need int, f Filter, pre prescreen, budget
 		scanned += int64(n)
 
 		if n < len(buf) {
-			// The file shrank after its size was taken: truncated in place, or
-			// rotated and replaced by a shorter one. Only the bytes actually
-			// read are log content, the remainder of the buffer is zeroes.
-			// What was carried from the chunk above no longer abuts them
-			// either, so it is dropped rather than spliced onto an unrelated
-			// line.
+			// The file shrank after its size was taken. A rotation cannot do
+			// that to an open handle, which goes on reading the renamed file,
+			// so this is a truncation in place. Only the bytes actually read
+			// are log content, the remainder of the buffer is zeroes. What was
+			// carried from the chunk above no longer abuts them either, so it
+			// is dropped rather than spliced onto an unrelated line.
 			buf, partial = buf[:n], nil
 		}
 
@@ -216,6 +210,18 @@ type FollowOptions struct {
 	// OnRotate, when set, is called after the log is rotated or truncated
 	// underneath us and reading has restarted on the new file.
 	OnRotate func()
+
+	// Live is the handle a Scan left open on the log, from ScanResult.Live.
+	// Given it, Follow resumes in the file offset was measured in rather than
+	// in whatever the path names by now, reads that file to its end, and only
+	// then moves on to the path. Without it a rotation during the scan loses
+	// the old file's tail, and a replacement that has already grown past offset
+	// is read from the middle.
+	//
+	// Follow takes it over. It closes it on moving to the new file, so that a
+	// rotated log is not held open after algod deletes it, and in any case
+	// before returning; ScanResult.Close after that is harmless.
+	Live *os.File
 }
 
 // openWhenPresent opens path, waiting out a rotation that has momentarily left
@@ -250,12 +256,17 @@ func openWhenPresent(ctx context.Context, path string, interval time.Duration) (
 // calling emit for each one that passes the filter, until ctx is cancelled.
 //
 // Cancellation is not an error: Follow returns nil. It handles the log being
-// rotated to its archive or truncated in place while streaming.
+// rotated to its archive or truncated in place while streaming. Given the
+// handle a Scan left open in opts.Live, it starts in the file that Scan read,
+// so that a rotation between the two loses nothing either.
 func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(Entry) error, opts FollowOptions) error {
 	// A compressed archive is not a file anything is appending to, and an
 	// offset into one counts decompressed bytes, which means nothing to a seek.
 	// Streaming it would read the container itself as though it were text.
 	if IsCompressed(path) {
+		if opts.Live != nil {
+			_ = opts.Live.Close()
+		}
 		return fmt.Errorf("cannot follow %s: a compressed archive is not being written to", path)
 	}
 
@@ -264,14 +275,22 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 		interval = defaultFollowInterval
 	}
 
-	fh, err := openWhenPresent(ctx, path, interval)
-	if err != nil {
-		// Waiting for the file to come back was cut short by the user, which
-		// is a cancellation like any other and not a failure to open.
-		if ctx.Err() != nil {
-			return nil
+	// The scan's own handle, when there is one, is still on the file offset was
+	// measured in, however it has been renamed since. Reading on from it first
+	// and leaving the switch to the path for the rotation check below is what
+	// delivers the lines written to the old file while the scan was reading.
+	fh := opts.Live
+	if fh == nil {
+		var err error
+		fh, err = openWhenPresent(ctx, path, interval)
+		if err != nil {
+			// Waiting for the file to come back was cut short by the user,
+			// which is a cancellation like any other and not a failure to open.
+			if ctx.Err() != nil {
+				return nil
+			}
+			return err
 		}
-		return err
 	}
 	defer func() { _ = fh.Close() }()
 
@@ -280,12 +299,12 @@ func Follow(ctx context.Context, path string, offset int64, f Filter, emit func(
 		return err
 	}
 
-	// A rotation or a truncation between the scan that produced offset and this
-	// open leaves that offset pointing into a file it was never measured
-	// against. Seeking there would sit past the end of the replacement and wait
-	// for it to grow back to a position that means nothing in it, silently
-	// dropping everything written in the meantime. A file shorter than the
-	// offset can only be such a replacement, so it is read from its start.
+	// A truncation between the scan that produced offset and now leaves that
+	// offset pointing past the end of the file, and so does a rotation when the
+	// path had to be opened afresh. Seeking there would wait for the file to
+	// grow back to a position that means nothing in it, silently dropping
+	// everything written in the meantime. A file shorter than the offset has
+	// been replaced one way or the other, so it is read from its start.
 	if info.Size() < offset {
 		offset = 0
 		if opts.OnRotate != nil {

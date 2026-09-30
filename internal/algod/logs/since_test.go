@@ -79,7 +79,7 @@ func TestTailStopsAtTheSinceBoundary(t *testing.T) {
 	path := writeLog(t, content)
 
 	f := Filter{MinLevel: LevelWarn, Since: times[195]}
-	found, scanned, reason, err := tailFile(path, -1, 100, f, newPrescreen(f), maxScanned)
+	found, scanned, reason, err := tailFile(openLog(t, path), -1, 100, f, newPrescreen(f), maxScanned)
 	require.NoError(t, err)
 
 	assert.Equal(t, stopSince, reason)
@@ -129,7 +129,7 @@ func TestSinceOffsetStartsBeforeTheFirstEntryInRange(t *testing.T) {
 	content, offsets, times := timedLog("info", 400, end)
 	path := writeLog(t, content)
 
-	got, err := sinceOffset(path, -1, times[300])
+	got, err := sinceOffset(openLog(t, path), -1, times[300])
 	require.NoError(t, err)
 
 	assert.Greater(t, got, int64(0), "the search should have skipped part of the file")
@@ -146,26 +146,26 @@ func TestSinceOffsetFallsBackToTheStartOfTheFile(t *testing.T) {
 	dir := t.TempDir()
 
 	t.Run("with no lower bound", func(t *testing.T) {
-		got, err := sinceOffset(writeAt(t, dir, "node.log", content), -1, time.Time{})
+		got, err := sinceOffset(openLog(t, writeAt(t, dir, "node.log", content)), -1, time.Time{})
 		require.NoError(t, err)
 		assert.Zero(t, got)
 	})
 
 	t.Run("when the whole file is in range", func(t *testing.T) {
-		got, err := sinceOffset(writeAt(t, dir, "in-range.log", content), -1, times[0].Add(-time.Hour))
+		got, err := sinceOffset(openLog(t, writeAt(t, dir, "in-range.log", content)), -1, times[0].Add(-time.Hour))
 		require.NoError(t, err)
 		assert.Zero(t, got)
 	})
 
 	t.Run("on a compressed archive that cannot be seeked into", func(t *testing.T) {
-		got, err := sinceOffset(writeGzipped(t, dir, "node.archive.log.gz", content), -1, times[300])
+		got, err := sinceOffset(openLog(t, writeGzipped(t, dir, "node.archive.log.gz", content)), -1, times[300])
 		require.NoError(t, err)
 		assert.Zero(t, got)
 	})
 
 	t.Run("on a file smaller than the slack it would rewind by", func(t *testing.T) {
 		short, _, shortTimes := timedLog("info", 4, end)
-		got, err := sinceOffset(writeAt(t, dir, "short.log", short), -1, shortTimes[3])
+		got, err := sinceOffset(openLog(t, writeAt(t, dir, "short.log", short)), -1, shortTimes[3])
 		require.NoError(t, err)
 		assert.Zero(t, got)
 	})

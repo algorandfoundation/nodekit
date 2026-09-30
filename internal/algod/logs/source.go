@@ -147,7 +147,7 @@ func PruneSources(sources []string, since time.Time) []string {
 // pattern, not a path. Those are found by globbing, and ordered by modification
 // time because the names sort in whatever order the template happens to give.
 // Compressed archives are included: algod gzips or bzips the rotated file when
-// the name says so, and openSource reads those directly.
+// the name says so, and sourceReader reads those directly.
 func (s Source) ArchiveFiles() []string {
 	if s.Archive == "" {
 		return nil
