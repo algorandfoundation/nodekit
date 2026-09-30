@@ -30,6 +30,16 @@ func writeLog(t *testing.T, content string) string {
 	return path
 }
 
+// openLog opens a fixture the way Scan opens a source, for the functions that
+// read one through a handle.
+func openLog(t *testing.T, path string) *os.File {
+	t.Helper()
+	fh, err := os.Open(path)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = fh.Close() })
+	return fh
+}
+
 func line(level, msg string) string {
 	return fmt.Sprintf(`{"level":%q,"msg":%q,"time":"2026-09-09T14:16:19+02:00"}`, level, msg)
 }
@@ -162,7 +172,7 @@ func TestTailFileWithAStaleSize(t *testing.T) {
 	require.NoError(t, err)
 
 	f := Filter{MinLevel: LevelTrace}
-	found, _, _, err := tailFile(path, info.Size()+3*chunkSize, 10, f, newPrescreen(f), maxScanned)
+	found, _, _, err := tailFile(openLog(t, path), info.Size()+3*chunkSize, 10, f, newPrescreen(f), maxScanned)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"two", "one"}, messages(found)) // tailFile yields newest first
 }
@@ -366,6 +376,121 @@ func TestFollowResumesFromTheStartOfAShorterFile(t *testing.T) {
 	case <-rotated:
 	case <-time.After(time.Second):
 		t.Error("restarting at the top of a new file is a rotation and must be reported as one")
+	}
+}
+
+// rotate does what algod does once LogSizeLimit is reached: renames the live
+// log to its archive and starts a new one, which here already holds lines.
+func rotate(t *testing.T, path string, lines []string) {
+	t.Helper()
+	require.NoError(t, os.Rename(path, path+".archive"))
+	require.NoError(t, os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0o600))
+}
+
+// The log can rotate between the scan that reports an offset and Follow picking
+// up from it, and with --follow replaying the whole history by default that gap
+// lasts as long as the replay. Whatever was written to the old file in the gap
+// has to arrive, and then the new file from its start. Reopening the path loses
+// the first, and loses part of the second too when the new file has already
+// grown past the offset, because its size then gives no sign of the swap.
+func TestFollowReadsTheScannedFileToItsEndAcrossARotation(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		replacement int
+	}{
+		{"replaced by a file shorter than the offset", 1},
+		{"replaced by a file longer than the offset", 5},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scanned := []string{line("warning", "scanned 1"), line("warning", "scanned 2"), line("warning", "scanned 3")}
+			path := writeLog(t, strings.Join(scanned, "\n")+"\n")
+
+			result, err := Scan([]string{path}, 0, Filter{MinLevel: LevelTrace}, func(Entry) error { return nil })
+			require.NoError(t, err)
+			t.Cleanup(func() { _ = result.Close() })
+
+			appendLine(t, path, line("warning", "written during the scan")+"\n")
+
+			want := []string{"written during the scan"}
+			var replacement []string
+			for i := range tc.replacement {
+				msg := fmt.Sprintf("new-file-%d", i)
+				replacement = append(replacement, line("warning", msg))
+				want = append(want, msg)
+			}
+			rotate(t, path, replacement)
+
+			var c collector
+			rotated := make(chan struct{}, 1)
+			startFollow(t, path, result.Offset, &c, FollowOptions{
+				Interval: time.Millisecond,
+				Live:     result.Live,
+				OnRotate: func() {
+					select {
+					case rotated <- struct{}{}:
+					default:
+					}
+				},
+			})
+
+			c.waitFor(t, len(want))
+			assert.Equal(t, want, c.messages())
+
+			select {
+			case <-rotated:
+			case <-time.After(time.Second):
+				t.Error("moving on to the new file is a rotation and must be reported as one")
+			}
+		})
+	}
+}
+
+// A rotation part way through the scan itself, while an archive is being
+// replayed, must not swap the live log the scan goes on to read for the file
+// that replaced it. The scan shows the file it measured, and Follow carries on
+// from there: the old file's tail, then the new file.
+func TestScanAndFollowAcrossARotationDuringTheScan(t *testing.T) {
+	dir := t.TempDir()
+	archive := writeAt(t, dir, "node.log.archive", line("warning", "archived")+"\n")
+	path := writeAt(t, dir, "node.log", line("warning", "live")+"\n")
+
+	// The archive is named the way rotate names it, so the rotation renames the
+	// live log onto the archive while the scan is reading it. That is what
+	// algod does, reusing one archive name, and it leaves the archive's handle
+	// on the file it was listed as, so the scan still reads it whole.
+	var scanned []string
+	result, err := Scan([]string{path, archive}, 0, Filter{MinLevel: LevelTrace}, func(e Entry) error {
+		if e.Message == "archived" {
+			appendLine(t, path, line("warning", "written during the scan")+"\n")
+			rotate(t, path, []string{line("warning", "new file")})
+		}
+		scanned = append(scanned, e.Message)
+		return nil
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = result.Close() })
+	assert.Equal(t, []string{"archived", "live"}, scanned, "the live log as it was measured, not its replacement")
+
+	var c collector
+	rotated := make(chan struct{}, 1)
+	startFollow(t, path, result.Offset, &c, FollowOptions{
+		Interval: time.Millisecond,
+		Live:     result.Live,
+		OnRotate: func() {
+			select {
+			case rotated <- struct{}{}:
+			default:
+			}
+		},
+	})
+
+	c.waitFor(t, 2)
+	assert.Equal(t, []string{"written during the scan", "new file"}, c.messages())
+
+	select {
+	case <-rotated:
+	case <-time.After(time.Second):
+		t.Error("moving on to the new file is a rotation and must be reported as one")
 	}
 }
 

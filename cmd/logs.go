@@ -157,6 +157,8 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		if err != nil {
 			return explainLogError(err, source)
 		}
+		// The scan leaves the live log open for --follow to carry on from.
+		defer func() { _ = result.Close() }()
 		if err := out.Flush(); err != nil {
 			return err
 		}
@@ -189,6 +191,7 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			writeLogEntry(out, entry)
 			return out.Flush()
 		}, logs.FollowOptions{
+			Live: result.Live,
 			OnRotate: func() {
 				fmt.Fprintln(errOut, style.Yellow.Render("--- the log was rotated, continuing with the new file ---"))
 			},

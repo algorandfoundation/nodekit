@@ -112,6 +112,12 @@ written before that watch exists. Truncation in place is not a rename at all —
 copy-truncate arrives as a write — and is caught only by comparing the file's size against the read
 offset. That comparison is a periodic `stat`, so a watch would sit on top of the loop already doing the
 work, to save a quarter second of latency on a stream a human is reading. This is what `tail -F` does.
+The live log is opened once, by the scan that replays the history, and `Follow` carries on from that
+handle rather than reopening the path, so a single rotation during the replay loses nothing: the old file
+is read to its end before the new one is picked up, and an archive path that the rotation has pointed at
+the live log is reported as skipped rather than read twice. Two rotations before the first poll still lose the file
+in between, as they do under `tail -F`; that takes a pause as long as it takes algod to fill a log, such
+as a `logs -f | less` left scrolled back.
 
 **Verbatim JSON.** Passing the original bytes through means `nodekit logs --json | jq` and reading the
 file directly produce the same objects, with no field reordering and nothing lost to a round trip. Lines
