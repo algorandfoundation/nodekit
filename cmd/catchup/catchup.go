@@ -16,7 +16,7 @@ var (
 	dataDir string = ""
 
 	// defaultLag represents the default minimum catchup delay in milliseconds for the Fast Catchup process.
-	defaultLag int = 30_000
+	defaultLag uint64 = 30_000
 
 	// cmdLong provides a detailed description of the Fast-Catchup feature, explaining its purpose and expected sync durations.
 	cmdLong = lipgloss.JoinVertical(

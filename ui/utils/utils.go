@@ -42,13 +42,19 @@ func isZeros(b []byte) bool {
 	return true
 }
 
-func StrOrNA(value *int) string {
+// Integer covers every integer kind the generated algod client uses, so these
+// helpers work with both the int and uint64 fields it exposes.
+type Integer interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
+}
+
+func StrOrNA[T Integer](value *T) string {
 	if value == nil {
 		return "N/A"
 	}
 	return IntToStr(*value)
 }
-func IntToStr(number int) string {
+func IntToStr[T Integer](number T) string {
 	return fmt.Sprintf("%d", number)
 }
 

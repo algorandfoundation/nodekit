@@ -12,7 +12,7 @@ type FastCatchupStopped string
 
 func StartFastCatchupCmd(state *algod.StateModel) tea.Cmd {
 	return func() tea.Msg {
-		threshold := algod.CATCHPOINT_THRESHOLD
+		var threshold uint64 = algod.CATCHPOINT_THRESHOLD
 		// Fetch catchpoint
 		catchpoint, _, err := algod.GetLatestCatchpoint(state.HttpPkg, state.Status.Network)
 		if err != nil {

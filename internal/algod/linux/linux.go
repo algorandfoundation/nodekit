@@ -24,6 +24,15 @@ const PackageManagerNotFoundMsg = "could not find a package manager to uninstall
 // system but was not installed through the package manager nodekit manages.
 const NotPackageManagedMsg = "algod is not managed by a package manager. upgrade it with the same method used to install it (e.g. ./update.sh for updater-based installs)"
 
+const algorandRPMRepoURL = "https://releases.algorand.com/rpm/stable/algorand.repo"
+
+func algorandRepoAddCommand(dnf5 bool) []string {
+	if dnf5 {
+		return []string{"sudo", "dnf5", "config-manager", "addrepo", "--from-repofile=" + algorandRPMRepoURL}
+	}
+	return []string{"sudo", "dnf", "config-manager", "--add-repo=" + algorandRPMRepoURL}
+}
+
 // isPackageManaged reports whether the algorand package is installed with the
 // system package manager (deb or rpm based).
 func isPackageManaged() bool {
@@ -113,7 +122,7 @@ func Install() error {
 			{"curl", "-O", "https://releases.algorand.com/rpm/rpm_algorand.pub"},
 			{"sudo", "rpmkeys", "--import", "rpm_algorand.pub"},
 			{"sudo", "dnf", "install", "-y", "dnf-command(config-manager)"},
-			{"sudo", "dnf", "config-manager", "--add-repo=https://releases.algorand.com/rpm/stable/algorand.repo"},
+			algorandRepoAddCommand(system.CmdExists("dnf5")),
 			{"sudo", "dnf", "install", "-y", "algorand"},
 			{"sudo", "systemctl", "enable", "algorand.service"},
 			{"sudo", "systemctl", "start", "algorand.service"},
