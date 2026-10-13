@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"io/fs"
+	"math"
 	"os"
 	"slices"
 	"strings"
@@ -20,6 +21,17 @@ type ScanResult struct {
 	// rounded back to a line boundary. Passing it to Follow resumes at exactly
 	// that point, with no gap and no line delivered in halves.
 	Offset int64
+
+	// Live is the newest source, still open on the file that Offset was
+	// measured in. algod rotates by renaming, so by the time the scan is over
+	// the path may name a new file while this handle still reads the old one,
+	// along with whatever was written to it after the scan took its size.
+	// Passing it to Follow in FollowOptions.Live is what lets Follow read that
+	// tail before it moves on to the new file.
+	//
+	// It is nil when Scan returns an error. Otherwise the caller releases it
+	// with Close, which is harmless after Follow has taken it over.
+	Live *os.File
 
 	// Count is how many entries were emitted.
 	Count int
@@ -36,6 +48,14 @@ type ScanResult struct {
 	// whole command to one of those is a far worse answer than losing the
 	// archive and saying so.
 	Skipped []SkippedSource
+}
+
+// Close releases the handle on the live log.
+func (r ScanResult) Close() error {
+	if r.Live == nil {
+		return nil
+	}
+	return r.Live.Close()
 }
 
 // SkippedSource is an archive a scan could not read, with the reason it gave.
@@ -62,16 +82,41 @@ var errScanBudget = errors.New("scan budget exhausted")
 // everything, which is served by streaming forwards from the oldest source: the
 // same bytes are read either way, but nothing is held in memory and the caller
 // can print each entry as it arrives rather than waiting out a 1 GiB file.
+//
+// The live log is left open in the result, for Follow to carry on from; the
+// caller closes it.
 func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult, error) {
-	var result ScanResult
-
 	if len(sources) == 0 {
-		return result, fs.ErrNotExist
+		return ScanResult{}, fs.ErrNotExist
 	}
+
+	// The live log is opened once, and every read of it goes through this
+	// handle rather than through its path. algod rotates by renaming, and a
+	// replay of the whole history reads every archive before it reaches the
+	// live log: opening the path at that point can find the file that replaced
+	// the one whose size was taken, and read it against a size and an offset
+	// that were never measured in it.
+	live, err := os.Open(sources[0])
+	if err != nil {
+		return ScanResult{}, err
+	}
+
+	result, err := scan(live, sources, n, f, emit)
+	if err != nil {
+		_ = live.Close()
+		return result, err
+	}
+	result.Live = live
+	return result, nil
+}
+
+// scan is Scan with the live log already open.
+func scan(live *os.File, sources []string, n int, f Filter, emit func(Entry) error) (ScanResult, error) {
+	var result ScanResult
 
 	// The live log's size bounds the read, and it is taken before a byte is
 	// read so that nothing written during the scan is missed or repeated.
-	info, err := os.Stat(sources[0])
+	info, err := live.Stat()
 	if err != nil {
 		return result, err
 	}
@@ -84,7 +129,7 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 	// would arrive as a fragment of itself instead of whole. The scan below
 	// still reads to size and shows that fragment, which is the file as it
 	// stands and is the tail of a crash dump when the node died mid-write.
-	result.Offset, err = followOffset(sources[0], size)
+	result.Offset, err = followOffset(live, size)
 	if err != nil {
 		return result, err
 	}
@@ -95,7 +140,7 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 	}
 
 	if n > 0 {
-		found, err := tailSources(sources, n, f, size, &result)
+		found, err := tailSources(sources, live, n, f, size, &result)
 		if err != nil {
 			return result, err
 		}
@@ -107,7 +152,7 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 		return result, nil
 	}
 
-	return result, streamSources(sources, f, size, counted, &result)
+	return result, streamSources(sources, live, f, size, counted, &result)
 }
 
 // followOffset returns the place in the live log a Follow should resume from,
@@ -121,16 +166,10 @@ func Scan(sources []string, n int, f Filter, emit func(Entry) error) (ScanResult
 // The search looks back one read buffer and no further: a final line longer
 // than that is already past anything algod writes, and rewinding a scan of a
 // gigabyte log by a megabyte to chase one is the worse trade.
-func followOffset(path string, size int64) (int64, error) {
+func followOffset(fh *os.File, size int64) (int64, error) {
 	if size <= 0 {
 		return 0, nil
 	}
-
-	fh, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = fh.Close() }()
 
 	window := int64(followBufferSize)
 	if window > size {
@@ -163,7 +202,7 @@ func followOffset(path string, size int64) (int64, error) {
 // maxScanned is one budget for the whole walk rather than one per file: the
 // point of the cap is to bound the work a search that matches nothing can do,
 // and that is no less true once the search continues into an archive.
-func tailSources(sources []string, n int, f Filter, liveSize int64, result *ScanResult) ([]Entry, error) {
+func tailSources(sources []string, live *os.File, n int, f Filter, liveSize int64, result *ScanResult) ([]Entry, error) {
 	pre := newPrescreen(f)
 	budget := maxScanned
 
@@ -189,7 +228,15 @@ func tailSources(sources []string, n int, f Filter, liveSize int64, result *Scan
 			size = liveSize
 		}
 
-		entries, scanned, reason, err := tailOne(path, size, n-len(found), f, pre, budget)
+		var (
+			entries []Entry
+			scanned int64
+			reason  stopReason
+		)
+		err := withSource(sources, i, live, func(fh *os.File) (err error) {
+			entries, scanned, reason, err = tailOne(fh, size, n-len(found), f, pre, budget)
+			return err
+		})
 		budget -= scanned
 		if err != nil {
 			if i == 0 {
@@ -224,13 +271,54 @@ func tailSources(sources []string, n int, f Filter, liveSize int64, result *Scan
 	return found, nil
 }
 
+// errRotatedOnto is why an archive is skipped when the live log was renamed
+// onto its path during the scan.
+var errRotatedOnto = errors.New("the live log was rotated onto it during the scan")
+
+// withSource calls read with source i of the history open.
+//
+// An archive is opened for the call and closed after it. The live log is not
+// opened again: it is read through the handle Scan took its size from, which
+// Scan's caller closes.
+//
+// An archive path can name the live log by the time it is opened. algod
+// rotates by renaming node.log onto the archive name, so a rotation after the
+// scan opened the live log replaces the archive it listed with the very file
+// it holds a handle on. Reading that again would print the live log twice and
+// hide that the real archive is gone, so it is refused and the caller skips
+// the archive as it would any other it cannot read.
+func withSource(sources []string, i int, live *os.File, read func(*os.File) error) error {
+	if i == 0 {
+		return read(live)
+	}
+
+	fh, err := os.Open(sources[i])
+	if err != nil {
+		return err
+	}
+	defer func() { _ = fh.Close() }()
+
+	info, err := fh.Stat()
+	if err != nil {
+		return err
+	}
+	liveInfo, err := live.Stat()
+	if err != nil {
+		return err
+	}
+	if os.SameFile(info, liveInfo) {
+		return errRotatedOnto
+	}
+	return read(fh)
+}
+
 // tailOne walks one source backwards for up to need matching entries, choosing
 // between the two ways of reaching the end of a file.
-func tailOne(path string, size int64, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
-	if IsCompressed(path) {
-		return tailCompressed(path, need, f, pre, budget)
+func tailOne(fh *os.File, size int64, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
+	if IsCompressed(fh.Name()) {
+		return tailCompressed(fh, need, f, pre, budget)
 	}
-	return tailFile(path, size, need, f, pre, budget)
+	return tailFile(fh, size, need, f, pre, budget)
 }
 
 // tailCompressed collects the last need matches from a compressed archive.
@@ -244,12 +332,11 @@ func tailOne(path string, size int64, need int, f Filter, pre prescreen, budget 
 // not its newest, so keeping it would punch a hole in a history that is meant
 // to read as one run of entries. What the newer sources gave is a shorter
 // answer, which is the honest one, and the caller reports that it is short.
-func tailCompressed(path string, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
-	r, err := openSource(path, 0, -1)
+func tailCompressed(fh *os.File, need int, f Filter, pre prescreen, budget int64) ([]Entry, int64, stopReason, error) {
+	r, err := sourceReader(fh, 0, -1)
 	if err != nil {
 		return nil, 0, stopNone, err
 	}
-	defer func() { _ = r.Close() }()
 
 	counter := &countingReader{r: r}
 
@@ -302,7 +389,7 @@ func (e emitError) Unwrap() error { return e.err }
 
 // streamSources emits every match in the history, oldest first, holding no
 // entries in memory.
-func streamSources(sources []string, f Filter, liveSize int64, emit func(Entry) error, result *ScanResult) error {
+func streamSources(sources []string, live *os.File, f Filter, liveSize int64, emit func(Entry) error, result *ScanResult) error {
 	pre := newPrescreen(f)
 
 	tagged := func(e Entry) error {
@@ -321,7 +408,9 @@ func streamSources(sources []string, f Filter, liveSize int64, emit func(Entry) 
 			limit = liveSize
 		}
 
-		err := streamOne(sources[i], limit, f, pre, tagged)
+		err := withSource(sources, i, live, func(fh *os.File) error {
+			return streamOne(fh, limit, f, pre, tagged)
+		})
 		if err != nil {
 			// A callback error is the caller saying stop, and it means the same
 			// thing whichever file was being read when it arrived. Skipping it
@@ -345,17 +434,16 @@ func streamSources(sources []string, f Filter, liveSize int64, emit func(Entry) 
 	return nil
 }
 
-func streamOne(path string, limit int64, f Filter, pre prescreen, emit func(Entry) error) error {
-	offset, err := sinceOffset(path, limit, f.Since)
+func streamOne(fh *os.File, limit int64, f Filter, pre prescreen, emit func(Entry) error) error {
+	offset, err := sinceOffset(fh, limit, f.Since)
 	if err != nil {
 		return err
 	}
 
-	r, err := openSource(path, offset, limit)
+	r, err := sourceReader(fh, offset, limit)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = r.Close() }()
 
 	return forEachLine(r, func(line []byte) error {
 		e, ok := match(line, f, pre)
@@ -383,7 +471,7 @@ var probeSize int64 = 64 << 10
 // would otherwise have been hundreds. A var for the same reason as probeSize.
 var sinceSlack int64 = 1 << 20
 
-// sinceOffset returns a byte offset in path at or before the first entry that
+// sinceOffset returns a byte offset in fh at or before the first entry that
 // is not older than since, so that a forward read can start there instead of at
 // the beginning of the file.
 //
@@ -405,16 +493,10 @@ var sinceSlack int64 = 1 << 20
 //
 // A compressed archive cannot be seeked into and always gets 0. Those are
 // excluded whole, by PruneSources, before a scan ever opens them.
-func sinceOffset(path string, limit int64, since time.Time) (int64, error) {
-	if since.IsZero() || IsCompressed(path) {
+func sinceOffset(fh *os.File, limit int64, since time.Time) (int64, error) {
+	if since.IsZero() || IsCompressed(fh.Name()) {
 		return 0, nil
 	}
-
-	fh, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = fh.Close() }()
 
 	size := limit
 	if size < 0 {
@@ -516,49 +598,35 @@ func match(line []byte, f Filter, pre prescreen) (Entry, bool) {
 	return e, f.Keep(e)
 }
 
-// openSource opens a log file for forward reading, transparently decompressing
-// an archive that algod compressed on its way out. A non-negative limit stops
-// the read at that many bytes of the file, counted from the start of the file
-// and not from offset.
+// sourceReader reads a log file forwards, transparently decompressing an
+// archive that algod compressed on its way out. A non-negative limit stops the
+// read at that many bytes of the file, counted from the start of the file and
+// not from offset.
 //
 // offset skips that many bytes before reading, and is only ever non-zero for an
 // uncompressed source: a compressed stream has to be read from its beginning,
 // and sinceOffset declines to give an offset for one.
-func openSource(path string, offset, limit int64) (io.ReadCloser, error) {
-	fh, err := os.Open(path)
-	if err != nil {
-		return nil, err
+//
+// The reads are positional and leave fh's own offset where it was, so the live
+// log's handle can be read here and still be handed to Follow afterwards.
+func sourceReader(fh *os.File, offset, limit int64) (io.Reader, error) {
+	end := limit
+	if end < 0 {
+		end = math.MaxInt64
 	}
-
-	if offset > 0 {
-		if _, err := fh.Seek(offset, io.SeekStart); err != nil {
-			_ = fh.Close()
-			return nil, err
-		}
-	}
-
-	var reader io.Reader = fh
-	if limit >= 0 {
-		remaining := limit - offset
-		if remaining < 0 {
-			remaining = 0
-		}
-		reader = io.LimitReader(fh, remaining)
-	}
+	reader := io.NewSectionReader(fh, offset, max(end-offset, 0))
 
 	switch {
-	case strings.HasSuffix(path, ".gz"):
+	case strings.HasSuffix(fh.Name(), ".gz"):
 		zr, err := gzip.NewReader(reader)
 		if err != nil {
-			_ = fh.Close()
 			return nil, err
 		}
-		return sourceReader{Reader: zr, closers: []io.Closer{zr, fh}}, nil
-	case strings.HasSuffix(path, ".bz2"):
-		// compress/bzip2 is decompress-only and has no Close.
-		return sourceReader{Reader: bzip2.NewReader(reader), closers: []io.Closer{fh}}, nil
+		return zr, nil
+	case strings.HasSuffix(fh.Name(), ".bz2"):
+		return bzip2.NewReader(reader), nil
 	default:
-		return sourceReader{Reader: reader, closers: []io.Closer{fh}}, nil
+		return reader, nil
 	}
 }
 
@@ -568,21 +636,6 @@ func openSource(path string, offset, limit int64) (io.ReadCloser, error) {
 // uncompressed one supports, following it above all.
 func IsCompressed(path string) bool {
 	return strings.HasSuffix(path, ".gz") || strings.HasSuffix(path, ".bz2")
-}
-
-type sourceReader struct {
-	io.Reader
-	closers []io.Closer
-}
-
-func (s sourceReader) Close() error {
-	var err error
-	for _, c := range s.closers {
-		if cerr := c.Close(); cerr != nil && err == nil {
-			err = cerr
-		}
-	}
-	return err
 }
 
 // countingReader records how many bytes were read, so that a decompressed

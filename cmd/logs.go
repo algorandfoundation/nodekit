@@ -27,12 +27,13 @@ import (
 // given. Zero means every match: warnings are well under one percent of a real
 // log, so the whole history of them is a readable amount of output, and a
 // fixed count would silently hide the older ones.
+//
+// It is the default with --follow as well. One meaning for one flag: --lines N
+// is the newest N whether or not the stream continues afterwards, and --lines 0
+// is all of them either way. A separate follow default would have made -n 0 -f
+// ask for the whole history where tail -n 0 -f asks for none of it, which is
+// the reading that -n and -f invite.
 const defaultLogLines = 0
-
-// defaultFollowLogLines is the smaller default used with --follow, so that a
-// long backlog does not scroll past before the stream begins. This mirrors the
-// asymmetry between tail and tail -f.
-const defaultFollowLogLines = 10
 
 // Flag values for the logs command.
 //
@@ -70,8 +71,10 @@ var logsLong = lipgloss.JoinVertical(
 	style.BoldUnderline("Notes:"),
 	"Every matching entry is shown; --lines N shows only the newest N of them.",
 	"--lines counts entries that match the filters, not raw lines of the file.",
-	"--follow shows the newest 10 before it starts streaming, the way tail -f",
-	"does; --lines N sets that backlog, and --lines 0 shows the whole history.",
+	"--follow shows that same set before it starts streaming, so it replays the",
+	"whole history by default; --lines N shortens the backlog, and --since sets",
+	"where it starts: --since 0s skips the timestamped history, but crash output",
+	"and other plain-text lines near the end of the log may still be shown.",
 	"The rotated archives are read as well, so the history reaches back past the",
 	"last rotation. Pass --file to read one file on its own instead.",
 	"--filter matches plain text in the message and the fields shown beside it,",
@@ -110,11 +113,6 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		defer func() { _ = out.Flush() }()
 		errOut := cmd.ErrOrStderr()
 
-		lines := logsLines
-		if !cmd.Flags().Changed("lines") && logsFollow {
-			lines = defaultFollowLogLines
-		}
-
 		// What is about to be read, before any of it is read. Archives that
 		// cannot hold anything as new as --since are dropped first, so that the
 		// status line names the files the scan will really open. The unpruned
@@ -122,7 +120,7 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		// whether this search has any use for it.
 		history := source.LogFiles()
 		sources := logs.PruneSources(history, filter.Since)
-		writeLogStatus(errOut, sources, filter, lines)
+		writeLogStatus(errOut, sources, filter, logsLines)
 
 		// A node whose floor sits above the level being asked for never records
 		// what the user wants to see, so the view is incomplete in a way that is
@@ -152,13 +150,15 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		// Entries are written as they are found rather than collected first:
 		// asking for every match on a gigabyte of log would otherwise hold the
 		// whole result in memory before printing a line of it.
-		result, err := logs.Scan(sources, lines, filter, func(entry logs.Entry) error {
+		result, err := logs.Scan(sources, logsLines, filter, func(entry logs.Entry) error {
 			writeLogEntry(out, entry)
 			return nil
 		})
 		if err != nil {
 			return explainLogError(err, source)
 		}
+		// The scan leaves the live log open for --follow to carry on from.
+		defer func() { _ = result.Close() }()
 		if err := out.Flush(); err != nil {
 			return err
 		}
@@ -176,7 +176,7 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			fmt.Fprintln(errOut, style.Yellow.Render(fmt.Sprintf(
 				"searched back %d MiB without finding %d entries, and stopped there;\n"+
 					"older entries were not read. Use --lines 0 to search all of it",
-				logs.ScanLimit()>>20, lines)))
+				logs.ScanLimit()>>20, logsLines)))
 		}
 
 		if !logsFollow {
@@ -191,6 +191,7 @@ var logsCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 			writeLogEntry(out, entry)
 			return out.Flush()
 		}, logs.FollowOptions{
+			Live: result.Live,
 			OnRotate: func() {
 				fmt.Fprintln(errOut, style.Yellow.Render("--- the log was rotated, continuing with the new file ---"))
 			},
@@ -402,7 +403,7 @@ func reportEmptyLogResult(errOut io.Writer, source logs.Source, filter logs.Filt
 
 func init() {
 	logsCmd.Flags().BoolVarP(&logsFollow, "follow", "f", false, style.LightBlue("Stream new entries as they are written"))
-	logsCmd.Flags().IntVarP(&logsLines, "lines", "n", defaultLogLines, style.LightBlue("Number of newest matching entries to show, 0 for all (10 with --follow)"))
+	logsCmd.Flags().IntVarP(&logsLines, "lines", "n", defaultLogLines, style.LightBlue("Number of newest matching entries to show, 0 for all"))
 	logsCmd.Flags().StringVar(&logsLevel, "level", "", style.LightBlue("Minimum level to show: "+strings.Join(logs.LevelNames, ", ")))
 	logsCmd.Flags().BoolVarP(&logsAll, "all", "a", false, style.LightBlue("Show entries at every level"))
 	logsCmd.Flags().StringVar(&logsSince, "since", "", style.LightBlue("Only entries newer than a duration (15m, 2h) or a timestamp"))

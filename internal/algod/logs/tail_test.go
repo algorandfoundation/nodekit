@@ -29,5 +29,6 @@ func tailFilter(path string, n int, f Filter) (tailResult, error) {
 		return nil
 	})
 	out.Offset, out.ScanLimited = result.Offset, result.ScanLimited
+	_ = result.Close()
 	return out, err
 }

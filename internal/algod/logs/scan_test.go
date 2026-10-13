@@ -51,6 +51,7 @@ func collect(t *testing.T, sources []string, n int, f Filter) ([]string, ScanRes
 		return nil
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = result.Close() })
 	return got, result
 }
 
@@ -80,6 +81,35 @@ func TestScanCountReachesIntoTheArchiveOnlyAsNeeded(t *testing.T) {
 	// Satisfied by the live log alone, the archive is never opened.
 	got, _ = collect(t, []string{live, filepath.Join(dir, "absent.log")}, 1, Filter{MinLevel: LevelWarn})
 	assert.Equal(t, []string{"new one"}, got)
+}
+
+// A rotation after the scan opened the live log renames it onto the archive
+// name, so by the time the archive is opened its path names the live log. It
+// is skipped rather than read: reading it would print the live log twice, and
+// the archive it replaced is gone, which the result has to say.
+func TestScanSkipsAnArchiveTheLiveLogWasRotatedOnto(t *testing.T) {
+	dir := t.TempDir()
+	older := writeAt(t, dir, "node.archive.2.log", line("warning", "older archive")+"\n")
+	archive := writeAt(t, dir, "node.archive.log", line("warning", "archive")+"\n")
+	live := writeAt(t, dir, "node.log", line("warning", "live")+"\n")
+
+	// Every match is streamed oldest first, so the older archive is read, and
+	// the rotation lands, before the newer archive is opened.
+	var got []string
+	result, err := Scan([]string{live, archive, older}, 0, Filter{MinLevel: LevelWarn}, func(e Entry) error {
+		if e.Message == "older archive" {
+			require.NoError(t, os.Rename(live, archive))
+		}
+		got = append(got, e.Message)
+		return nil
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = result.Close() })
+
+	assert.Equal(t, []string{"older archive", "live"}, got, "the live log once, and not again as the archive")
+	require.Len(t, result.Skipped, 1)
+	assert.Equal(t, archive, result.Skipped[0].Path)
+	assert.ErrorIs(t, result.Skipped[0].Err, errRotatedOnto)
 }
 
 func TestScanSkipsAMissingArchiveButNotAMissingLiveLog(t *testing.T) {
@@ -166,6 +196,7 @@ func TestScanStopsAtTheOffsetItReported(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = result.Close() })
 	assert.Equal(t, []string{"before"}, got)
 	assert.Equal(t, 1, result.Count)
 }
@@ -297,6 +328,7 @@ func TestArchiveFilesKeepsAnArchiveItCannotStat(t *testing.T) {
 	// let the command report a complete history it never read.
 	result, err := Scan(source.LogFiles(), 0, Filter{MinLevel: LevelWarn}, func(Entry) error { return nil })
 	require.NoError(t, err, "an unreadable archive does not cost the readable live log")
+	t.Cleanup(func() { _ = result.Close() })
 	require.Len(t, result.Skipped, 1)
 	assert.Equal(t, archive, result.Skipped[0].Path)
 	assert.ErrorIs(t, result.Skipped[0].Err, fs.ErrPermission)

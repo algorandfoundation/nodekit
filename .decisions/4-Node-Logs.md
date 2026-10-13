@@ -11,6 +11,7 @@ are the ones most likely to be revisited, recorded so they are not re-argued fro
 - **SHOULD** show warnings and errors by default, with `--all` for every level
 - **SHOULD** treat `--lines` as a count of matching entries, not of raw lines
 - **SHOULD** show every match by default, with `--lines N` for the newest N
+- **SHOULD** keep the same `--lines` default with `--follow`, rather than `tail -f`'s backlog of ten
 - **SHOULD** read the rotated archives as part of one history, with `--file` to read one file alone
 - **SHOULD** match `--filter` as plain text against the message and shown fields, not as a regular expression
 - **SHOULD** say on stderr, before the first entry, which files are being read and what is being hidden
@@ -49,6 +50,15 @@ oldest source instead of walking backwards: the same bytes are read, but entries
 and none are held. On a 692 MiB log that is a million entries at 58 MiB of memory, against 4.7 GiB for the
 same request buffered. The budget still applies to `--lines N`, which is the search that can fail to find
 what it is looking for.
+
+**One default for `--lines`, with or without `--follow`.** `--follow` first borrowed `tail -f`'s backlog of
+ten, but that gave `-n` two meanings: `-n 0 -f` asked for the whole history where `tail -n 0 -f` asks for
+none of it. `--follow` now replays the same set the command shows without it, `--lines N` shortens that
+backlog, and `--since 0s` skips the timestamped history, which the bisection below makes cheap. It does
+not make the backlog empty: `--since` bounds a region rather than each entry, as below, so crash output
+and other plain-text lines near the end of the log can still be replayed. The cost is that a bare `-f`
+reads the whole history before the first new entry arrives, as the command without it already does, and
+`--all -f` prints all of it.
 
 **Archives are part of the history.** The live log only goes back to the last rotation, which on a busy
 node is hours. The archive path was already resolved, so reading it is the difference between "the last
@@ -102,6 +112,12 @@ written before that watch exists. Truncation in place is not a rename at all —
 copy-truncate arrives as a write — and is caught only by comparing the file's size against the read
 offset. That comparison is a periodic `stat`, so a watch would sit on top of the loop already doing the
 work, to save a quarter second of latency on a stream a human is reading. This is what `tail -F` does.
+The live log is opened once, by the scan that replays the history, and `Follow` carries on from that
+handle rather than reopening the path, so a single rotation during the replay loses nothing: the old file
+is read to its end before the new one is picked up, and an archive path that the rotation has pointed at
+the live log is reported as skipped rather than read twice. Two rotations before the first poll still lose the file
+in between, as they do under `tail -F`; that takes a pause as long as it takes algod to fill a log, such
+as a `logs -f | less` left scrolled back.
 
 **Verbatim JSON.** Passing the original bytes through means `nodekit logs --json | jq` and reading the
 file directly produce the same objects, with no field reordering and nothing lost to a round trip. Lines
