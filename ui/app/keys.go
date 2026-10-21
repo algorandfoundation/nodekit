@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/algod/participation"
 	"github.com/charmbracelet/lipgloss"
@@ -41,16 +42,21 @@ func GenerateCmd(account string, rangeType participation.RangeType, duration int
 		var params api.GenerateParticipationKeysParams
 
 		if rangeType == participation.TimeRange {
+			// RoundTime stays zero until the node has seen a full metrics
+			// window, and a duration cannot be converted to rounds without it.
+			if state.Metrics.RoundTime <= 0 {
+				return errors.New("round time is not yet known, please wait until your node is fully synced")
+			}
 			params = api.GenerateParticipationKeysParams{
 				Dilution: nil,
-				First:    int(state.Status.LastRound),
-				Last:     int(state.Status.LastRound) + int((time.Duration(duration) / state.Metrics.RoundTime)),
+				First:    state.Status.LastRound,
+				Last:     state.Status.LastRound + uint64(time.Duration(duration)/state.Metrics.RoundTime),
 			}
 		} else {
 			params = api.GenerateParticipationKeysParams{
 				Dilution: nil,
-				First:    int(state.Status.LastRound),
-				Last:     int(state.Status.LastRound) + int(duration),
+				First:    state.Status.LastRound,
+				Last:     state.Status.LastRound + uint64(duration),
 			}
 		}
 

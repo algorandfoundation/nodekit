@@ -22,7 +22,7 @@ import (
 const CheckAlgodInterval = 10 * time.Second
 const CheckAlgodTimeout = 2 * time.Minute
 
-var CatchpointLagThreshold int = 30_000
+var CatchpointLagThreshold uint64 = 30_000
 
 // bootstrapCmdShort provides a brief description of the "bootstrap" command to initialize a fresh Algorand node.
 var bootstrapCmdShort = "Initialize a fresh node"
@@ -163,7 +163,7 @@ var bootstrapCmd = &cobra.Command{
 			log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
 
 			// Run the installer
-			err := algod.Install()
+			err := algod.Install(new(api.HttpPkg))
 			if err != nil {
 				return err
 			}

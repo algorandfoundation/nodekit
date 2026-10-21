@@ -107,7 +107,7 @@ var telemetryCmd = cmdutils.WithAlgodFlags(&cobra.Command{
 		}
 
 		log.Debug("Restarting node...")
-		err = algod.Stop()
+		err = algod.Stop(false)
 		if err != nil {
 			log.Fatal(err)
 		}

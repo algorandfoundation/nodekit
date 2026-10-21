@@ -17,6 +17,10 @@ import (
 // UpgradeMsg is a constant string used to indicate the start of the Algod upgrade process.
 const UpgradeMsg = "Upgrading Algod"
 
+const NodeKitUpgradeSuccessMsg = "NodeKit upgraded successfully. Restarting with the latest version."
+
+const AlgorandUpgradeSuccessMsg = "Algorand upgraded successfully."
+
 var upgradeShort = "Upgrade the node daemon"
 
 var upgradeLong = lipgloss.JoinVertical(
@@ -38,12 +42,22 @@ var upgradeCmd = &cobra.Command{
 	Long:         upgradeLong,
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		if NeedsUpgrade {
+		if NeedsUpgrade && !system.IsReexec() {
 			log.Info(style.Green.Render("Upgrading NodeKit"))
-			err := system.Upgrade(new(api.HttpPkg))
+			executable, err := os.Executable()
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			err = system.Upgrade(new(api.HttpPkg))
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Info(style.Green.Render(NodeKitUpgradeSuccessMsg))
+			if err := system.Reexec(executable, os.Args[1:]); err != nil {
+				log.Fatal(err)
+			}
+			return
 		}
 
 		// TODO: get expected version and check if update is required
@@ -55,6 +69,7 @@ var upgradeCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Info(style.Green.Render(AlgorandUpgradeSuccessMsg))
 
 		time.Sleep(5 * time.Second)
 

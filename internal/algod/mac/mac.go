@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/algorandfoundation/nodekit/api"
 	"github.com/algorandfoundation/nodekit/internal/algod/utils"
 	"github.com/algorandfoundation/nodekit/internal/system"
 	"github.com/charmbracelet/log"
@@ -56,7 +56,7 @@ func IsService() bool {
 // Install sets up Algod on macOS using Homebrew,
 // configures necessary directories, and ensures it
 // runs as a background service.
-func Install() error {
+func Install(http api.HttpPkgInterface) error {
 	log.Info("Installing Algod on macOS")
 
 	// Homebrew is our package manager of choice
@@ -82,7 +82,7 @@ func Install() error {
 	}
 
 	// Handle data directory and genesis.json file
-	err = handleDataDirMac()
+	err = handleDataDirMac(http)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func UpdateService(dataDirectoryPath string) error {
 
 // handleDataDirMac ensures the necessary Algorand data directory and mainnet genesis.json file exist on macOS.
 // TODO move to configure as a generic
-func handleDataDirMac() error {
+func handleDataDirMac(http api.HttpPkgInterface) error {
 	// Ensure the ~/.algorand directory exists
 	algorandDir := filepath.Join(os.Getenv("HOME"), ".algorand")
 	if err := os.MkdirAll(algorandDir, 0755); err != nil {
