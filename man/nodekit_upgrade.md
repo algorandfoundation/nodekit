@@ -22,7 +22,8 @@ nodekit upgrade [flags]
 ### Options
 
 ```
-  -h, --help   help for upgrade
+      --accept-new-key   install a new Algorand package signing key without asking
+  -h, --help             help for upgrade
 ```
 
 ### SEE ALSO

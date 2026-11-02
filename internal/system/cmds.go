@@ -50,6 +50,18 @@ func Run(args []string) (string, error) {
 	return string(output), err
 }
 
+// RunOutput executes a command and returns its standard output. Standard
+// error is kept out of the result so it can be parsed, and added to the error
+// when the command fails.
+func RunOutput(args []string) (string, error) {
+	output, err := exec.Command(args[0], args[1:]...).Output()
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && len(exitErr.Stderr) > 0 {
+		err = fmt.Errorf("%w: %s", err, strings.TrimSpace(string(exitErr.Stderr)))
+	}
+	return string(output), err
+}
+
 // RunAll executes each command in the CmdsList sequentially, logging errors or debug messages for each command execution.
 // Returns an error if any command fails, including the command details, output, and error message.
 func RunAll(list CmdsList) error {

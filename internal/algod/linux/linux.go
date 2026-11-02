@@ -171,16 +171,36 @@ func Uninstall() error {
 }
 
 // Upgrade updates Algorand and its dev tools using an approved package
-// manager if available, otherwise returns an error.
-func Upgrade() error {
+// manager if available, otherwise returns an error. confirm asks the user a
+// yes/no question, such as whether to trust a new repository signing key.
+func Upgrade(confirm func(question string) bool) error {
 	if (system.CmdExists("apt-get") || system.CmdExists("dnf")) && !isPackageManaged() {
 		return errors.New(NotPackageManagedMsg)
 	}
 	if system.CmdExists("apt-get") {
-		return system.RunAll(system.CmdsList{
-			{"sudo", "apt-get", "update"},
+		before, _ := InstalledVersion()
+		sources := findAlgorandAptSources()
+		keys := keyUnchecked
+		if len(sources) > 0 {
+			var err error
+			if keys, err = refreshAptKey(sources, confirm); err != nil {
+				return err
+			}
+		}
+		if err := aptUpdate(keys); err != nil {
+			return err
+		}
+		if err := system.RunAll(system.CmdsList{
 			{"sudo", "apt-get", "install", "--only-upgrade", "-y", "algorand"},
-		})
+		}); err != nil {
+			return err
+		}
+		// Without a repository for the package apt cannot see new versions,
+		// so an unchanged version means nothing was checked, not "up to date".
+		if after, _ := InstalledVersion(); after == before && !aptHasAlgorandSource() {
+			return fmt.Errorf("Algorand was not upgraded: no enabled apt repository provides the algorand package. Enable the %s repository in /etc/apt/sources.list.d/ and run nodekit upgrade again", algorandRepoHost)
+		}
+		return nil
 	}
 	if system.CmdExists("dnf") {
 		return system.RunAll(system.CmdsList{

@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/algorandfoundation/nodekit/api"
+	"github.com/algorandfoundation/nodekit/cmd/utils"
 	"github.com/algorandfoundation/nodekit/cmd/utils/explanations"
 	"github.com/algorandfoundation/nodekit/internal/algod"
 	"github.com/algorandfoundation/nodekit/internal/system"
@@ -19,9 +21,19 @@ const UpgradeMsg = "Upgrading Algod"
 
 const NodeKitUpgradeSuccessMsg = "NodeKit upgraded successfully. Restarting with the latest version."
 
-const AlgorandUpgradeSuccessMsg = "Algorand upgraded successfully."
+// AlgorandUpgradeSuccessMsg is shown when the upgrade ran but the installed version could not be read.
+const AlgorandUpgradeSuccessMsg = "Algorand upgrade finished."
+
+// AlgorandUpgradedMsg is shown when the package moved to a new version.
+const AlgorandUpgradedMsg = "Algorand upgraded from %s to %s."
+
+// AlgorandUpToDateMsg is shown when there was nothing newer to install.
+const AlgorandUpToDateMsg = "Algorand is already up to date (%s)."
 
 var upgradeShort = "Upgrade the node daemon"
+
+// acceptNewKey installs a new Algorand repository signing key without asking.
+var acceptNewKey bool
 
 var upgradeLong = lipgloss.JoinVertical(
 	lipgloss.Left,
@@ -60,18 +72,26 @@ var upgradeCmd = &cobra.Command{
 			return
 		}
 
-		// TODO: get expected version and check if update is required
 		log.Info(style.Green.Render(UpgradeMsg))
 		// Warn user for prompt
 		log.Warn(style.Yellow.Render(explanations.SudoWarningMsg))
-		// TODO: Check Version from S3 against the local binary
-		err := algod.Update()
+		before, _ := algod.InstalledVersion()
+		err := algod.Update(confirmNewKey)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Info(style.Green.Render(AlgorandUpgradeSuccessMsg))
-
-		time.Sleep(5 * time.Second)
+		after, _ := algod.InstalledVersion()
+		switch {
+		case before != "" && before == after:
+			log.Info(style.Green.Render(fmt.Sprintf(AlgorandUpToDateMsg, after)))
+		case before != "" && after != "":
+			log.Info(style.Green.Render(fmt.Sprintf(AlgorandUpgradedMsg, before, after)))
+			// Give the package's service restart time to settle
+			time.Sleep(5 * time.Second)
+		default:
+			log.Info(style.Green.Render(AlgorandUpgradeSuccessMsg))
+			time.Sleep(5 * time.Second)
+		}
 
 		// If it's not running, start the daemon (can happen)
 		if !algod.IsRunning(algodData) {
@@ -82,4 +102,19 @@ var upgradeCmd = &cobra.Command{
 			}
 		}
 	},
+}
+
+// confirmNewKey asks before trusting a new repository signing key, unless
+// --accept-new-key was passed. nodekit only offers keys under the Algorand
+// primary key it expects.
+func confirmNewKey(question string) bool {
+	if acceptNewKey {
+		log.Info("Accepting the new key (--accept-new-key)")
+		return true
+	}
+	return utils.Confirm(question)
+}
+
+func init() {
+	upgradeCmd.Flags().BoolVar(&acceptNewKey, "accept-new-key", false, style.Yellow.Render("install a new Algorand package signing key without asking"))
 }
