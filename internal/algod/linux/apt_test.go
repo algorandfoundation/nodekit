@@ -400,6 +400,10 @@ func TestAptUpdateIssuesUnknownErrorsAreFatal(t *testing.T) {
 
 func TestAptUpdate(t *testing.T) {
 	exit100 := errors.New("exit status 100")
+	killed := exec.Command("sh", "-c", "kill -TERM $$").Run()
+	if !killedBySignal(killed) {
+		t.Fatalf("could not get a killed process error, got %v", killed)
+	}
 	tests := []struct {
 		name    string
 		out     string
@@ -415,6 +419,8 @@ func TestAptUpdate(t *testing.T) {
 		{"failed without output", "sudo: a password is required\n", errors.New("exit status 1"), keyCurrent, "password is required"},
 		{"pre-invoke hook failed", "E: Problem executing scripts APT::Update::Pre-Invoke 'false'\nE: Sub-process returned an error code\n", exit100, keyCurrent, "Pre-Invoke"},
 		{"mirror stale key", mirrorStaleKeyOutput, nil, keyUnchecked, "mirror.example.com"},
+		{"failed with warnings only", "W: https://example.com/apt/dists/stable/InRelease: Key is stored in legacy trusted.gpg keyring\n", exit100, keyCurrent, "apt-get update failed"},
+		{"killed after a harmless error", "E: The repository 'https://example.com/apt stable InRelease' is not signed.\n", killed, keyCurrent, "apt-get update failed"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

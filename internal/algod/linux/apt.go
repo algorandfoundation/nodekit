@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -918,7 +919,10 @@ func aptUpdate(keys keyOutcome) error {
 	if len(fatal) > 0 {
 		return fmt.Errorf("apt-get update failed, so the package lists may not have been refreshed:\n  %s", strings.Join(fatal, "\n  "))
 	}
-	if err != nil && len(warnings) == 0 {
+	// A failed update is only safe to continue past when an error known to
+	// leave the Algorand lists usable explains it. Warnings alone don't make
+	// apt fail, and a killed apt may have stopped before refreshing anything.
+	if err != nil && (killedBySignal(err) || !hasErrorLine(warnings)) {
 		return fmt.Errorf("apt-get update failed: %w\n%s", err, strings.TrimSpace(out))
 	}
 	for _, line := range warnings {
@@ -928,6 +932,20 @@ func aptUpdate(keys keyOutcome) error {
 		log.Warn(fmt.Sprintf("apt-get update failed (%v) because of the problems above, which do not affect the Algorand repository; continuing with the upgrade", err))
 	}
 	return nil
+}
+
+func hasErrorLine(lines []string) bool {
+	for _, line := range lines {
+		if strings.HasPrefix(line, "E:") {
+			return true
+		}
+	}
+	return false
+}
+
+func killedBySignal(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr) && exitErr.ExitCode() == -1
 }
 
 // algorandRepoURIs returns the repositories apt lists for the algorand
