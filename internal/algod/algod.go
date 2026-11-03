@@ -97,12 +97,26 @@ func Install(httpPkg api.HttpPkgInterface) error {
 	}
 }
 
-// Update checks the operating system and performs an
-// upgrade using OS-specific package managers, if supported.
-func Update() error {
+// InstalledVersion returns the version of the installed Algorand package, as
+// reported by the OS package manager.
+func InstalledVersion() (string, error) {
 	switch runtime.GOOS {
 	case "linux":
-		return linux.Upgrade()
+		return linux.InstalledVersion()
+	case "darwin":
+		return mac.InstalledVersion()
+	default:
+		return "", fmt.Errorf(UnsupportedOSError)
+	}
+}
+
+// Update checks the operating system and performs an
+// upgrade using OS-specific package managers, if supported.
+// confirm asks the user a yes/no question when the upgrade needs a decision.
+func Update(confirm func(question string) bool) error {
+	switch runtime.GOOS {
+	case "linux":
+		return linux.Upgrade(confirm)
 	case "darwin":
 		return mac.Upgrade(false)
 	default:

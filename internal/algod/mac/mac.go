@@ -2,6 +2,7 @@ package mac
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -146,6 +147,44 @@ func Uninstall(force bool) error {
 	}
 
 	return system.RunAll(cmds)
+}
+
+// InstalledVersion returns the linked version of the Homebrew algorand formula.
+func InstalledVersion() (string, error) {
+	// Homebrew 6 cannot read formulae from an untrusted tap.
+	trustTap()
+	out, err := system.RunOutput([]string{"brew", "info", "--json=v2", "algorand"})
+	if err != nil {
+		return "", err
+	}
+	return parseBrewVersion([]byte(out))
+}
+
+// parseBrewVersion reads the active version from `brew info --json=v2`. The
+// linked keg is the version in use; several versions can be installed at once.
+func parseBrewVersion(data []byte) (string, error) {
+	var info struct {
+		Formulae []struct {
+			LinkedKeg string `json:"linked_keg"`
+			Installed []struct {
+				Version string `json:"version"`
+			} `json:"installed"`
+		} `json:"formulae"`
+	}
+	if err := json.Unmarshal(data, &info); err != nil {
+		return "", err
+	}
+	if len(info.Formulae) == 0 {
+		return "", errors.New("algorand formula not found")
+	}
+	formula := info.Formulae[0]
+	if formula.LinkedKeg != "" {
+		return formula.LinkedKeg, nil
+	}
+	if len(formula.Installed) == 1 {
+		return formula.Installed[0].Version, nil
+	}
+	return "", errors.New("algorand formula version not found")
 }
 
 // Upgrade updates the installed Algorand package using Homebrew if it's available and properly configured.
