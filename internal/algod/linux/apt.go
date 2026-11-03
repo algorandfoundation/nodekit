@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -773,19 +774,23 @@ var repoFailures = []string{
 	"NO_PUBKEY", "EXPKEYSIG", "KEYEXPIRED", "REVKEYSIG", "BADSIG",
 }
 
-// aptFatalErrors are apt errors after which no repository was refreshed.
-// Other errors, such as a failing Post-Invoke hook or a broken repository
-// that is not Algorand's, leave the Algorand lists usable.
+// aptFatalErrors are apt errors after which no repository was refreshed,
+// even when they name a repository.
 var aptFatalErrors = []string{
 	"Could not get lock", "Unable to lock", "Could not open lock file", "Unable to acquire the dpkg frontend lock",
 	"The list of sources could not be read", "Malformed entry", "Malformed line", "is not known on line",
 	"Conflicting values set for option", "Unable to parse package file",
+	"APT::Update::Pre-Invoke",
 }
 
 var signatureProblems = []string{
 	"GPG error", "is not signed", "signatures", "signature verification", "is not bound",
 	"NO_PUBKEY", "EXPKEYSIG", "KEYEXPIRED", "REVKEYSIG", "BADSIG",
 }
+
+// repoURIPattern finds a repository URI in an apt message: http(s)://,
+// file:/, cdrom:[, mirror+https:// and so on.
+var repoURIPattern = regexp.MustCompile(`[a-z][a-z0-9+.-]*:(/|\[)`)
 
 func containsAny(line string, markers []string) bool {
 	for _, marker := range markers {
@@ -796,13 +801,59 @@ func containsAny(line string, markers []string) bool {
 	return false
 }
 
+// mentionsRepo reports whether line names one of the repositories: the
+// Algorand host, or a mirror or proxy URI that apt says provides the package.
+func mentionsRepo(line string, repos []string) bool {
+	if strings.Contains(line, algorandRepoHost) {
+		return true
+	}
+	for _, repo := range repos {
+		for rest := line; ; {
+			i := strings.Index(rest, repo)
+			if i < 0 {
+				break
+			}
+			rest = rest[i+len(repo):]
+			// Stop https://host/deb from matching https://host/deb-testing.
+			if rest == "" || strings.ContainsAny(rest[:1], "/ '\"") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// harmlessAptError reports whether an E: line from apt-get update leaves the
+// Algorand lists usable. Anything not known to be harmless is fatal, since
+// apt may have refreshed nothing and an old list would make the upgrade look
+// up to date.
+func harmlessAptError(line string, afterPostInvoke bool) bool {
+	switch {
+	case strings.Contains(line, "APT::Update::Post-Invoke"):
+		// The lists were refreshed before the hook ran.
+		return true
+	case strings.Contains(line, "Sub-process returned an error code"):
+		return afterPostInvoke
+	case strings.Contains(line, "Some index files failed to download"):
+		// A summary; failures of the Algorand repository are reported on
+		// their own lines.
+		return true
+	default:
+		// A problem with a repository other than Algorand's.
+		return repoURIPattern.MatchString(line)
+	}
+}
+
 // aptUpdateIssues sorts apt-get update output into:
 //   - failures: the Algorand repository was not refreshed
 //   - warnings: everything else, which does not stop the upgrade
-//   - fatal: errors after which no repository was refreshed, such as a held lock
-func aptUpdateIssues(out string) (failures, warnings, fatal []string) {
+//   - fatal: errors after which the lists may not have been refreshed, such as a held lock
+//
+// repos are the mirror or proxy URIs apt lists for the algorand package, on
+// top of the Algorand host itself.
+func aptUpdateIssues(out string, repos []string) (failures, warnings, fatal []string) {
 	var fetchErrors []string
-	inFetchError := false
+	inFetchError, afterPostInvoke := false, false
 	for _, raw := range strings.Split(out, "\n") {
 		line := strings.TrimSpace(raw)
 		if inFetchError && line != "" && (strings.HasPrefix(raw, " ") || strings.HasPrefix(raw, "\t")) {
@@ -810,7 +861,7 @@ func aptUpdateIssues(out string) (failures, warnings, fatal []string) {
 			continue
 		}
 		inFetchError = false
-		if strings.HasPrefix(line, "Err:") && strings.Contains(line, algorandRepoHost) {
+		if strings.HasPrefix(line, "Err:") && mentionsRepo(line, repos) {
 			fetchErrors = append(fetchErrors, line)
 			inFetchError = true
 			continue
@@ -820,12 +871,17 @@ func aptUpdateIssues(out string) (failures, warnings, fatal []string) {
 			continue
 		}
 		switch {
-		case strings.Contains(line, algorandRepoHost) && (isError || containsAny(line, repoFailures)):
-			failures = append(failures, line)
 		case isError && containsAny(line, aptFatalErrors):
 			fatal = append(fatal, line)
-		default:
+		case mentionsRepo(line, repos) && (isError || containsAny(line, repoFailures)):
+			failures = append(failures, line)
+		case !isError || harmlessAptError(line, afterPostInvoke):
 			warnings = append(warnings, line)
+		default:
+			fatal = append(fatal, line)
+		}
+		if isError {
+			afterPostInvoke = strings.Contains(line, "APT::Update::Post-Invoke")
 		}
 	}
 	// apt normally repeats a failed fetch as a W: line; fall back to the
@@ -839,9 +895,12 @@ func aptUpdateIssues(out string) (failures, warnings, fatal []string) {
 // aptUpdate runs apt-get update and fails when the Algorand repository could
 // not be refreshed, which apt itself reports only as a warning.
 func aptUpdate(keys keyOutcome) error {
+	// Ask before updating: a failed update can leave apt without the lists
+	// that name the repository.
+	repos := algorandRepoURIs()
 	log.Info("Refreshing package lists")
 	out, err := runAptGetUpdate()
-	failures, warnings, fatal := aptUpdateIssues(out)
+	failures, warnings, fatal := aptUpdateIssues(out, repos)
 	if len(failures) > 0 {
 		msg := "apt could not refresh the Algorand repository, so no new version can be installed:\n  " + strings.Join(failures, "\n  ")
 		if containsAny(strings.Join(failures, "\n"), signatureProblems) {
@@ -857,7 +916,7 @@ func aptUpdate(keys keyOutcome) error {
 		return errors.New(msg)
 	}
 	if len(fatal) > 0 {
-		return fmt.Errorf("apt-get update failed, so no package lists were refreshed:\n  %s", strings.Join(fatal, "\n  "))
+		return fmt.Errorf("apt-get update failed, so the package lists may not have been refreshed:\n  %s", strings.Join(fatal, "\n  "))
 	}
 	if err != nil && len(warnings) == 0 {
 		return fmt.Errorf("apt-get update failed: %w\n%s", err, strings.TrimSpace(out))
@@ -871,6 +930,17 @@ func aptUpdate(keys keyOutcome) error {
 	return nil
 }
 
+// algorandRepoURIs returns the repositories apt lists for the algorand
+// package, which include mirrors and caching proxies the sources parser does
+// not recognise. It returns nil when apt cannot be asked.
+func algorandRepoURIs() []string {
+	out, err := runAptCachePolicy()
+	if err != nil {
+		return nil
+	}
+	return policySources(out)
+}
+
 // aptHasAlgorandSource asks apt whether any repository offers the algorand
 // package. Unlike the sources parser, this also sees mirrors and caching
 // proxies. It answers true when apt cannot be asked, so it never blocks an
@@ -880,12 +950,14 @@ func aptHasAlgorandSource() bool {
 	if err != nil {
 		return true
 	}
-	return policyHasSource(out)
+	return len(policySources(out)) > 0
 }
 
-// policyHasSource reports whether `apt-cache policy` lists a repository for
-// the package, rather than only the installed copy in /var/lib/dpkg/status.
-func policyHasSource(out string) bool {
+// policySources returns the repository URIs `apt-cache policy` lists for the
+// package, leaving out the installed copy in /var/lib/dpkg/status.
+func policySources(out string) []string {
+	var uris []string
+	seen := map[string]bool{}
 	inTable := false
 	for _, line := range strings.Split(out, "\n") {
 		if strings.TrimSpace(line) == "Version table:" {
@@ -907,11 +979,14 @@ func policyHasSource(out string) bool {
 		if _, err := strconv.Atoi(fields[1]); err == nil {
 			continue
 		}
-		if fields[1] != "/var/lib/dpkg/status" {
-			return true
+		uri := strings.TrimRight(fields[1], "/")
+		if fields[1] == "/var/lib/dpkg/status" || uri == "" || seen[uri] {
+			continue
 		}
+		seen[uri] = true
+		uris = append(uris, uri)
 	}
-	return false
+	return uris
 }
 
 // InstalledVersion returns the version of the installed algorand package.

@@ -194,7 +194,7 @@ W: Some index files failed to download. They have been ignored, or old ones used
 `
 
 func TestAptUpdateIssues(t *testing.T) {
-	failures, warnings, _ := aptUpdateIssues(staleKeyUpdateOutput)
+	failures, warnings, _ := aptUpdateIssues(staleKeyUpdateOutput, nil)
 	if len(failures) != 2 {
 		t.Errorf("got %d failures, want 2: %q", len(failures), failures)
 	}
@@ -205,7 +205,7 @@ func TestAptUpdateIssues(t *testing.T) {
 		t.Errorf("warnings = %q, want %q", warnings, want)
 	}
 
-	failures, warnings, _ = aptUpdateIssues("Hit:1 https://releases.algorand.com/deb stable InRelease\nReading package lists...\n")
+	failures, warnings, _ = aptUpdateIssues("Hit:1 https://releases.algorand.com/deb stable InRelease\nReading package lists...\n", nil)
 	if len(failures) != 0 || len(warnings) != 0 {
 		t.Errorf("clean update reported issues: %q %q", failures, warnings)
 	}
@@ -216,7 +216,7 @@ func TestAptUpdateIssuesBenignRepoWarning(t *testing.T) {
 Reading package lists...
 W: https://releases.algorand.com/deb/dists/stable/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
 `
-	failures, warnings, _ := aptUpdateIssues(out)
+	failures, warnings, _ := aptUpdateIssues(out, nil)
 	if len(failures) != 0 {
 		t.Errorf("legacy keyring warning treated as a failure: %q", failures)
 	}
@@ -231,7 +231,7 @@ func TestAptUpdateIssuesErrOnly(t *testing.T) {
 Hit:2 http://archive.ubuntu.com/ubuntu noble InRelease
 Reading package lists...
 `
-	failures, _, _ := aptUpdateIssues(out)
+	failures, _, _ := aptUpdateIssues(out, nil)
 	want := []string{"Err:1 https://releases.algorand.com/deb stable InRelease", "Could not resolve 'releases.algorand.com'"}
 	if !reflect.DeepEqual(failures, want) {
 		t.Errorf("failures = %q, want %q", failures, want)
@@ -264,7 +264,7 @@ func TestFormatFingerprint(t *testing.T) {
 
 func TestAptUpdateIssuesLock(t *testing.T) {
 	out := "Reading package lists...\nE: Could not get lock /var/lib/apt/lists/lock. It is held by process 1234 (apt-get)\nE: Unable to lock directory /var/lib/apt/lists/\n"
-	failures, warnings, fatal := aptUpdateIssues(out)
+	failures, warnings, fatal := aptUpdateIssues(out, nil)
 	if len(failures) != 0 || len(warnings) != 0 || len(fatal) != 2 {
 		t.Errorf("lock errors sorted as failures %q, warnings %q, fatal %q", failures, warnings, fatal)
 	}
@@ -276,13 +276,13 @@ E: The repository 'file:/opt/localrepo ./ Release' does not have a Release file.
 E: Problem executing scripts APT::Update::Post-Invoke-Success 'if /usr/bin/test -w /var/lib/command-not-found/ -a -e /usr/lib/cnf-update-db; then /usr/lib/cnf-update-db > /dev/null; fi'
 E: Sub-process returned an error code
 `
-	failures, warnings, fatal := aptUpdateIssues(out)
+	failures, warnings, fatal := aptUpdateIssues(out, nil)
 	if len(failures) != 0 || len(fatal) != 0 || len(warnings) != 3 {
 		t.Errorf("non-fatal errors sorted as failures %q, warnings %q, fatal %q", failures, warnings, fatal)
 	}
 }
 
-func TestPolicyHasSource(t *testing.T) {
+func TestPolicySources(t *testing.T) {
 	installedOnly := `algorand:
   Installed: 5.0.2
   Candidate: 5.0.2
@@ -300,11 +300,11 @@ func TestPolicyHasSource(t *testing.T) {
      4.4.1 500
         500 http://apt-cache:3142/HTTPS///releases.algorand.com/deb stable/main amd64 Packages
 `
-	if policyHasSource(installedOnly) {
-		t.Error("installed copy reported as a repository")
+	if got := policySources(installedOnly); len(got) != 0 {
+		t.Errorf("installed copy reported as a repository: %q", got)
 	}
-	if !policyHasSource(proxied) {
-		t.Error("proxied repository not found")
+	if got, want := policySources(proxied), []string{"http://apt-cache:3142/HTTPS///releases.algorand.com/deb"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("policySources() = %q, want %q", got, want)
 	}
 }
 
@@ -328,7 +328,7 @@ W: Failed to fetch https://example.com/apt/dists/stable/InRelease  Could not res
 E: The repository 'https://example.com/apt stable InRelease' is not signed.
 W: Some index files failed to download. They have been ignored, or old ones used instead.
 `
-	failures, warnings, fatal := aptUpdateIssues(out)
+	failures, warnings, fatal := aptUpdateIssues(out, nil)
 	if len(failures) != 0 || len(fatal) != 0 || len(warnings) != 3 {
 		t.Errorf("other repository errors sorted as failures %q, warnings %q, fatal %q", failures, warnings, fatal)
 	}
@@ -339,6 +339,63 @@ func stubAptGetUpdate(t *testing.T, out string, err error) {
 	old := runAptGetUpdate
 	runAptGetUpdate = func() (string, error) { return out, err }
 	t.Cleanup(func() { runAptGetUpdate = old })
+}
+
+func stubAptCachePolicy(t *testing.T, out string) {
+	t.Helper()
+	old := runAptCachePolicy
+	runAptCachePolicy = func() (string, error) { return out, nil }
+	t.Cleanup(func() { runAptCachePolicy = old })
+}
+
+const mirrorPolicy = `algorand:
+  Installed: 4.4.1
+  Candidate: 4.4.1
+  Version table:
+ *** 4.4.1 500
+        500 https://mirror.example.com/algorand/deb stable/main amd64 Packages
+        100 /var/lib/dpkg/status
+`
+
+const mirrorStaleKeyOutput = `Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Err:2 https://mirror.example.com/algorand/deb stable InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY F1C9063D88DB5791
+Reading package lists...
+W: GPG error: https://mirror.example.com/algorand/deb stable InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY F1C9063D88DB5791
+W: Failed to fetch https://mirror.example.com/algorand/deb/dists/stable/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY F1C9063D88DB5791
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+`
+
+func TestAptUpdateIssuesMirror(t *testing.T) {
+	repos := policySources(mirrorPolicy)
+	failures, _, _ := aptUpdateIssues(mirrorStaleKeyOutput, repos)
+	if len(failures) != 2 {
+		t.Errorf("got %d mirror failures, want 2: %q", len(failures), failures)
+	}
+
+	// A repository whose URI only starts with the mirror's is someone else's.
+	other := strings.ReplaceAll(mirrorStaleKeyOutput, "/algorand/deb", "/algorand/deb-testing")
+	failures, warnings, fatal := aptUpdateIssues(other, repos)
+	if len(failures) != 0 || len(fatal) != 0 || len(warnings) != 3 {
+		t.Errorf("look-alike mirror sorted as failures %q, warnings %q, fatal %q", failures, warnings, fatal)
+	}
+}
+
+func TestAptUpdateIssuesUnknownErrorsAreFatal(t *testing.T) {
+	tests := map[string]string{
+		"pre-invoke hook": "E: Problem executing scripts APT::Update::Pre-Invoke 'false'\nE: Sub-process returned an error code\n",
+		"lists directory": "E: List directory /var/lib/apt/lists/partial is missing. - Acquire (13: Permission denied)\n",
+		"unknown":         "E: Something apt has not said before\n",
+	}
+	for name, out := range tests {
+		t.Run(name, func(t *testing.T) {
+			failures, warnings, fatal := aptUpdateIssues(out, nil)
+			want := strings.Count(out, "E:")
+			if len(failures) != 0 || len(warnings) != 0 || len(fatal) != want {
+				t.Errorf("sorted as failures %q, warnings %q, fatal %q; want %d fatal", failures, warnings, fatal, want)
+			}
+		})
+	}
 }
 
 func TestAptUpdate(t *testing.T) {
@@ -356,10 +413,13 @@ func TestAptUpdate(t *testing.T) {
 		{"lock held", "E: Could not get lock /var/lib/apt/lists/lock. It is held by process 1234 (apt-get)\n", exit100, keyCurrent, "Could not get lock"},
 		{"other repository broken", "E: The repository 'https://example.com/apt stable InRelease' is not signed.\n", exit100, keyCurrent, ""},
 		{"failed without output", "sudo: a password is required\n", errors.New("exit status 1"), keyCurrent, "password is required"},
+		{"pre-invoke hook failed", "E: Problem executing scripts APT::Update::Pre-Invoke 'false'\nE: Sub-process returned an error code\n", exit100, keyCurrent, "Pre-Invoke"},
+		{"mirror stale key", mirrorStaleKeyOutput, nil, keyUnchecked, "mirror.example.com"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stubAptGetUpdate(t, tt.out, tt.err)
+			stubAptCachePolicy(t, mirrorPolicy)
 			err := aptUpdate(tt.keys)
 			switch {
 			case tt.wantErr == "" && err != nil:
