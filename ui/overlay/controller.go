@@ -49,13 +49,11 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.infoModal.State = msg
 		m.renameModal.State = msg
 
-		// Get the existing account from the state
-		acct, ok := msg.Accounts[m.Address]
+		// Get the account of the key being shown
+		acct, ok := msg.Accounts[m.keyAddress()]
 
 		// Handle suspensions
-		if ok {
-			m.SetSuspended(acct.Participation != nil && acct.Status == "Offline")
-		}
+		m.updateSuspended()
 
 		// We found the account, and we are on one of the modals
 		// TODO: move to logic to Transaction and Info Modal based on events
@@ -125,6 +123,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case app.KeySelectedEvent:
 		m.Open = true
 		m.SetKey(msg.Key)
+		m.updateSuspended()
 		m.SetActive(msg.Active)
 		m.SetType(app.InfoModal)
 		// Update or clear the prefix
