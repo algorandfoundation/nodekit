@@ -69,6 +69,29 @@ func (m *ViewModel) SetActive(active bool) {
 	m.transactionModal.OfflineControls = active
 }
 
+// keyAddress returns the address of the account the shown key belongs to.
+// It can differ from the account highlighted on the accounts page: "g"
+// generates keys for a typed-in address, often an account that had no keys
+// on this node when "g" was pressed.
+func (m *ViewModel) keyAddress() string {
+	if m.transactionModal.Participation != nil && m.transactionModal.Participation.Address != "" {
+		return m.transactionModal.Participation.Address
+	}
+	return m.Address
+}
+
+// updateSuspended derives the suspended state from the shown key's account,
+// so it never carries over from a previously shown key.
+func (m *ViewModel) updateSuspended() {
+	suspended := false
+	if m.State != nil {
+		if acct, ok := m.State.Accounts[m.keyAddress()]; ok {
+			suspended = acct.Participation != nil && acct.Status == "Offline"
+		}
+	}
+	m.SetSuspended(suspended)
+}
+
 // SetSuspended sets the suspended state
 func (m *ViewModel) SetSuspended(sus bool) {
 	m.infoModal.Suspended = sus
